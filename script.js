@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let initialDistance = 0; 
     let initialZoom = 1;
 
-    // --- 4. ФУНКЦИИ БЕЗОПАСНОГО ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ (Остаются) ---
+    // --- 4. ФУНКЦИИ БЕЗОПАСНОГО ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ ---
     function safeGetItem(key) {
         try { return localStorage.getItem(key); } catch (e) { return null; }
     }
@@ -51,13 +51,30 @@ document.addEventListener('DOMContentLoaded', (event) => {
         try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
     }
 
-    // --- 5. УПРАВЛЕНИЕ ПРОФИЛЯМИ (Остаются) ---
+    // --- 5. УПРАВЛЕНИЕ ПРОФИЛЯМИ С ПАРОЛЕМ ---
+    
     function getProfileList() {
         const listJson = safeGetItem(PROFILE_LIST_KEY);
-        // Добавляем 'Default', если список пуст
-        const list = listJson ? JSON.parse(listJson) : [];
-        if (list.length === 0) list.push('Default');
-        return list;
+        let list = listJson ? JSON.parse(listJson) : [];
+
+        // Конвертация старого формата (массив строк) в новый (массив объектов)
+        let convertedList = list.map(item => {
+            if (typeof item === 'string') {
+                return { name: item, password: null };
+            }
+            return item;
+        });
+
+        // Гарантируем, что "Default" всегда есть и без пароля
+        if (!convertedList.find(p => p.name === 'Default')) {
+            convertedList.unshift({ name: 'Default', password: null });
+        }
+        
+        // Убедимся, что все пароли для "Default" удалены
+        const defaultProfile = convertedList.find(p => p.name === 'Default');
+        if (defaultProfile) defaultProfile.password = null;
+
+        return convertedList;
     }
 
     function saveProfileList(list) {
@@ -68,13 +85,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const profileList = getProfileList();
         profileSelect.innerHTML = ''; 
         
-        profileList.forEach(name => {
+        profileList.forEach(p => {
             const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            if (name === activeProfileName) {
+            // Добавляем замочек, если есть пароль
+            option.textContent = p.password ? `${p.name} 🔒` : p.name;
+            option.value = p.name; 
+            if (p.name === activeProfileName) {
                 option.selected = true;
-                CURRENT_PROFILE_KEY = name; 
+                CURRENT_PROFILE_KEY = p.name; 
             }
             profileSelect.appendChild(option);
         });
@@ -89,12 +107,34 @@ document.addEventListener('DOMContentLoaded', (event) => {
         if (!newName) return; 
 
         const profileList = getProfileList();
-        if (profileList.includes(newName)) {
+        if (profileList.find(p => p.name === newName)) {
             alert(`Профиль с именем "${newName}" уже существует.`);
             return;
         }
+        
+        let password = null;
+        if (confirm("Вы хотите установить 4-значный пароль для этого профиля?")) {
+            let passInput;
+            while (true) {
+                passInput = prompt("Введите 4-значный ЧИСЛОВОЙ пароль:");
+                
+                if (passInput === null) { // Пользователь нажал "Отмена"
+                    break;
+                }
+                
+                // Проверка на 4 цифры
+                if (/^\d{4}$/.test(passInput)) {
+                    password = passInput;
+                    break;
+                } else {
+                    alert("Некорректный формат. Пароль должен состоять ровно из 4 цифр.");
+                }
+            }
+        }
 
-        profileList.push(newName);
+        const newProfile = { name: newName, password: password };
+
+        profileList.push(newProfile);
         saveProfileList(profileList);
         
         safeSetItem(newName, JSON.stringify(createInitialState())); 
@@ -111,6 +151,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
             alert("Нельзя удалить последний профиль!");
             return;
         }
+        
+        if (currentName === 'Default') {
+            alert("Основной профиль 'Default' удалить нельзя.");
+            return;
+        }
+        
+        const profileToDelete = profileList.find(p => p.name === currentName);
+        if (profileToDelete && profileToDelete.password) {
+             let passInput = prompt(`Для удаления профиля "${currentName}" введите пароль:`);
+             if (passInput !== profileToDelete.password) {
+                 alert("Неверный пароль. Удаление отменено.");
+                 return;
+             }
+        }
+
 
         if (!confirm(`Вы уверены, что хотите удалить профиль "${currentName}"? Данные будут потеряны.`)) {
             return;
@@ -118,16 +173,32 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
         localStorage.removeItem(currentName);
         
-        const newProfileList = profileList.filter(name => name !== currentName);
+        const newProfileList = profileList.filter(p => p.name !== currentName);
         saveProfileList(newProfileList);
 
-        const newActiveName = newProfileList[0];
+        const newActiveName = newProfileList[0].name;
         updateProfileSelect(newActiveName);
         loadState(newActiveName);
     }
     
     function handleProfileChange() {
         const newProfileName = profileSelect.value;
+        const profileList = getProfileList();
+        const selectedProfile = profileList.find(p => p.name === newProfileName);
+        
+        if (!selectedProfile) return;
+        
+        if (selectedProfile.password) {
+            let passInput = prompt(`Профиль "${newProfileName}" защищен паролем. Введите 4-значный пароль:`);
+            
+            if (passInput !== selectedProfile.password) {
+                alert("Неверный пароль. Переключение отменено.");
+                // Возвращаем селектор к текущему активному профилю
+                profileSelect.value = CURRENT_PROFILE_KEY; 
+                return;
+            }
+        }
+
         if (newProfileName !== CURRENT_PROFILE_KEY) {
             loadState(newProfileName);
         }
@@ -818,8 +889,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         setupEventListeners();
         
         const profileList = getProfileList();
-        updateProfileSelect(profileList[0]);
-        loadState(profileList[0]);
+        updateProfileSelect(profileList[0].name);
+        loadState(profileList[0].name);
     }
     
     initialize(); 
