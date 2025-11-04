@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hrain - Mind Map Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app">
+        
+        <div id="controls">
+            <h1>HRAIN</h1>
+            
+            <button id="saveProfileButton">Сохранить данные</button>
+
+            <button id="toggleHintsButton">Подсказки</button>
+        </div>
+
+        <div id="workspace">
+            <div id="canvas">
+                </div>
+        </div>
+        
+        <div id="hints" class="visible">
+            <h3>Подсказки и управление:</h3>
+            <ul>
+                <li>**Создание узла:** Двойной клик (Double Click) на пустом пространстве.</li>
+                <li>**Перемещение холста:** Нажмите и удерживайте **ПРОБЕЛ**, затем перетаскивайте мышью.</li>
+                <li>**Масштаб (Zoom):** Используйте колесико мыши.</li>
+                <li>**Соединение узлов:**
+                    <ol>
+                        <li>Кликните на первый узел (он станет **синим**).</li>
+                        <li>Кликните на второй узел.</li>
+                    </ol>
+                </li>
+                <li>**Изменение размера узла:** Используйте кнопки **+** / **-** рядом с узлом.</li>
+                <li>**Удаление узла (Облака):** **Двойной клик** (Double Click) по узлу.</li>
+                <li>**Удаление связи:** Двойной клик (Double Click) по линии.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

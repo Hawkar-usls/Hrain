@@ -1,0 +1,251 @@
+/* ОБЩИЕ СТИЛИ */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif; /* Более строгий шрифт */
+    background-color: #1a1a1a; /* Очень темный фон */
+    color: #e0e0e0; /* Светлый текст по умолчанию */
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* 1. ПАНЕЛЬ УПРАВЛЕНИЯ */
+#controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 30px; /* Увеличенные отступы */
+    background-color: #2a2a2a; /* Темнее, чем фон */
+    border-bottom: 1px solid #3a3a3a; /* Тонкая разделительная линия */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Глубокая тень */
+    z-index: 100;
+}
+
+#controls h1 {
+    margin: 0;
+    font-size: 2em; /* Более крупный и заметный заголовок */
+    color: #00bcd4; /* Акцентный сине-голубой, холодный */
+    font-weight: 700; /* Жирный */
+    letter-spacing: 1px; /* Небольшой интервал между буквами */
+}
+
+#controls button {
+    padding: 10px 20px;
+    margin-left: 15px;
+    border: 1px solid #555; /* Строгая рамка */
+    border-radius: 4px; /* Менее скругленные углы */
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+#controls button:hover {
+    background-color: #4a4a4a;
+    border-color: #777;
+    color: #ffffff;
+}
+
+/* Стили для кнопки сохранения */
+#saveProfileButton {
+    background-color: #00796b; /* Глубокий бирюзовый/изумрудный для сохранения */
+    color: white;
+    border-color: #00796b;
+}
+
+#saveProfileButton:hover {
+    background-color: #00897b;
+    border-color: #00897b;
+}
+
+/* Кнопка подсказок */
+#toggleHintsButton {
+    background-color: #5d6d7e; /* Приглушенный синий */
+    border-color: #5d6d7e;
+}
+
+#toggleHintsButton:hover {
+    background-color: #6c8099;
+    border-color: #6c8099;
+}
+
+
+/* 2. РАБОЧАЯ ОБЛАСТЬ */
+#workspace {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    cursor: default;
+    background-color: #1a1a1a; /* Фон такой же, как body */
+}
+
+#workspace.panning, #workspace[style*="grabbing"] {
+    cursor: grabbing !important;
+}
+
+#canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    /* Трансформация применяется через JS */
+}
+
+/* 3. УЗЕЛ (NODE) */
+.node {
+    position: absolute;
+    width: 220px; /* Чуть шире */
+    min-height: 90px; /* Чуть выше */
+    padding: 15px;
+    background-color: #333333; /* Темный фон узла */
+    border: 1px solid #555555; /* Строгая темная рамка */
+    border-radius: 6px; /* Небольшое скругление */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* Видимая тень */
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transform-origin: center center; 
+}
+
+.node input[type="text"] {
+    width: 100%;
+    padding: 8px 5px; /* Больше padding */
+    border: none;
+    background-color: transparent; /* Прозрачный фон для инпута */
+    border-bottom: 2px solid #555555; /* Строгая нижняя линия */
+    color: #e0e0e0; /* Светлый текст */
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 5px;
+    outline: none;
+    transition: border-bottom-color 0.2s;
+}
+
+.node input[type="text"]:focus {
+    border-bottom-color: #00bcd4; /* Акцентный цвет при фокусе */
+}
+
+.node:hover {
+    border-color: #00bcd4; /* Акцентный цвет при наведении */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    background-color: #3a3a3a; /* Чуть светлее при наведении */
+}
+
+/* Стиль для узла в режиме соединения (Source) */
+.node.selected {
+    border-color: #4fc3f7 !important; /* Более яркий синий для выделения */
+    box-shadow: 0 0 12px rgba(79, 195, 247, 0.7) !important;
+    background-color: #424242 !important;
+}
+
+/* Стиль для узла, выбранного для удаления (теперь не используется) */
+.node.selected-for-delete {
+    border-color: #e57373 !important; 
+    box-shadow: 0 0 10px rgba(229, 115, 115, 0.7) !important;
+    background-color: #424242 !important;
+}
+
+/* Кнопки масштаба */
+.scale-button {
+    width: 24px; /* Чуть больше */
+    height: 24px;
+    padding: 0;
+    font-size: 1.1em;
+    line-height: 1;
+    text-align: center;
+    border-radius: 50%;
+    background-color: rgba(60, 60, 60, 0.8); /* Темно-серый полупрозрачный */
+    color: #ffffff;
+    z-index: 10;
+    border: 1px solid rgba(80, 80, 80, 0.8);
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.scale-button:hover {
+    background-color: rgba(90, 90, 90, 0.9);
+    border-color: rgba(120, 120, 120, 0.9);
+}
+
+/* 4. СВЯЗЬ (LINK) */
+.link-line {
+    position: absolute;
+    height: 2px; 
+    background-color: #888888; /* Темно-серые линии */
+    transform-origin: 0 0;
+    pointer-events: auto; 
+    cursor: pointer; 
+    z-index: 1;
+    transition: background-color 0.1s, height 0.1s;
+}
+
+.link-line:hover {
+    background-color: #e57373; /* Приглушенный красный при наведении для удаления */
+    height: 3px; 
+}
+
+/* 5. ПОДСКАЗКИ */
+#hints {
+    position: absolute;
+    top: 80px; /* Отступ от панели */
+    right: 30px;
+    width: 320px; /* Чуть шире */
+    padding: 20px;
+    background-color: rgba(45, 45, 45, 0.95); /* Темный полупрозрачный фон */
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    border: 1px solid #555555; /* Тонкая рамка */
+    color: #c0c0c0; /* Светлый текст */
+}
+
+#hints.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+#hints h3 {
+    margin-top: 0;
+    color: #00bcd4; /* Акцентный цвет для заголовка подсказок */
+    font-size: 1.2em;
+    border-bottom: 1px solid #444444; /* Темная разделительная линия */
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#hints ul {
+    padding-left: 0;
+    list-style-type: none;
+}
+
+#hints li {
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    color: #c0c0c0;
+    position: relative;
+    padding-left: 20px;
+}
+
+#hints li::before {
+    content: "▶"; /* Используем стрелку как маркер для "грубости" */
+    color: #00bcd4; /* Акцентный цвет для маркера */
+    font-weight: bold;
+    display: inline-block;
+    width: 1.5em; /* Расстояние для маркера */
+    margin-left: -1.5em;
+}
