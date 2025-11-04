@@ -1,16 +1,22 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     
-    // --- 1. Константы и элементы интерфейса ---
-    const UNIQUE_PROFILE_KEY = 'hrain_user_data'; // Единый ключ для всех данных
+    // --- 1. КОНСТАНТЫ И ЭЛЕМЕНТЫ ИНТЕРФЕЙСА ---
+    
+    // Ключ для хранения списка ВСЕХ профилей
+    const PROFILE_LIST_KEY = 'hrain_profiles_list'; 
+    // Имя текущего активного профиля
+    let CURRENT_PROFILE_KEY = 'Default'; 
     
     const workspace = document.getElementById('workspace');
     const canvas = document.getElementById('canvas');
+    const profileSelect = document.getElementById('profile-select');
     const saveProfileButton = document.getElementById('saveProfileButton');
-    
-    // --- 2. Глобальные переменные ---
+    const newProfileButton = document.getElementById('newProfileButton');
+    const deleteProfileButton = document.getElementById('deleteProfileButton');
+
+    // --- 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ КАРТЫ И ВЗАИМОДЕЙСТВИЯ ---
     let nodeIdCounter = 0;
     let connectingNodeId = null; 
-    
     let currentZoom = 1; 
     let panX = 0; 
     let panY = 0; 
@@ -20,11 +26,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const maxZoom = 3.0; 
     const nodeScaleStep = 0.2; 
 
+    // Переменные для Мыши/Touch
     let isPanning = false; 
     let isDraggingNode = false; 
     let currentDraggedNode = null;
-    let lastMouseX = 0;
-    let lastMouseY = 0;
+    let lastClientX = 0; // Универсальные координаты (Mouse X/Y или Touch X/Y)
+    let lastClientY = 0; 
+
+    // Переменные для Touch (Pinch-to-Zoom)
+    let activeTouches = []; 
+    let initialDistance = 0; 
+    let initialZoom = 1;
 
     // --- 3. ФУНКЦИИ БЕЗОПАСНОГО ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ ---
     
@@ -47,7 +59,88 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    // --- 4. ФУНКЦИИ ТРАНСФОРМАЦИИ И СОХРАНЕНИЯ ---
+    // --- 4. УПРАВЛЕНИЕ ПРОФИЛЯМИ ---
+
+    function getProfileList() {
+        const listJson = safeGetItem(PROFILE_LIST_KEY);
+        return listJson ? JSON.parse(listJson) : ['Default'];
+    }
+
+    function saveProfileList(list) {
+        safeSetItem(PROFILE_LIST_KEY, JSON.stringify(list));
+    }
+
+    function updateProfileSelect(activeProfileName) {
+        const profileList = getProfileList();
+        profileSelect.innerHTML = ''; 
+        
+        profileList.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            if (name === activeProfileName) {
+                option.selected = true;
+                CURRENT_PROFILE_KEY = name; 
+            }
+            profileSelect.appendChild(option);
+        });
+        
+        deleteProfileButton.disabled = profileList.length <= 1;
+    }
+    
+    function handleNewProfile() {
+        let newName = prompt("Введите имя нового профиля:", `Карта ${getProfileList().length + 1}`);
+        if (!newName) return;
+        newName = newName.trim();
+        if (!newName) return; 
+
+        const profileList = getProfileList();
+        if (profileList.includes(newName)) {
+            alert(`Профиль с именем "${newName}" уже существует.`);
+            return;
+        }
+
+        profileList.push(newName);
+        saveProfileList(profileList);
+        
+        safeSetItem(newName, JSON.stringify(createInitialState())); 
+        
+        updateProfileSelect(newName);
+        loadState(newName);
+    }
+
+    function handleDeleteProfile() {
+        const currentName = CURRENT_PROFILE_KEY;
+        const profileList = getProfileList();
+        
+        if (profileList.length <= 1) {
+            alert("Нельзя удалить последний профиль!");
+            return;
+        }
+
+        if (!confirm(`Вы уверены, что хотите удалить профиль "${currentName}"? Данные будут потеряны.`)) {
+            return;
+        }
+
+        localStorage.removeItem(currentName);
+        
+        const newProfileList = profileList.filter(name => name !== currentName);
+        saveProfileList(newProfileList);
+
+        const newActiveName = newProfileList[0];
+        updateProfileSelect(newActiveName);
+        loadState(newActiveName);
+    }
+    
+    function handleProfileChange() {
+        const newProfileName = profileSelect.value;
+        if (newProfileName !== CURRENT_PROFILE_KEY) {
+            loadState(newProfileName);
+        }
+    }
+
+
+    // --- 5. ФУНКЦИИ ТРАНСФОРМАЦИИ И СОХРАНЕНИЯ ---
 
     function applyTransform() {
         canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
@@ -57,11 +150,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         canvas.innerHTML = '';
         nodeIdCounter = 0; 
         connectingNodeId = null;
-        currentZoom = 1;
-        panX = 0;
-        panY = 0;
-        
-        applyTransform();
     }
     
     function createInitialState() {
@@ -75,6 +163,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function saveState() {
+        const stateKey = CURRENT_PROFILE_KEY;
+        
         const nodesData = {};
         document.querySelectorAll('.node').forEach(nodeEl => {
             const id = nodeEl.id;
@@ -109,21 +199,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
             panX: panX, 
             panY: panY  
         };
-        safeSetItem(UNIQUE_PROFILE_KEY, JSON.stringify(state));
+        safeSetItem(stateKey, JSON.stringify(state));
     }
     
-    function loadState() {
+    function loadState(profileName) {
         clearWorkspace(); 
 
-        const savedState = safeGetItem(UNIQUE_PROFILE_KEY);
+        CURRENT_PROFILE_KEY = profileName || CURRENT_PROFILE_KEY;
+        
+        const savedState = safeGetItem(CURRENT_PROFILE_KEY);
         
         if (!savedState) {
-            // Инициализация, если данных нет
             const initialState = createInitialState();
-            safeSetItem(UNIQUE_PROFILE_KEY, JSON.stringify(initialState));
+            safeSetItem(CURRENT_PROFILE_KEY, JSON.stringify(initialState));
             
-            // Создаем и сохраняем начальный узел
-            createNode(50, 50, "Начало работы"); 
+            currentZoom = 1; panX = 0; panY = 0; applyTransform();
+            
+            createNode(50, 50, `Карта: ${CURRENT_PROFILE_KEY}`); 
             saveState(); 
             return;
         }
@@ -150,9 +242,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
         panY = state.panY || 0;
         
         applyTransform();
+        updateProfileSelect(CURRENT_PROFILE_KEY);
     }
 
-    // --- 5. ФУНКЦИИ УЗЛОВ И СВЯЗЕЙ ---
+    // --- 6. ФУНКЦИИ УЗЛОВ И СВЯЗЕЙ (ОСТАВЛЕНЫ БЕЗ ИЗМЕНЕНИЙ) ---
     
     function updateNodeSize(node, scale) {
         node.style.transform = `scale(${scale})`;
@@ -198,7 +291,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         input.addEventListener('blur', saveState);
         node.appendChild(input);
         
-        // Кнопки масштаба
         const scaleUpButton = document.createElement('button');
         scaleUpButton.textContent = '+';
         scaleUpButton.className = 'scale-button';
@@ -221,26 +313,35 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         node.addEventListener('mousedown', startNodeDrag);
         
-        // Двойной клик для НЕМЕДЛЕННОГО удаления узла (облака)
+        // Двойной клик для НЕМЕДЛЕННОГО удаления узла (ПК)
         node.addEventListener('dblclick', (e) => {
             e.stopPropagation(); 
-            // Снимаем все выделения
             document.querySelectorAll('.node').forEach(n => n.classList.remove('selected-for-delete', 'selected'));
             connectingNodeId = null; 
-            
-            // Выполняем удаление
             deleteNodeAndConnections(nodeId);
         });
         
-        // Логика одинарного клика для соединения
+        // Двойной тап для удаления узла (Touch)
+        let lastNodeTap = 0;
+        node.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastNodeTap;
+            
+            if (tapLength < 500 && tapLength > 50 && e.touches.length === 0) {
+                 e.stopPropagation(); 
+                 document.querySelectorAll('.node').forEach(n => n.classList.remove('selected-for-delete', 'selected'));
+                 connectingNodeId = null; 
+                 deleteNodeAndConnections(nodeId);
+            }
+            lastNodeTap = currentTime;
+        });
+
+        
+        // Логика одинарного клика/тапа для соединения
         node.addEventListener('click', (e) => {
             if (isDraggingNode) return; 
             e.stopPropagation(); 
-            
-            // Снимаем выделение для удаления со всех
             document.querySelectorAll('.node').forEach(n => n.classList.remove('selected-for-delete'));
-            
-            // Обработка соединения
             handleNodeConnect(nodeId);
         });
         
@@ -250,21 +351,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function handleNodeConnect(nodeId) {
         const node = document.getElementById(nodeId);
         
-        // Снимаем режим соединения со всех, кроме текущего
         document.querySelectorAll('.node').forEach(n => {
             if (n.id !== nodeId) n.classList.remove('selected');
         });
 
         if (connectingNodeId === null) {
-            // Активируем режим соединения (первый клик)
             connectingNodeId = nodeId;
             node.classList.add('selected');
         } else if (connectingNodeId === nodeId) {
-            // Отменяем режим соединения (клик по себе же)
             connectingNodeId = null;
             node.classList.remove('selected');
         } else {
-            // Завершаем соединение (второй клик)
             const sourceId = connectingNodeId;
             const targetId = nodeId;
             const sourceNode = document.getElementById(sourceId);
@@ -290,12 +387,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
     
-    // --- НОВАЯ ФУНКЦИЯ createLink С ИСПРАВЛЕННОЙ ГЕОМЕТРИЕЙ ---
     function createLink(sourceId, targetId) {
         const linkKey = [sourceId, targetId].sort().join('-'); 
         let line = document.getElementById(linkKey);
         
-        // Удаляем старую линию, если она уже существует
         if (line) line.remove();
         
         const sourceNode = document.getElementById(sourceId);
@@ -303,55 +398,35 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         if (!sourceNode || !targetNode) return; 
 
-        // --- 1. Функция для нахождения точки на границе узла ---
         function findNodeBoundaryPoint(node, targetPoint) {
-            
-            // Получаем позицию узла относительно canvas (не экрана)
+            // (Логика нахождения точки на границе узла, чтобы линия не пересекала текст)
             const nodeX = node.offsetLeft;
             const nodeY = node.offsetTop;
-            
-            // Получаем размеры узла (учитывая его scale)
             const scale = parseFloat(node.dataset.scale || 1);
             const width = node.offsetWidth * scale;
             const height = node.offsetHeight * scale;
-
-            // Координаты центра узла
             const centerX = nodeX + width / 2;
             const centerY = nodeY + height / 2;
-
-            // Вектор от центра узла до целевой точки
             const dx = targetPoint.x - centerX;
             const dy = targetPoint.y - centerY;
-
-            // Углы и радиусы для расчета
             const absDx = Math.abs(dx);
             const absDy = Math.abs(dy);
 
             let tx, ty;
 
-            // Ищем точку пересечения с границами
             if (absDx / width >= absDy / height) {
-                // Пересечение происходит по горизонтали (слева или справа)
                 tx = width / 2;
                 if (dx < 0) tx = -tx; 
-                
                 ty = tx * dy / dx; 
             } else {
-                // Пересечение происходит по вертикали (сверху или снизу)
                 ty = height / 2;
                 if (dy < 0) ty = -ty; 
-                
                 tx = ty * dx / dy; 
             }
 
-            return {
-                x: centerX + tx,
-                y: centerY + ty
-            };
+            return { x: centerX + tx, y: centerY + ty };
         }
-        // --- Конец findNodeBoundaryPoint ---
 
-        // --- 2. Определяем центры узлов для расчета направления ---
         const sourceScale = parseFloat(sourceNode.dataset.scale || 1);
         const targetScale = parseFloat(targetNode.dataset.scale || 1);
         
@@ -364,14 +439,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             y: targetNode.offsetTop + (targetNode.offsetHeight * targetScale) / 2
         };
 
-        // --- 3. Находим точки на границах узлов ---
-        // Точка выхода из Source (граница) - использует центр Target для направления
         const p1 = findNodeBoundaryPoint(sourceNode, targetCenter); 
-        // Точка входа в Target (граница) - использует центр Source для направления
         const p2 = findNodeBoundaryPoint(targetNode, sourceCenter); 
 
-
-        // --- 4. Расчет длины и угла для линии ---
         const length = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
         const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
         
@@ -379,23 +449,35 @@ document.addEventListener('DOMContentLoaded', (event) => {
         line.className = 'link-line';
         line.id = linkKey;
         line.style.width = `${length}px`;
-        // Линия начинается от точки p1
         line.style.left = `${p1.x}px`;
         line.style.top = `${p1.y}px`;
         line.style.transform = `rotate(${angle}deg)`;
         line.dataset.source = sourceId;
         line.dataset.target = targetId;
 
-        // Двойной клик для удаления связи
-        line.addEventListener('dblclick', (e) => {
-            e.stopPropagation(); 
-            const sId = e.target.dataset.source;
-            const tId = e.target.dataset.target;
-            
-            if (sId && tId) {
+        // Двойной клик/тап для удаления связи
+        const deleteLinkHandler = (e) => {
+             e.stopPropagation(); 
+             const sId = e.target.dataset.source;
+             const tId = e.target.dataset.target;
+             if (sId && tId) {
                  deleteLink(sId, tId);
+             }
+        };
+
+        line.addEventListener('dblclick', deleteLinkHandler); // ПК
+        
+        let lastLinkTap = 0;
+        line.addEventListener('touchend', (e) => { // Touch
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastLinkTap;
+            
+            if (tapLength < 500 && tapLength > 50 && e.touches.length === 0) {
+                 deleteLinkHandler(e);
             }
+            lastLinkTap = currentTime;
         });
+
 
         canvas.appendChild(line);
     }
@@ -465,18 +547,157 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
 
-    // --- 6. ОБРАБОТЧИКИ DRAG & DROP, ПАНОРАМИРОВАНИЯ И ЗУМА ---
+    // --- 7. УНИФИЦИРОВАННЫЕ ФУНКЦИИ ВЗАИМОДЕЙСТВИЯ (МЫШЬ И ТАЧ) ---
+    
+    function getMouseOrTouchCoordinates(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
+
+    function getDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getCenter(touches) {
+        return {
+            x: (touches[0].clientX + touches[1].clientX) / 2,
+            y: (touches[0].clientY + touches[1].clientY) / 2
+        };
+    }
+    
+    // --- TOUCH HANDLERS ---
+    function handleTouchStart(e) {
+        activeTouches = Array.from(e.touches);
+        
+        // Одно касание: Панорамирование или Перетаскивание узла
+        if (activeTouches.length === 1) {
+            const touch = activeTouches[0];
+            const targetNode = touch.target.closest('.node');
+            
+            // Если на элементе ввода, позволяем ему работать
+            if (touch.target.tagName === 'INPUT') return; 
+
+            if (targetNode && !touch.target.classList.contains('scale-button')) {
+                e.preventDefault();
+                currentDraggedNode = targetNode;
+                isDraggingNode = true;
+            } else if (!targetNode) {
+                e.preventDefault();
+                isPanning = true;
+            }
+            lastClientX = touch.clientX;
+            lastClientY = touch.clientY;
+        }
+        // Два касания: Зум
+        else if (activeTouches.length === 2) {
+            e.preventDefault();
+            initialDistance = getDistance(activeTouches);
+            initialZoom = currentZoom;
+            isPanning = false; 
+            isDraggingNode = false;
+        }
+        
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
+        document.addEventListener('touchcancel', handleTouchEnd);
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault(); 
+        activeTouches = Array.from(e.touches);
+        
+        if (isDraggingNode && currentDraggedNode && activeTouches.length === 1) {
+            // Перетаскивание узла
+            const touch = activeTouches[0];
+            const dx = touch.clientX - lastClientX;
+            const dy = touch.clientY - lastClientY;
+            
+            let newLeft = currentDraggedNode.offsetLeft + dx / currentZoom;
+            let newTop = currentDraggedNode.offsetTop + dy / currentZoom;
+
+            currentDraggedNode.style.top = `${newTop}px`;
+            currentDraggedNode.style.left = `${newLeft}px`; 
+            
+            lastClientX = touch.clientX;
+            lastClientY = touch.clientY;
+            
+            updateAllConnections(currentDraggedNode.id);
+        }
+        else if (isPanning && !isDraggingNode && activeTouches.length === 1) {
+            // Панорамирование холста
+            const touch = activeTouches[0];
+            const dx = touch.clientX - lastClientX;
+            const dy = touch.clientY - lastClientY;
+            
+            panX += dx;
+            panY += dy;
+            
+            lastClientX = touch.clientX;
+            lastClientY = touch.clientY;
+            
+            applyTransform();
+        }
+        else if (activeTouches.length === 2) {
+            // Зум двумя пальцами (Pinch-to-Zoom)
+            const currentDistance = getDistance(activeTouches);
+            const scaleFactor = currentDistance / initialDistance;
+            let newZoom = initialZoom * scaleFactor;
+            
+            newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+            newZoom = Math.round(newZoom * 100) / 100;
+            
+            if (newZoom !== currentZoom) {
+                const center = getCenter(activeTouches);
+                const rect = workspace.getBoundingClientRect();
+                const mouseX = center.x - rect.left;
+                const mouseY = center.y - rect.top;
+
+                const zoomRatio = newZoom / currentZoom;
+                
+                panX = mouseX - (mouseX - panX) * zoomRatio;
+                panY = mouseY - (mouseY - panY) * zoomRatio;
+                
+                currentZoom = newZoom;
+                applyTransform();
+            }
+        }
+    }
+
+    function handleTouchEnd(e) {
+        if (e.touches.length === 0) {
+            if (isDraggingNode || isPanning || initialZoom !== currentZoom) {
+                 saveState();
+            }
+            
+            isDraggingNode = false;
+            currentDraggedNode = null;
+            isPanning = false;
+            activeTouches = [];
+            initialDistance = 0;
+            initialZoom = 1;
+            
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+            document.removeEventListener('touchcancel', handleTouchEnd);
+        }
+    }
+    
+    // --- MOUSE HANDLERS (Адаптированы) ---
     
     function startNodeDrag(e) {
-        if (e.button !== 0 || e.target.classList.contains('scale-button')) return; 
-        if (e.target.tagName === 'INPUT') return; 
-        
+        if (e.button !== 0 || e.target.classList.contains('scale-button') || e.target.tagName === 'INPUT') return; 
+        if (activeTouches.length > 0) return; 
+
         e.preventDefault(); 
         isDraggingNode = false;
         currentDraggedNode = e.currentTarget;
         
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastClientX = e.clientX;
+        lastClientY = e.clientY;
         
         document.addEventListener('mousemove', dragNode);
         document.addEventListener('mouseup', stopNodeDrag);
@@ -487,20 +708,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function dragNode(e) {
         if (!currentDraggedNode) return;
         
-        const dx = e.clientX - lastMouseX;
-        const dy = e.clientY - lastMouseY;
+        const dx = e.clientX - lastClientX;
+        const dy = e.clientY - lastClientY;
         
         isDraggingNode = true; 
 
         let newLeft = currentDraggedNode.offsetLeft + dx / currentZoom;
         let newTop = currentDraggedNode.offsetTop + dy / currentZoom;
 
-        // Корректное обновление позиции
         currentDraggedNode.style.top = `${newTop}px`;
         currentDraggedNode.style.left = `${newLeft}px`; 
         
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastClientX = e.clientX;
+        lastClientY = e.clientY;
 
         updateAllConnections(currentDraggedNode.id); 
     }
@@ -519,31 +739,33 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function startPanning(e) {
         if (e.target.closest('.node') || e.button !== 0 || e.target.tagName === 'INPUT') return; 
-        
+        if (activeTouches.length > 0) return; 
+
+        // Панорамирование либо по ПРОБЕЛУ, либо по клику на пустом холсте
         if ((e.code === 'Space' || e.key === ' ' || e.target === workspace || e.target === canvas) && !isPanning) {
             e.preventDefault(); 
             isPanning = true;
             workspace.style.cursor = 'grabbing';
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
             
-            document.addEventListener('mousemove', panCanvas);
+            document.addEventListener('mousemove', panCanvasMouse);
             document.addEventListener('mouseup', stopPanning);
         }
     }
     
-    function panCanvas(e) {
+    function panCanvasMouse(e) {
         if (!isPanning) return;
         e.preventDefault();
         
-        const dx = e.clientX - lastMouseX;
-        const dy = e.clientY - lastMouseY;
+        const dx = e.clientX - lastClientX;
+        const dy = e.clientY - lastClientY;
         
         panX += dx;
         panY += dy;
         
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastClientX = e.clientX;
+        lastClientY = e.clientY;
         
         applyTransform();
     }
@@ -554,11 +776,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
             workspace.style.cursor = 'default';
             saveState(); 
         }
-        document.removeEventListener('mousemove', panCanvas);
+        document.removeEventListener('mousemove', panCanvasMouse);
         document.removeEventListener('mouseup', stopPanning);
     }
     
     function handleZoom(e) {
+        if (activeTouches.length > 0) return; 
+        
         e.preventDefault(); 
         
         const delta = e.deltaY > 0 ? -1 : 1;
@@ -580,10 +804,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         applyTransform();
         saveState(); 
     }
-    
-    // --- 7. ИНИЦИАЛИЗАЦИЯ И РЕГИСТРАЦИЯ ВСЕХ СОБЫТИЙ ---
+
+    // --- 8. ИНИЦИАЛИЗАЦИЯ И РЕГИСТРАЦИЯ ВСЕХ СОБЫТИЙ ---
 
     function setupEventListeners() {
+        // Управление профилями
+        profileSelect.addEventListener('change', handleProfileChange);
+        newProfileButton.addEventListener('click', handleNewProfile);
+        deleteProfileButton.addEventListener('click', handleDeleteProfile);
+        
         // Сохранение
         saveProfileButton.addEventListener('click', saveState);
         
@@ -601,16 +830,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }
         });
 
-        // Создание узла (Двойной клик)
+        // Создание узла (Двойной клик Мышью)
         workspace.addEventListener('dblclick', (e) => {
-            // Проверяем, что клик был на пустом пространстве
             if (e.target !== workspace && e.target !== canvas) return;
             
             const rect = workspace.getBoundingClientRect();
             const clientX = e.clientX - rect.left;
             const clientY = e.clientY - rect.top;
             
-            // Преобразование координат с учетом зума и панорамирования
             const rawX = (clientX - panX) / currentZoom;
             const rawY = (clientY - panY) / currentZoom;
             
@@ -622,10 +849,41 @@ document.addEventListener('DOMContentLoaded', (event) => {
             createNode(x, y);
             saveState();
         });
+
+        // Создание узла (Двойной тап Touch)
+        let lastTap = 0;
+        workspace.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            
+            // Если двойной тап и не было движения
+            if (tapLength < 500 && tapLength > 50 && e.touches.length === 0) {
+                 if (e.target !== workspace && e.target !== canvas) return;
+            
+                const rect = workspace.getBoundingClientRect();
+                const clientX = e.changedTouches[0].clientX - rect.left;
+                const clientY = e.changedTouches[0].clientY - rect.top;
+                
+                const rawX = (clientX - panX) / currentZoom;
+                const rawY = (clientY - panY) / currentZoom;
+                
+                const nodeWidth = 220; 
+                const nodeHeight = 90; 
+                const x = rawX - (nodeWidth / 2); 
+                const y = rawY - (nodeHeight / 2);
+                
+                createNode(x, y);
+                saveState();
+            }
+            lastTap = currentTime;
+        }, false);
         
-        // Панорамирование
+        // Touch events для всех взаимодействий
+        workspace.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+        // Панорамирование Мышью
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !isPanning && e.target.tagName !== 'INPUT') {
+            if (e.code === 'Space' && !isPanning && e.target.tagName !== 'INPUT' && activeTouches.length === 0) {
                 workspace.style.cursor = 'grab';
             }
         });
@@ -638,11 +896,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
         workspace.addEventListener('mousedown', startPanning); 
         
-        // Зум
-        workspace.addEventListener('wheel', handleZoom);
+        // Зум колесиком Мыши
+        workspace.addEventListener('wheel', handleZoom, { passive: false });
     }
 
-    // --- 8. ПЕРВИЧНАЯ ЗАГРУЗКА ---
-    setupEventListeners();
-    loadState(); 
+    // --- 9. ПЕРВИЧНАЯ ЗАГРУЗКА И ИНИЦИАЛИЗАЦИЯ ---
+    function initialize() {
+        setupEventListeners();
+        
+        let profileList = getProfileList();
+        if (profileList.length === 0) {
+            profileList = ['Default'];
+            saveProfileList(profileList);
+        }
+        
+        updateProfileSelect(profileList[0]);
+        loadState(profileList[0]);
+    }
+    
+    initialize(); 
 });
