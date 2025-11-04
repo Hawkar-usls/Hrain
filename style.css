@@ -7,7 +7,7 @@ body, html {
     font-family: Arial, sans-serif;
     background-color: #1e1e1e; /* Темный фон */
     color: #e0e0e0;
-    user-select: none; /* Запрет выделения текста, чтобы не мешать DRAG & DROP */
+    user-select: none; 
 }
 
 #controls {
@@ -40,16 +40,14 @@ body, html {
 
 h1 {
     margin: 0;
-    font-size: 1.5em;
-    display: flex;
-    align-items: center;
+    font-size: 1.5em; /* Простой стиль, не мешающий символу облака */
 }
 
 /* --- СТИЛИ ДЛЯ ПРОФИЛЕЙ --- */
 #profile-controls {
     display: flex;
     align-items: center;
-    gap: 10px; /* Расстояние между элементами */
+    gap: 10px; 
 }
 
 #profile-select {
@@ -86,7 +84,7 @@ h1 {
 /* --- РАБОЧЕЕ ПРОСТРАНСТВО --- */
 #workspace {
     position: absolute;
-    top: 60px; /* Отступ от панели управления */
+    top: 60px; 
     width: 100%;
     height: calc(100% - 60px);
     overflow: hidden;
