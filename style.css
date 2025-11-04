@@ -90,7 +90,7 @@ h1 {
     width: 100%;
     height: calc(100% - 60px);
     overflow: hidden;
-    /* Важно для мобильных: предотвращает конфликт скролла */
+    /* КРИТИЧЕСКИ ВАЖНО для Touch-событий! */
     touch-action: none; 
 }
 
@@ -101,7 +101,6 @@ h1 {
     width: 5000px; 
     height: 5000px; 
     transform-origin: 0 0;
-    /* Плавный переход при зуме */
     transition: transform 0.05s ease-out; 
 }
 
@@ -120,7 +119,7 @@ h1 {
     cursor: grab;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     transition: box-shadow 0.1s;
-    transform-origin: center center; /* Точка масштабирования */
+    transform-origin: center center; 
 }
 
 .node:hover {
@@ -166,7 +165,7 @@ h1 {
     height: 3px; 
     background-color: #888;
     transform-origin: 0 50%;
-    pointer-events: all; /* Позволяет кликать по линии */
+    pointer-events: all; 
     cursor: pointer;
     z-index: 1; 
     transition: background-color 0.2s;
@@ -189,11 +188,11 @@ h1 {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     z-index: 1000;
     transition: transform 0.3s ease-out;
-    transform: translateX(350px); /* Скрыто по умолчанию */
+    transform: translateX(350px); 
 }
 
 #hints.visible {
-    transform: translateX(0); /* Показать */
+    transform: translateX(0); 
 }
 
 #hints h3 {
