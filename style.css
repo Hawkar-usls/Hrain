@@ -18,7 +18,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px; /* Уменьшен padding */
+    padding: 10px 15px;
     background-color: #1e1e1e;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
     z-index: 2000;
@@ -26,8 +26,14 @@ body, html {
 
 #profile-controls {
     display: flex;
-    gap: 8px; /* Уменьшен gap */
+    gap: 8px;
     align-items: center;
+}
+
+#hrain-title {
+    color: #00bfff;
+    margin: 0;
+    font-size: 1.5em;
 }
 
 .control-select, .green-button, .red-button, .aux-button {
@@ -35,14 +41,27 @@ body, html {
     border-radius: 4px;
     border: none;
     cursor: pointer;
-    font-size: 0.9em; /* Уменьшен шрифт */
+    font-size: 0.9em;
 }
 
-/* ... (Стили для кнопок - оставляем как было) ... */
+.green-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.red-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.aux-button {
+    background-color: #555;
+    color: white;
+}
 
 #workspace {
     position: absolute;
-    top: 50px; /* Уменьшен отступ сверху */
+    top: 50px;
     width: 100%;
     height: calc(100% - 50px);
     overflow: hidden;
@@ -50,14 +69,120 @@ body, html {
     position: relative; 
 }
 
-/* ... (Стили для #canvas, #link-layer, .link-path - оставляем как было) ... */
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+}
 
-/* --- АДАПТИВНОСТЬ: Боковые панели (Скрыты по умолчанию) --- */
+#link-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* SVG не должен перехватывать клики для зума/панорамирования */
+    transform-origin: 0 0;
+    z-index: 50; 
+}
+
+.link-path {
+    stroke: #888;
+    stroke-width: 3;
+    fill: none;
+    transition: stroke-width 0.2s, stroke 0.2s; 
+    pointer-events: auto; /* Должен быть кликабельным для удаления */
+    cursor: pointer;
+}
+
+.link-path.highlighted {
+    stroke: #ffbb00;
+    stroke-width: 5;
+}
+
+.node {
+    position: absolute;
+    width: 200px;
+    height: 50px;
+    background-color: #333;
+    border: 2px solid #555;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
+    touch-action: none; 
+    transform-origin: center center;
+}
+
+.node input {
+    width: 80%;
+    background: transparent;
+    border: none;
+    color: white;
+    text-align: center;
+    font-size: 1.1em;
+    outline: none;
+}
+
+.node.selected {
+    border-color: #00bfff;
+    box-shadow: 0 0 15px rgba(0, 191, 255, 0.8);
+}
+
+.node:active {
+    cursor: grabbing;
+}
+
+.scale-button {
+    position: absolute;
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 2px 5px;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 0.9em;
+    border-radius: 3px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.scale-button:hover {
+    opacity: 1;
+}
+
+/* --- СФЕРЫ ВЛИЯНИЯ (Цвет границы) --- */
+.node.influence-importance-high {
+    border-color: #ffcc00; /* Желтый - высокая важность */
+}
+.node.influence-importance-medium {
+    border-color: #ff9933; /* Оранжевый - средняя важность */
+}
+.node.influence-importance-low {
+    border-color: #ccc; /* Светлый - низкая важность */
+}
+
+/* --- ТИП ВЛИЯНИЯ (Цвет фона) --- */
+.node.flow-color {
+    background-color: #004d99; /* Синий/Голубой */
+}
+.node.emotion-color {
+    background-color: #8b0000; /* Темно-красный */
+}
+
+
+/* --- АДАПТИВНОСТЬ: Боковые панели --- */
 
 .side-panel {
     position: fixed;
     top: 50px; 
-    width: 280px; /* Немного шире для ПК */
+    width: 280px; 
     height: calc(100% - 50px); 
     background-color: #1e1e1e;
     padding: 15px;
@@ -70,7 +195,7 @@ body, html {
 #analytics {
     right: 0;
     border-left: 1px solid #333;
-    transform: translateX(100%); /* Скрыто справа */
+    transform: translateX(100%); /* Скрыто справа по умолчанию */
 }
 
 #analytics.visible {
@@ -80,15 +205,11 @@ body, html {
 #hints {
     left: 0;
     border-right: 1px solid #333;
-    transform: translateX(-100%); /* Скрыто слева */
+    transform: translateX(-100%); /* Скрыто слева по умолчанию */
 }
 
 #hints.visible {
     transform: translateX(0);
-}
-
-#hints ul {
-    padding-left: 20px;
 }
 
 /* --- Мобильная Адаптация (Small Screens) --- */
@@ -111,7 +232,6 @@ body, html {
         top: 50px;
     }
 
-    /* Уменьшаем размер кнопок и шрифтов */
     .green-button, .red-button {
         font-size: 0.8em; 
         padding: 4px 8px;
@@ -121,21 +241,13 @@ body, html {
         padding: 8px 10px;
     }
 
-    /* Узлы тоже меньше */
     .node {
         width: 180px; 
         height: 40px; 
     }
 }
-/* Скрываем кнопки переключения панелей на широких экранах, где панели видны всегда */
+/* ПК Адаптация (Wide Screens) */
 @media (min-width: 901px) {
-    #analytics.visible, #hints.visible {
-        /* На широких экранах панели закреплены и видны */
-        transform: translateX(0);
-    }
-
-    /* На широких экранах панели Аналитики и Подсказок всегда видны,
-       поэтому они должны "отталкивать" рабочую область */
     #analytics, #hints {
         transform: translateX(0) !important;
         position: fixed;
@@ -151,5 +263,3 @@ body, html {
         display: none; /* Скрываем кнопки на ПК */
     }
 }
-
-/* ... (Стили для узлов и влияния - оставляем как было) ... */
