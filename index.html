@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HRAIN - Визуализация Мышления v2.0</title>
+    <title>HRAIN - Визуализация Мышления v2.1.1</title>
     
-    <link rel="stylesheet" href="style.css?v=2.1"> 
+    <link rel="stylesheet" href="style.css?v=2.1.1"> 
 </head>
 <body>
 
     <div id="controls">
-        <h1 id="hrain-title">🧠 HRAIN v2.0</h1> 
+        <h1 id="hrain-title">🧠 HRAIN v2.1.1</h1> 
         
         <div id="profile-controls">
             <label for="profile-select">Профиль:</label>
-            <select id="profile-select" style="min-width: 150px; padding: 8px;"></select>
+            <select id="profile-select" class="control-select"></select>
             
             <button id="saveProfileButton" class="green-button">Сохранить</button>
             <button id="newProfileButton" class="green-button">Новый</button>
-            <button id="deleteProfileButton" class="red-button">Удалить профиль</button>
+            <button id="deleteProfileButton" class="red-button">Удалить</button>
         </div>
 
-        <button id="toggleHintsButton">Подсказки</button>
+        <div id="aux-controls">
+            <button id="toggleHintsButton" class="aux-button">Подсказки</button>
+            <button id="toggleAnalyticsButton" class="aux-button">📊 Аналитика</button>
+        </div>
     </div>
 
     <div id="workspace">
@@ -31,20 +34,19 @@
             </div>
     </div>
 
-    <div id="hints">
-        <h3>Подсказки HRAIN (ПК/Тачскрин)</h3>
+    <div id="hints" class="side-panel">
+        <h3>Подсказки HRAIN</h3>
         <ul>
-            <li>**Создать узел:** Двойной клик мышью / Двойной быстрый тап пальцем.</li>
-            <li>**Переместить холст:** Удерживайте ПРОБЕЛ и тяните мышью / Тяните одним пальцем по пустому месту.</li>
-            <li>**Переместить узел:** Тяните мышью / Тяните одним пальцем по узлу.</li>
-            <li>**Зум/Масштаб:** Колесико мыши / Жест "Pinch-to-Zoom".</li>
-            <li>**Соединить узлы:** Одинарный клик на первом узле, затем на втором.</li>
-            <li>**Удалить узел/связь:** Двойной клик мышью / Двойной тап пальцем по узлу/связи.</li>
-            <li>**Размер узла:** Кнопки **+** и **-** возле узла.</li>
+            <li>**Создать узел:** Двойной клик/тап по фону.</li>
+            <li>**Переместить холст:** Удерживайте ПРОБЕЛ / Тяните 1 пальцем по фону.</li>
+            <li>**Переместить узел:** Тяните мышью/пальцем по узлу.</li>
+            <li>**Зум/Масштаб:** Колесико / Pinch-to-Zoom.</li>
+            <li>**Соединить:** Одинарный клик на 1-м, затем на 2-м узле.</li>
+            <li>**Удалить узел/связь:** Двойной клик/тап по элементу.</li>
         </ul>
     </div>
     
-    <div id="analytics">
+    <div id="analytics" class="side-panel">
         <h3>📊 Аналитика Карты</h3>
         <p>Узлов на карте: <span id="node-count">0</span></p>
         <p>Всего связей: <span id="link-count">0</span></p>
@@ -57,14 +59,13 @@
         
         <hr>
         <h4>Тип Влияния:</h4>
-        <select id="influence-type-select">
+        <select id="influence-type-select" class="control-select">
             <option value="importance">Важность (Желтый)</option>
             <option value="flow">Поток (Голубой)</option>
             <option value="emotion">Эмоция (Красный)</option>
-            <option value="custom">Пользовательский (Зеленый)</option>
         </select>
     </div>
 
-    <script src="script.js?v=2.1"></script>
+    <script src="script.js?v=2.1.1"></script>
 </body>
 </html>
