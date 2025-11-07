@@ -1,232 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Open Source MindMap (jsMind)</title>
+    <title>HRAIN - Визуализация Мышления v2.1.1</title>
     
-    <style type="text/css">
-        /* Базовые стили для jsMind */
-        jmind {
-            display: block;
-            width: 100%;
-            height: 100%;
-            border: 1px solid #ccc;
-            background-color: #f4f4f4;
-            overflow: auto;
-        }
-        
-        /* Стили для тела документа */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #333;
-        }
-        
-        /* Стили для панели управления */
-        #toolbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 10px;
-            background: #1e1e1e;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            color: white;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        /* Стили для области карты */
-        #map_container {
-            width: 100%;
-            height: calc(100% - 60px); /* Отступ от панели */
-            margin-top: 60px;
-        }
-
-        /* Общие стили для кнопок */
-        #toolbar button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-
-        #toolbar button:hover {
-            background-color: #0056b3;
-        }
-        
-    </style>
-    
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmind@0.5.10/dist/jsmind.min.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.5.10/style/jsmind.css" />
-
+    <link rel="stylesheet" href="style.css?v=2.1.1"> 
 </head>
 <body>
 
-    <div id="toolbar">
-        <button onclick="add_node_button()">+ Добавить Узел</button>
-        <button onclick="remove_node_button()">- Удалить Узел</button>
-        <button onclick="expand_node_button()">Развернуть/Свернуть</button>
+    <div id="controls">
+        <h1 id="hrain-title">🧠 HRAIN v2.1.1</h1> 
         
-        <button onclick="export_json_button()">💾 Сохранить (JSON)</button>
-        <button onclick="import_json_button()">📥 Загрузить (JSON)</button>
-        <button onclick="export_png_button()">🖼️ Экспорт (PNG)</button>
+        <div id="profile-controls">
+            <label for="profile-select">Профиль:</label>
+            <select id="profile-select" class="control-select"></select>
+            
+            <button id="saveProfileButton" class="green-button">Сохранить</button>
+            <button id="newProfileButton" class="green-button">Новый</button>
+            <button id="deleteProfileButton" class="red-button">Удалить</button>
+        </div>
+
+        <div id="aux-controls">
+            <button id="toggleHintsButton" class="aux-button">Подсказки</button>
+            <button id="toggleAnalyticsButton" class="aux-button">📊 Аналитика</button>
+        </div>
     </div>
 
-    <div id="map_container">
-        <jmind id="jsmind_container"></jmind>
+    <div id="workspace">
+        <svg id="link-layer"></svg> 
+        
+        <div id="canvas">
+            </div>
     </div>
 
-    <script type="text/javascript">
+    <div id="hints" class="side-panel">
+        <h3>Подсказки HRAIN</h3>
+        <ul>
+            <li>**Создать узел:** Двойной клик/тап по фону.</li>
+            <li>**Переместить холст:** Удерживайте ПРОБЕЛ / Тяните 1 пальцем по фону.</li>
+            <li>**Переместить узел:** Тяните мышью/пальцем по узлу.</li>
+            <li>**Зум/Масштаб:** Колесико / Pinch-to-Zoom.</li>
+            <li>**Соединить:** Одинарный клик на 1-м, затем на 2-м узле.</li>
+            <li>**Удалить узел/связь:** Двойной клик/тап по элементу.</li>
+        </ul>
+    </div>
+    
+    <div id="analytics" class="side-panel">
+        <h3>📊 Аналитика Карты</h3>
+        <p>Узлов на карте: <span id="node-count">0</span></p>
+        <p>Всего связей: <span id="link-count">0</span></p>
         
-        // --- 3. Инициализация и настройка ---
+        <hr>
+        <h4>Доминирующие Узлы (Топ-3):</h4>
+        <ul id="dominant-nodes">
+            <li>Нет данных</li>
+        </ul>
         
-        var jm = null;
-        
-        function load_jsmind() {
-            var mind = {
-                "meta": {
-                    "name": "Open Source Карта Мышления",
-                    "author": "HRAIN Open Source",
-                    "version": "v1.0"
-                },
-                "format": "node_array",
-                "data": [
-                    // Корень карты
-                    {"id": "root", "isroot": true, "topic": "Центральная Идея 💡"},
-                    
-                    // Ветви
-                    {"id": "branch1", "parentid": "root", "topic": "Функционал"},
-                    {"id": "branch2", "parentid": "root", "topic": "Визуализация", "expanded": false},
-                    
-                    // Под-ветви
-                    {"id": "func1", "parentid": "branch1", "topic": "Сохранение (Экспорт JSON)"},
-                    {"id": "func2", "parentid": "branch1", "topic": "Удаление узлов и связей"},
-                    {"id": "vis1", "parentid": "branch2", "topic": "Кривые линии Безье"},
-                    {"id": "vis2", "parentid": "branch2", "topic": "Цветовое кодирование"},
-                ]
-            };
-            
-            var options = {
-                container: 'jsmind_container',
-                editable: true, // Позволяет двойной клик для редактирования
-                theme: 'primary',
-                view: {
-                    engine: 'svg' // Используем SVG для высокого качества
-                }
-            }
-            
-            jm = jsMind.show(options, mind);
-        }
+        <hr>
+        <h4>Тип Влияния:</h4>
+        <select id="influence-type-select" class="control-select">
+            <option value="importance">Важность (Желтый)</option>
+            <option value="flow">Поток (Голубой)</option>
+            <option value="emotion">Эмоция (Красный)</option>
+        </select>
+    </div>
 
-        // --- 4. Функции управления ---
-        
-        function add_node_button() {
-            var selected_node = jm.get_selected_node();
-            if (!selected_node) {
-                alert('Пожалуйста, выберите родительский узел.');
-                return;
-            }
-            var nodeid = jsMind.util.uuid.newid();
-            var topic = prompt('Введите текст для нового узла:', 'Новый Узел');
-            if (topic) {
-                jm.add_node(selected_node, nodeid, topic, null, null, null, null, 'right');
-            }
-        }
-
-        function remove_node_button() {
-            var selected_node = jm.get_selected_node();
-            if (!selected_node) {
-                alert('Пожалуйста, выберите узел для удаления.');
-                return;
-            }
-            if (selected_node.isroot) {
-                alert('Корневой узел удалить нельзя.');
-                return;
-            }
-            jm.remove_node(selected_node.id);
-        }
-
-        function expand_node_button() {
-            var selected_node = jm.get_selected_node();
-            if (!selected_node) {
-                alert('Пожалуйста, выберите узел.');
-                return;
-            }
-            jm.toggle_node(selected_node.id);
-        }
-        
-        // --- 5. Функции Импорта / Экспорта (Резервное копирование) ---
-
-        // Сохранение в JSON-файл
-        function export_json_button() {
-            if (!jm) return;
-            var mind_data = jm.get_data('json');
-            var mind_json = jsMind.util.json.stringify(mind_data);
-
-            var blob = new Blob([mind_json], {type: "application/json;charset=utf-8"});
-            var filename = 'mindmap_' + new Date().getTime() + '.json';
-            
-            // Используем стандартный подход для скачивания файла
-            var a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-        
-        // Загрузка из JSON-файла
-        function import_json_button() {
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = function(e) {
-                var file = e.target.files[0];
-                if (!file) return;
-
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        var mind_json = e.target.result;
-                        var mind_data = jsMind.util.json.parse(mind_json);
-                        
-                        // Создаем новую карту из загруженных данных
-                        jm.show({
-                             container: 'jsmind_container',
-                             editable: true, 
-                             theme: 'primary',
-                             view: { engine: 'svg' }
-                        }, mind_data);
-                        alert('Карта успешно загружена!');
-                    } catch (error) {
-                        alert('Ошибка при загрузке или парсинге файла JSON: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
-
-        // Экспорт в PNG (использует встроенный функционал jsMind)
-        function export_png_button() {
-            if (!jm) return;
-            jm.shoot('png'); 
-        }
-
-        // Запуск при загрузке страницы
-        load_jsmind();
-
-    </script>
+    <script src="script.js?v=2.1.2"></script>
 </body>
 </html>
