@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     
-    // --- 1. АВАРИЙНАЯ ПРОВЕРКА LOCAL STORAGE (Удалены try/catch для диагностики!) ---
+    // --- 1. АВАРИЙНАЯ ПРОВЕРКА LOCAL STORAGE ---
     function isLocalStorageAvailable() {
         try {
             const testKey = 'test_hrain_storage';
@@ -9,15 +9,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
             return true;
         } catch (e) {
             console.error("Local Storage IS BLOCKED:", e);
-            alert("КРИТИЧЕСКАЯ ОШИБКА: Local Storage недоступен. Профили, карты и настройки НЕ БУДУТ сохраняться. Проверьте: 1. Вы не в режиме 'Приватный просмотр'. 2. В настройках разрешено сохранение данных/cookies.");
+            alert("КРИТИЧЕСКАЯ ОШИБКА: Local Storage недоступен. Профили, карты и настройки НЕ БУДУТ сохраняться. Проверьте: 1. Вы не в режиме 'Приватный просмотр'. 2. В настройках разрешено сохранение данных.");
             return false;
         }
     }
     
     // Проверяем доступность при старте
-    if (!isLocalStorageAvailable()) {
-        // Продолжаем, но с ошибкой.
-    }
+    const localStorageActive = isLocalStorageAvailable();
     
     // --- 2. КОНСТАНТЫ И ЭЛЕМЕНТЫ ИНТЕРФЕЙСА ---
     const PROFILE_LIST_KEY = 'hrain_profiles_list'; 
@@ -64,27 +62,27 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let lastTapWorkspace = 0;
     let lastTapNode = 0;
     let lastTapLink = 0;
-    // ---
 
-    // --- 4. ФУНКЦИИ ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ (Без try/catch!) ---
-    // Если Local Storage заблокирован, эти функции будут бросать ошибку,
-    // которую мы обработаем в консоли и в isLocalStorageAvailable.
+    // --- 4. ФУНКЦИИ ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ (БЕЗ try/catch для диагностики) ---
     function safeGetItem(key) {
+         if (!localStorageActive) return null;
          return localStorage.getItem(key); 
     }
     function safeSetItem(key, value) {
+         if (!localStorageActive) return false;
          localStorage.setItem(key, value); 
          return true;
     }
 
-    // --- 5. УПРАВЛЕНИЕ ПРОФИЛЯМИ С ПАРОЛЕМ ---
+    // --- 5. УПРАВЛЕНИЕ ПРОФИЛЯМИ ---
     
     function getProfileList() {
+        if (!localStorageActive) return [{ name: 'Default', password: null }];
+
         const listJson = safeGetItem(PROFILE_LIST_KEY);
         let list;
         
         try {
-             // Пытаемся распарсить, если не можем, список пуст.
              list = listJson ? JSON.parse(listJson) : [];
              if (!Array.isArray(list)) list = []; 
         } catch (e) {
@@ -99,7 +97,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
             return item;
         });
 
-        // Гарантируем "Default"
         if (!convertedList.find(p => p.name === 'Default')) {
             convertedList.unshift({ name: 'Default', password: null });
         }
@@ -111,10 +108,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function saveProfileList(list) {
-        if (isLocalStorageAvailable()) {
+        if (localStorageActive) {
             safeSetItem(PROFILE_LIST_KEY, JSON.stringify(list));
-        } else {
-            console.warn("Saving profile list skipped due to blocked Local Storage.");
         }
     }
 
@@ -133,23 +128,104 @@ document.addEventListener('DOMContentLoaded', (event) => {
             profileSelect.appendChild(option);
         });
         
-        // Кнопка удаления доступна, только если профилей > 1
-        document.getElementById('deleteProfileButton').disabled = profileList.length <= 1;
+        const deleteButton = document.getElementById('deleteProfileButton');
+        if (deleteButton) {
+             deleteButton.disabled = !localStorageActive || profileList.length <= 1;
+        }
     }
     
-    // ... (handleNewProfile, handleDeleteProfile, handleProfileChange - Логика не меняется) ...
     function handleNewProfile() { 
-         // ... (Проверка имени, логика пароля) ...
-         const newProfile = { name: newName, password: password };
-         profileList.push(newProfile);
-         saveProfileList(profileList); // ЭТО ДОЛЖНО РАБОТАТЬ
-         safeSetItem(newName, JSON.stringify(createInitialState())); // ЭТО ДОЛЖНО РАБОТАТЬ
-         updateProfileSelect(newName);
-         loadState(newName);
+        if (!localStorageActive) { alert("Сохранение заблокировано. Невозможно создать новый профиль."); return; }
+        // ... (логика создания нового профиля) ...
+        let newName = prompt("Введите имя нового профиля:", `Карта ${getProfileList().length + 1}`);
+        if (!newName || !newName.trim()) return;
+        newName = newName.trim();
+        
+        const profileList = getProfileList();
+        if (profileList.find(p => p.name === newName)) {
+            alert(`Профиль с именем "${newName}" уже существует.`);
+            return;
+        }
+        
+        let password = null;
+        if (confirm("Вы хотите установить 4-значный пароль для этого профиля?")) {
+            let passInput;
+            while (true) {
+                passInput = prompt("Введите 4-значный ЧИСЛОВОЙ пароль:");
+                if (passInput === null) break; 
+                if (/^\d{4}$/.test(passInput)) { password = passInput; break; } 
+                else { alert("Некорректный формат. Пароль должен состоять ровно из 4 цифр."); }
+            }
+        }
+        
+        const newProfile = { name: newName, password: password };
+        profileList.push(newProfile);
+        saveProfileList(profileList);
+        
+        safeSetItem(newName, JSON.stringify(createInitialState())); 
+        
+        updateProfileSelect(newName);
+        loadState(newName);
     }
     
-    function handleDeleteProfile() { /* ... */ }
-    function handleProfileChange() { /* ... */ }
+    function handleDeleteProfile() { 
+        if (!localStorageActive) { alert("Сохранение заблокировано. Невозможно удалить профиль."); return; }
+        // ... (логика удаления профиля) ...
+        const currentName = CURRENT_PROFILE_KEY;
+        const profileList = getProfileList();
+        
+        if (profileList.length <= 1 || currentName === 'Default') {
+            alert("Основной профиль 'Default' удалить нельзя.");
+            return;
+        }
+        
+        const profileToDelete = profileList.find(p => p.name === currentName);
+        if (profileToDelete && profileToDelete.password) {
+             let passInput = prompt(`Для удаления профиля "${currentName}" введите пароль:`);
+             if (passInput !== profileToDelete.password) {
+                 alert("Неверный пароль. Удаление отменено.");
+                 return;
+             }
+        }
+
+        if (!confirm(`Вы уверены, что хотите удалить профиль "${currentName}"?`)) return;
+
+        localStorage.removeItem(currentName);
+        
+        const newProfileList = profileList.filter(p => p.name !== currentName);
+        saveProfileList(newProfileList);
+
+        const newActiveName = newProfileList[0].name;
+        updateProfileSelect(newActiveName);
+        loadState(newActiveName);
+    }
+    
+    function handleProfileChange() {
+        if (!localStorageActive) { profileSelect.value = CURRENT_PROFILE_KEY; return; }
+        // ... (логика смены профиля) ...
+        const newProfileName = profileSelect.value;
+        const profileList = getProfileList();
+        const selectedProfile = profileList.find(p => p.name === newProfileName);
+        
+        if (!selectedProfile) {
+             profileSelect.value = CURRENT_PROFILE_KEY; 
+             return;
+        }
+        
+        if (selectedProfile.password) {
+            let passInput = prompt(`Профиль "${newProfileName}" защищен паролем. Введите 4-значный пароль:`);
+            
+            if (passInput !== selectedProfile.password) {
+                alert("Неверный пароль. Переключение отменено.");
+                profileSelect.value = CURRENT_PROFILE_KEY; 
+                return;
+            }
+        }
+
+        if (newProfileName !== CURRENT_PROFILE_KEY) {
+            loadState(newProfileName);
+        }
+    }
 
 
     // --- 6. ФУНКЦИИ СОХРАНЕНИЯ/ЗАГРУЗКИ ---
@@ -160,7 +236,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
     
     function createInitialState() {
-        return { nodes: {}, links: [], zoom: 1, panX: 0, panY: 0, influenceType: 'importance' };
+        return { 
+            nodes: {}, 
+            links: [], 
+            zoom: 1, 
+            panX: 0, 
+            panY: 0,
+            influenceType: 'importance' 
+        };
     }
     
     function clearWorkspace() {
@@ -171,14 +254,49 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
     
     function saveState() {
-        if (!isLocalStorageAvailable()) {
+        if (!localStorageActive) {
             console.warn("Saving map state skipped due to blocked Local Storage.");
             return;
         }
-        // ... (логика сохранения узлов, связей и настроек) ...
+        // ... (логика сбора данных) ...
         const stateKey = CURRENT_PROFILE_KEY;
-        // ... (сбор данных) ...
-        const state = { /* ... */ };
+        
+        const nodesData = {};
+        document.querySelectorAll('.node').forEach(nodeEl => {
+            const id = nodeEl.id;
+            nodesData[id] = {
+                id: id,
+                text: nodeEl.querySelector('input').value,
+                x: nodeEl.offsetLeft,
+                y: nodeEl.offsetTop,
+                connections: JSON.parse(nodeEl.dataset.connections),
+                nodeScale: parseFloat(nodeEl.dataset.scale || 1),
+                influenceColor: nodeEl.dataset.influenceColor || 'default' 
+            };
+        });
+
+        const linksData = [];
+        const uniqueLinks = new Set();
+        document.querySelectorAll('.node').forEach(nodeEl => {
+            const sourceId = nodeEl.id;
+            const targetIds = JSON.parse(nodeEl.dataset.connections);
+            targetIds.forEach(targetId => {
+                const linkKey = [sourceId, targetId].sort().join('-');
+                if (!uniqueLinks.has(linkKey)) {
+                    linksData.push({ source: sourceId, target: targetId });
+                    uniqueLinks.add(linkKey);
+                }
+            });
+        });
+
+        const state = {
+            nodes: nodesData,
+            links: linksData,
+            zoom: currentZoom,
+            panX: panX, 
+            panY: panY,
+            influenceType: influenceTypeSelect.value 
+        };
         safeSetItem(stateKey, JSON.stringify(state));
     }
     
@@ -190,13 +308,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const savedState = safeGetItem(CURRENT_PROFILE_KEY);
         
         if (!savedState) {
-            // Если профиль пуст или не найден, создаем начальное состояние
             const initialState = createInitialState();
-            
-            // Пытаемся сохранить, но даже если не удастся (Local Storage заблокирован),
-            // мы продолжим работать с текущим состоянием в памяти.
             safeSetItem(CURRENT_PROFILE_KEY, JSON.stringify(initialState)); 
-
             currentZoom = 1; panX = 0; panY = 0; applyTransform();
             createNode(50, 50, `Карта: ${CURRENT_PROFILE_KEY}`); 
             influenceTypeSelect.value = initialState.influenceType;
@@ -206,31 +319,67 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         const state = JSON.parse(savedState);
         
-        // ... (логика загрузки узлов, связей, зума) ...
+        influenceTypeSelect.value = state.influenceType || 'importance'; 
+        
+        let maxId = 0;
+        Object.values(state.nodes || {}).forEach(data => {
+            createNode(data.x, data.y, data.text, data.id, data.connections, data.nodeScale, data.influenceColor); 
+            const currentIdNum = parseInt(data.id.replace('node-', ''));
+            if (currentIdNum > maxId) maxId = currentIdNum;
+        });
+
+        nodeIdCounter = maxId;
+
+        (state.links || []).forEach(link => {
+            if (document.getElementById(link.source) && document.getElementById(link.target)) {
+                createLink(link.source, link.target);
+            }
+        });
+        
+        currentZoom = state.zoom || 1;
+        panX = state.panX || 0;
+        panY = state.panY || 0;
         
         applyTransform();
         updateProfileSelect(CURRENT_PROFILE_KEY);
         
-        // ... (обновление влияния и аналитики) ...
+        document.querySelectorAll('.node').forEach(node => {
+            updateNodeInfluence(node.id);
+        });
+        updateAnalytics();
     }
     
-    // --- 7. ФУНКЦИИ УЗЛОВ, СВЯЗЕЙ И ВЛИЯНИЯ ---
-    // ... (Логика не меняется) ...
-
-    // --- 8. ФУНКЦИИ АНАЛИТИКИ И СТАТИСТИКИ ---
-    // ... (Логика не меняется) ...
-
-
-    // --- 9. УНИФИЦИРОВАННЫЕ ФУНКЦИИ ВЗАИМОДЕЙСТВИЯ (МЫШЬ И ТАЧ) ---
-    // ... (Логика не меняется) ...
-
+    // --- 7. ФУНКЦИИ УЗЛОВ, СВЯЗЕЙ И ВЛИЯНИЯ (Оставлены для полноты) ---
+    // ... (updateNodeInfluence, createNode, updateNodeSize и т.д. - должны быть здесь) ...
+    // ... (Из-за ограничения на длину ответа, я не могу включить весь код, но вы можете найти его в предыдущем ответе) ...
+    
     // --- 10. ИНИЦИАЛИЗАЦИЯ И РЕГИСТРАЦИЯ ВСЕХ СОБЫТИЙ ---
 
     function setupEventListeners() {
         
-        // ... (События Профилей) ...
+        const saveButton = document.getElementById('saveProfileButton');
+        const newButton = document.getElementById('newProfileButton');
+        const deleteButton = document.getElementById('deleteProfileButton');
 
-        // НОВЫЕ ОБРАБОТЧИКИ ПАНЕЛЕЙ
+        if (localStorageActive) {
+            document.getElementById('profile-select').addEventListener('change', handleProfileChange);
+            newButton.addEventListener('click', handleNewProfile);
+            deleteButton.addEventListener('click', handleDeleteProfile);
+            saveButton.addEventListener('click', saveState);
+        } else {
+            // Отключение кнопок, если хранилище заблокировано
+            saveButton.disabled = true;
+            newButton.disabled = true;
+            deleteButton.disabled = true;
+            document.getElementById('profile-select').disabled = true;
+        }
+
+        influenceTypeSelect.addEventListener('change', () => {
+            document.querySelectorAll('.node').forEach(node => updateNodeInfluence(node.id));
+            if (localStorageActive) saveState();
+        });
+        
+        // Обработчики панелей (Подсказки и Аналитика)
         toggleHintsButton.addEventListener('click', () => {
             hintsPanel.classList.toggle('visible');
             if (window.innerWidth <= 900 && hintsPanel.classList.contains('visible')) {
@@ -245,34 +394,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }
         });
         
-        // ... (Остальные обработчики) ...
+        // ... (Остальные обработчики для drag, zoom, dblclick и т.д. - должны быть здесь) ...
     }
 
-    // --- 11. ПЕРВИЧНАЯ ЗАГРУЗКА (КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ЗАГРУЗКИ ПРОФИЛЕЙ) ---
+    // --- 11. ПЕРВИЧНАЯ ЗАГРУЗКА ---
     function initialize() {
-        
-        // КРИТИЧЕСКИЙ ШАГ: Если Local Storage заблокирован, мы не сможем работать с профилями.
-        if (!isLocalStorageAvailable()) {
-            // В этом случае, мы загружаем пустое начальное состояние,
-            // но пользователь не сможет сохранить его или создать новый профиль.
-            setupEventListeners();
-            clearWorkspace();
-            const initialState = createInitialState();
-            currentZoom = 1; panX = 0; panY = 0; applyTransform();
-            createNode(50, 50, `Карта: ${CURRENT_PROFILE_KEY} (СОХРАНЕНИЕ ВЫКЛЮЧЕНО!)`);
-            updateProfileSelect(CURRENT_PROFILE_KEY);
-            document.getElementById('saveProfileButton').disabled = true;
-            document.getElementById('newProfileButton').disabled = true;
-            document.getElementById('deleteProfileButton').disabled = true;
-            return; // Завершаем инициализацию
-        }
-        
-        // Если Local Storage доступен:
         setupEventListeners();
         
-        // Принудительная инициализация списка профилей, если он пуст/поврежден
         let profileList = getProfileList();
-        if (profileList.length === 0) {
+        
+        if (localStorageActive && profileList.length === 0) {
             const defaultProfile = { name: 'Default', password: null };
             profileList.push(defaultProfile);
             saveProfileList(profileList);
@@ -285,5 +416,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
         loadState(activeProfileName);
     }
     
+    // Здесь должен быть полный код всех функций узлов, связей, drag&drop, touch, zoom и т.д. 
+    // Поскольку он слишком длинный, чтобы поместиться, я даю вам каркас с ключевыми исправлениями.
+    // Если вы хотите полный рабочий файл script.js, пожалуйста, сообщите. 
+    
+    // КОНСТРУКЦИЯ: ИНИЦИАЛИЗАЦИЯ ЗАПУСКАЕТСЯ ЗДЕСЬ
     initialize(); 
 });
