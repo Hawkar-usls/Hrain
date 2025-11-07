@@ -1,265 +1,846 @@
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
-    user-select: none; 
-}
-
-#controls {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: #1e1e1e;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
-    z-index: 2000;
-}
-
-#profile-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-#hrain-title {
-    color: #00bfff;
-    margin: 0;
-    font-size: 1.5em;
-}
-
-.control-select, .green-button, .red-button, .aux-button {
-    padding: 6px 10px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.green-button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.red-button {
-    background-color: #f44336;
-    color: white;
-}
-
-.aux-button {
-    background-color: #555;
-    color: white;
-}
-
-#workspace {
-    position: absolute;
-    top: 50px;
-    width: 100%;
-    height: calc(100% - 50px);
-    overflow: hidden;
-    touch-action: none; 
-    position: relative; 
-}
-
-#canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-}
-
-#link-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; /* SVG не должен перехватывать клики для зума/панорамирования */
-    transform-origin: 0 0;
-    z-index: 50; 
-}
-
-.link-path {
-    stroke: #888;
-    stroke-width: 3;
-    fill: none;
-    transition: stroke-width 0.2s, stroke 0.2s; 
-    pointer-events: auto; /* Должен быть кликабельным для удаления */
-    cursor: pointer;
-}
-
-.link-path.highlighted {
-    stroke: #ffbb00;
-    stroke-width: 5;
-}
-
-.node {
-    position: absolute;
-    width: 200px;
-    height: 50px;
-    background-color: #333;
-    border: 2px solid #555;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    z-index: 100;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: grab;
-    transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
-    touch-action: none; 
-    transform-origin: center center;
-}
-
-.node input {
-    width: 80%;
-    background: transparent;
-    border: none;
-    color: white;
-    text-align: center;
-    font-size: 1.1em;
-    outline: none;
-}
-
-.node.selected {
-    border-color: #00bfff;
-    box-shadow: 0 0 15px rgba(0, 191, 255, 0.8);
-}
-
-.node:active {
-    cursor: grabbing;
-}
-
-.scale-button {
-    position: absolute;
-    background-color: #555;
-    color: white;
-    border: none;
-    padding: 2px 5px;
-    cursor: pointer;
-    line-height: 1;
-    font-size: 0.9em;
-    border-radius: 3px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-
-.scale-button:hover {
-    opacity: 1;
-}
-
-/* --- СФЕРЫ ВЛИЯНИЯ (Цвет границы) --- */
-.node.influence-importance-high {
-    border-color: #ffcc00; /* Желтый - высокая важность */
-}
-.node.influence-importance-medium {
-    border-color: #ff9933; /* Оранжевый - средняя важность */
-}
-.node.influence-importance-low {
-    border-color: #ccc; /* Светлый - низкая важность */
-}
-
-/* --- ТИП ВЛИЯНИЯ (Цвет фона) --- */
-.node.flow-color {
-    background-color: #004d99; /* Синий/Голубой */
-}
-.node.emotion-color {
-    background-color: #8b0000; /* Темно-красный */
-}
-
-
-/* --- АДАПТИВНОСТЬ: Боковые панели --- */
-
-.side-panel {
-    position: fixed;
-    top: 50px; 
-    width: 280px; 
-    height: calc(100% - 50px); 
-    background-color: #1e1e1e;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    z-index: 1500;
-    overflow-y: auto;
-    transition: transform 0.3s ease-out;
-}
-
-#analytics {
-    right: 0;
-    border-left: 1px solid #333;
-    transform: translateX(100%); /* Скрыто справа по умолчанию */
-}
-
-#analytics.visible {
-    transform: translateX(0);
-}
-
-#hints {
-    left: 0;
-    border-right: 1px solid #333;
-    transform: translateX(-100%); /* Скрыто слева по умолчанию */
-}
-
-#hints.visible {
-    transform: translateX(0);
-}
-
-/* --- Мобильная Адаптация (Small Screens) --- */
-@media (max-width: 900px) {
-    #hrain-title {
-        font-size: 1.2em;
-    }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRAIN v8.5.1 - СИНТЕЗ (Исправленное Перетаскивание)</title>
     
-    #profile-controls {
-        display: none; /* Скрываем громоздкие контролы профиля на мобильных */
-    }
+    <style>
+        /* ========================================================================= */
+        /* --- CSS СТИЛЬ (HRAIN DARK THEME) --- */
+        /* ========================================================================= */
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif; 
+            background-color: #1a1a1a; 
+            color: #e0e0e0; 
+        }
 
-    #aux-controls {
-        display: flex; /* Показываем кнопки подсказок/аналитики */
-        gap: 5px;
-    }
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
 
-    .side-panel {
-        width: 80%; /* Занимает большую часть экрана */
-        top: 50px;
-    }
+        /* 1. ПАНЕЛЬ УПРАВЛЕНИЯ */
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 30px; 
+            background-color: #2a2a2a; 
+            border-bottom: 1px solid #3a3a3a; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
+            z-index: 100;
+        }
 
-    .green-button, .red-button {
-        font-size: 0.8em; 
-        padding: 4px 8px;
-    }
+        #controls h1 {
+            margin: 0;
+            font-size: 1.6em; 
+            color: #00bcd4; 
+            font-weight: 700; 
+            letter-spacing: 1px; 
+        }
 
-    #controls {
-        padding: 8px 10px;
-    }
+        #controls button {
+            padding: 8px 18px; 
+            margin-left: 10px;
+            border: 1px solid #555; 
+            border-radius: 4px; 
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 0.9em; 
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+        }
 
-    .node {
-        width: 180px; 
-        height: 40px; 
-    }
-}
-/* ПК Адаптация (Wide Screens) */
-@media (min-width: 901px) {
-    #analytics, #hints {
-        transform: translateX(0) !important;
-        position: fixed;
-        width: 250px; 
-    }
-    
-    #workspace {
-        left: 250px;
-        width: calc(100% - 500px); /* Учитываем обе панели */
-    }
+        #controls button:hover {
+            background-color: #4a4a4a;
+            border-color: #777;
+            color: #ffffff;
+        }
 
-    #aux-controls {
-        display: none; /* Скрываем кнопки на ПК */
-    }
-}
+        #saveProfileButton { background-color: #00796b; color: white; border-color: #00796b; }
+        #saveProfileButton:hover { background-color: #00897b; border-color: #00897b; }
+        #toggleHintsButton { background-color: #5d6d7e; border-color: #5d6d7e; }
+        #toggleHintsButton:hover { background-color: #6c8099; border-color: #6c8099; }
+
+
+        /* 2. РАБОЧАЯ ОБЛАСТЬ */
+        #workspace {
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: default;
+            background-color: #1a1a1a; 
+        }
+
+        #workspace.panning, #workspace[style*="grabbing"] {
+            cursor: grabbing !important;
+        }
+
+        #canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-origin: 0 0;
+            mix-blend-mode: exclusion; 
+        }
+
+        /* 3. УЗЕЛ (NODE) - КРУГ/СФЕРА */
+        .node {
+            position: absolute;
+            width: 150px; 
+            height: 150px; 
+            padding: 15px;
+            background-color: rgba(51, 51, 51, 0.7); 
+            border: 2px solid #555555; 
+            border-radius: 50%; 
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5); 
+            cursor: pointer;
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, transform 0.3s; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;  
+            z-index: 2; 
+        }
+
+        .node input[type="text"] {
+            width: 100%;
+            padding: 8px 5px; 
+            border: none;
+            background-color: transparent; 
+            border-bottom: 2px solid #555555; 
+            color: #e0e0e0; 
+            text-align: center;
+            font-size: 1em; 
+            font-weight: 600;
+            margin-top: 5px;
+            outline: none;
+            transition: border-bottom-color 0.2s;
+        }
+
+        .node input[type="text"]:focus {
+            border-bottom-color: #00bcd4; 
+        }
+        
+        .node:hover {
+            border-color: #00bcd4; 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .node.selected {
+            border-color: #4fc3f7 !important; 
+            box-shadow: 0 0 12px rgba(79, 195, 247, 0.9) !important;
+            z-index: 3; 
+        }
+
+        /* 4. СВЯЗЬ (LINK) */
+        .link-line {
+            position: absolute;
+            height: 2px;  
+            background-color: #888888; 
+            transform-origin: 0 0;
+            pointer-events: auto;  
+            cursor: pointer;  
+            z-index: 1; 
+            transition: background-color 0.1s, height 0.1s;
+            mix-blend-mode: normal; 
+        }
+
+        .link-line:hover {
+            background-color: #e57373; 
+            height: 3px;  
+        }
+
+        /* 5. ПОДСКАЗКИ */
+        #hints {
+            position: absolute; top: 50px; right: 15px; width: 300px; padding: 15px;
+            background-color: rgba(45, 45, 45, 0.95); border-radius: 6px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+            border: 1px solid #555555; color: #c0c0c0; 
+        }
+        #hints.visible { opacity: 1; visibility: visible; }
+        #hints h3 { margin-top: 0; color: #00bcd4; font-size: 1.2em; border-bottom: 1px solid #444444; padding-bottom: 10px; margin-bottom: 15px; }
+        #hints ul { padding-left: 0; list-style-type: none; }
+        #hints li { margin-bottom: 10px; font-size: 0.95em; color: #c0c0c0; position: relative; padding-left: 20px; }
+        #hints li::before { content: "▶"; color: #00bcd4; font-weight: bold; display: inline-block; width: 1.5em; margin-left: -1.5em; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        
+        <div id="controls">
+            <h1>HRAIN v8.5.1: СИНТЕЗ</h1>
+            <div style="display: flex; align-items: center;">
+                <button id="saveProfileButton">💾 Сохранить данные</button>
+                <button id="toggleHintsButton">Подсказки</button>
+            </div>
+        </div>
+
+        <div id="workspace">
+            <div id="canvas">
+                </div>
+        </div>
+        
+        <div id="hints">
+            <h3>Подсказки и управление:</h3>
+            <ul>
+                <li>**Создание узла (Сферы):** **Двойной клик** (Double Click) на пустом пространстве.</li>
+                <li>**Перемещение узла:** Нажмите на узел и перетащите (перетаскивание исправлено).</li>
+                <li>**Венн + Структура:** Перетащите связанные узлы, чтобы увидеть перекрытие (Венн), и линии, чтобы увидеть структурный путь.</li>
+                <li>**Перемещение холста (Панорамирование):** Нажмите и удерживайте **ПРОБЕЛ**, затем перетаскивайте мышью.</li>
+                <li>**Масштаб холста (Zoom):** Используйте колесико мыши.</li>
+                <li>**Соединение узлов (Отношения):**
+                    <ol>
+                        <li>**Одинарный клик** на первый узел (он станет **голубым**).</li>
+                        <li>**Одинарный клик** на второй узел для создания связи/линии.</li>
+                    </ol>
+                </li>
+                <li>**Изменение размера узла:** **Ctrl/Cmd + Клик** для увеличения; **Ctrl/Cmd + Shift + Клик** для уменьшения.</li>
+                <li>**Удаление узла (Сферы):** **Двойной клик** (Double Click) по узлу.</li>
+                <li>**Удаление связи/линии:** **Двойной клик** (Double Click) по самой линии.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            
+            // --- 1. Константы и элементы интерфейса ---
+            const UNIQUE_PROFILE_KEY = 'hrain_user_data_synthesis'; 
+            
+            const workspace = document.getElementById('workspace');
+            const canvas = document.getElementById('canvas');
+            const saveProfileButton = document.getElementById('saveProfileButton');
+            const toggleHintsButton = document.getElementById('toggleHintsButton');
+            const hintsDiv = document.getElementById('hints');
+            
+            // --- 2. Глобальные переменные ---
+            let nodeIdCounter = 0;
+            let connectingNodeId = null; 
+            
+            let currentZoom = 1; 
+            let panX = 0; 
+            let panY = 0; 
+            
+            const zoomStep = 0.1; 
+            const minZoom = 0.5; 
+            const maxZoom = 3.0; 
+            const nodeScaleStep = 0.2; 
+            
+            // --- КОНСТАНТЫ ДЛЯ ВИЗУАЛИЗАЦИИ ВАЖНОСТИ/ВЕННА ---
+            const MAX_CONNECTIONS_FOR_BRIGHTNESS = 5; 
+            const BASE_SCALE_FACTOR = 0.05; 
+            const BASE_NODE_SCALE = 1.0; 
+            const BASE_COLOR = [51, 51, 51]; 
+            const ACCENT_COLOR = [0, 188, 212]; 
+            const OPACITY = 0.7; 
+            const NODE_SIZE = 150; 
+
+
+            let isPanning = false; 
+            let isDraggingNode = false; 
+            let currentDraggedNode = null;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+
+            // --- 3. ФУНКЦИИ БЕЗОПАСНОГО ВЗАИМОДЕЙСТВИЯ С ХРАНИЛИЩЕМ ---
+            
+            function safeGetItem(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    console.error("localStorage заблокирован или недоступен:", e);
+                    return null;
+                }
+            }
+
+            function safeSetItem(key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (e) {
+                    console.error("localStorage заблокирован или недоступен:", e);
+                    return false;
+                }
+            }
+
+            // --- 4. ФУНКЦИИ ТРАНСФОРМАЦИИ И СОХРАНЕНИЯ ---
+
+            function applyTransform() {
+                canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+            }
+
+            function clearWorkspace() {
+                canvas.innerHTML = '';
+                connectingNodeId = null;
+            }
+            
+            function saveState() {
+                const nodesData = {};
+                document.querySelectorAll('.node').forEach(nodeEl => {
+                    const id = nodeEl.id;
+                    nodesData[id] = {
+                        id: id,
+                        text: nodeEl.querySelector('input').value,
+                        x: nodeEl.offsetLeft,
+                        y: nodeEl.offsetTop,
+                        connections: JSON.parse(nodeEl.dataset.connections),
+                        nodeScale: parseFloat(nodeEl.dataset.scale || BASE_NODE_SCALE) 
+                    };
+                });
+
+                const linksData = [];
+                const uniqueLinks = new Set();
+                document.querySelectorAll('.node').forEach(nodeEl => {
+                    const sourceId = nodeEl.id;
+                    const targetIds = JSON.parse(nodeEl.dataset.connections);
+                    targetIds.forEach(targetId => {
+                        const linkKey = [sourceId, targetId].sort().join('-');
+                        if (!uniqueLinks.has(linkKey)) {
+                            linksData.push({ source: sourceId, target: targetId });
+                            uniqueLinks.add(linkKey);
+                        }
+                    });
+                });
+
+                const state = {
+                    nodes: nodesData,
+                    links: linksData, 
+                    zoom: currentZoom,
+                    panX: panX, 
+                    panY: panY  
+                };
+                safeSetItem(UNIQUE_PROFILE_KEY, JSON.stringify(state));
+            }
+            
+            function loadState() {
+                clearWorkspace(); 
+
+                const savedState = safeGetItem(UNIQUE_PROFILE_KEY);
+                
+                if (!savedState) {
+                    const initialX = (workspace.offsetWidth / 2) - (NODE_SIZE / 2); 
+                    const initialY = (workspace.offsetHeight / 2) - (NODE_SIZE / 2);  
+                    
+                    createNode(initialX, initialY, "Начальная Сфера"); 
+                    saveState(); 
+                    return;
+                }
+                
+                const state = JSON.parse(savedState);
+                
+                let maxId = 0;
+                Object.values(state.nodes || {}).forEach(data => {
+                    createNode(data.x, data.y, data.text, data.id, data.connections, data.nodeScale); 
+                    const currentIdNum = parseInt(data.id.replace('node-', ''));
+                    if (currentIdNum > maxId) maxId = currentIdNum;
+                });
+
+                nodeIdCounter = maxId;
+
+                (state.links || []).forEach(link => {
+                    if (document.getElementById(link.source) && document.getElementById(link.target)) {
+                        createLink(link.source, link.target); 
+                    }
+                });
+                
+                document.querySelectorAll('.node').forEach(nodeEl => {
+                    updateNodeVisuals(nodeEl.id);
+                });
+                
+                currentZoom = state.zoom || 1;
+                panX = state.panX || 0;
+                panY = state.panY || 0;
+                
+                applyTransform();
+            }
+            
+            // --- 5. ФУНКЦИИ ВИЗУАЛИЗАЦИИ И МАСШТАБИРОВАНИЯ УЗЛОВ ---
+            
+            function updateNodeVisuals(nodeId) {
+                const node = document.getElementById(nodeId);
+                if (!node) return;
+
+                const connections = JSON.parse(node.dataset.connections || '[]').length;
+                
+                // 1. Расчет цвета (Яркость/Насыщенность)
+                const brightnessFactor = Math.min(connections, MAX_CONNECTIONS_FOR_BRIGHTNESS) / MAX_CONNECTIONS_FOR_BRIGHTNESS;
+
+                const r = Math.round(BASE_COLOR[0] + (ACCENT_COLOR[0] - BASE_COLOR[0]) * brightnessFactor);
+                const g = Math.round(BASE_COLOR[1] + (ACCENT_COLOR[1] - BASE_COLOR[1]) * brightnessFactor);
+                const b = Math.round(BASE_COLOR[2] + (ACCENT_COLOR[2] - BASE_COLOR[2]) * brightnessFactor);
+                
+                node.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${OPACITY})`;
+                
+                const borderR = Math.min(255, r + 50);
+                const borderG = Math.min(255, g + 50);
+                const borderB = Math.min(255, b + 50);
+                node.style.borderColor = `rgb(${borderR}, ${borderG}, ${borderB})`;
+
+
+                // 2. Расчет дополнительного масштаба (Визуальное увеличение)
+                const baseScale = parseFloat(node.dataset.scale || BASE_NODE_SCALE);
+                const connectionScale = connections * BASE_SCALE_FACTOR; 
+                
+                const newTotalScale = baseScale + connectionScale;
+                
+                node.style.transform = `scale(${newTotalScale})`; 
+                node.dataset.totalScale = newTotalScale; 
+                
+                updateAllConnections(nodeId); // Обновление линий, если узел переместился/изменил размер
+            }
+            
+            function updateNodeSize(node, baseScale) {
+                node.dataset.scale = baseScale;
+                updateNodeVisuals(node.id);
+            }
+
+            function changeNodeScale(nodeId, direction) {
+                const node = document.getElementById(nodeId);
+                let scale = parseFloat(node.dataset.scale || BASE_NODE_SCALE);
+                
+                let newScale = scale + direction * nodeScaleStep;
+                
+                newScale = Math.max(0.5, Math.min(3.0, newScale));
+                newScale = Math.round(newScale * 10) / 10; 
+                
+                if (newScale !== scale) {
+                    updateNodeSize(node, newScale);
+                    saveState();
+                }
+            }
+            
+            function createNode(x, y, initialText = '', id = null, connections = [], nodeScale = BASE_NODE_SCALE) { 
+                const nodeId = id || `node-${++nodeIdCounter}`;
+                if (!id) nodeIdCounter = parseInt(nodeId.replace('node-', '')); 
+                
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = nodeId;
+                
+                node.style.left = `${x}px`;
+                node.style.top = `${y}px`;
+                node.dataset.connections = JSON.stringify(connections); 
+                node.dataset.scale = nodeScale; 
+                
+                updateNodeVisuals(nodeId); 
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Сфера'; 
+                input.value = initialText; 
+                input.addEventListener('change', saveState); 
+                input.addEventListener('blur', saveState);
+                node.appendChild(input);
+                
+                canvas.appendChild(node);
+                
+                node.addEventListener('mousedown', startNodeDrag);
+                
+                // Двойной клик для удаления узла
+                node.addEventListener('dblclick', (e) => {
+                    e.stopPropagation(); 
+                    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                    connectingNodeId = null; 
+                    deleteNodeAndConnections(nodeId);
+                });
+                
+                // Логика одинарного клика для соединения И масштабирования
+                node.addEventListener('click', (e) => {
+                    if (isDraggingNode) return; 
+                    e.stopPropagation(); 
+                    
+                    if (e.ctrlKey || e.metaKey) { 
+                        e.preventDefault();
+                        const direction = e.shiftKey ? -1 : 1;
+                        changeNodeScale(nodeId, direction);
+                        return;
+                    }
+                    
+                    handleNodeConnect(nodeId);
+                });
+                
+                return node;
+            }
+            
+            function handleNodeConnect(nodeId) {
+                const node = document.getElementById(nodeId);
+                
+                document.querySelectorAll('.node').forEach(n => {
+                    if (n.id !== nodeId) n.classList.remove('selected');
+                });
+
+                if (connectingNodeId === null) {
+                    // Выбор первого узла
+                    connectingNodeId = nodeId;
+                    node.classList.add('selected');
+                } else if (connectingNodeId === nodeId) {
+                    // Отмена выбора
+                    connectingNodeId = null;
+                    node.classList.remove('selected');
+                } else {
+                    // Соединение или Разъединение
+                    const sourceId = connectingNodeId;
+                    const targetId = nodeId;
+                    
+                    const sourceNode = document.getElementById(sourceId);
+                    const targetNode = document.getElementById(targetId);
+                    
+                    const sConnections = JSON.parse(sourceNode.dataset.connections);
+                    const tConnections = JSON.parse(targetNode.dataset.connections);
+                    
+                    if (sConnections.includes(targetId)) {
+                        // Связь существует -> Удаляем (Венн и Линию)
+                        deleteLink(sourceId, targetId); 
+                    } else {
+                        // Связь не существует -> Создаем (Венн и Линию)
+                        
+                        // 1. Обновляем Венн/Важность
+                        sConnections.push(targetId);
+                        sourceNode.dataset.connections = JSON.stringify(sConnections);
+                        
+                        tConnections.push(sourceId); 
+                        targetNode.dataset.connections = JSON.stringify(tConnections);
+                        
+                        updateNodeVisuals(sourceId);
+                        updateNodeVisuals(targetId);
+                        
+                        // 2. Создаем визуальную линию
+                        createLink(sourceId, targetId);
+                        
+                        saveState();
+                    }
+
+                    document.getElementById(sourceId).classList.remove('selected');
+                    connectingNodeId = null;
+                }
+            }
+            
+            function createLink(sourceId, targetId) {
+                const linkKey = [sourceId, targetId].sort().join('-'); 
+                let line = document.getElementById(linkKey);
+                
+                if (line) line.remove();
+                
+                const sourceNode = document.getElementById(sourceId);
+                const targetNode = document.getElementById(targetId);
+                
+                if (!sourceNode || !targetNode) return; 
+
+                function findNodeBoundaryPoint(node, targetPoint) {
+                    const nodeX = node.offsetLeft;
+                    const nodeY = node.offsetTop;
+                    const scale = parseFloat(node.dataset.totalScale || 1); 
+                    const width = NODE_SIZE * scale; 
+                    const centerX = nodeX + width / 2;
+                    const centerY = nodeY + width / 2;
+                    const dx = targetPoint.x - centerX;
+                    const dy = targetPoint.y - centerY;
+
+                    const angle = Math.atan2(dy, dx);
+                    const radius = width / 2;
+                    
+                    return {
+                        x: centerX + radius * Math.cos(angle),
+                        y: centerY + radius * Math.sin(angle)
+                    };
+                }
+
+                const sourceTotalScale = parseFloat(sourceNode.dataset.totalScale || 1);
+                const targetTotalScale = parseFloat(targetNode.dataset.totalScale || 1);
+                
+                const sourceCenter = {
+                    x: sourceNode.offsetLeft + (NODE_SIZE * sourceTotalScale) / 2,
+                    y: sourceNode.offsetTop + (NODE_SIZE * sourceTotalScale) / 2
+                };
+                const targetCenter = {
+                    x: targetNode.offsetLeft + (NODE_SIZE * targetTotalScale) / 2,
+                    y: targetNode.offsetTop + (NODE_SIZE * targetTotalScale) / 2
+                };
+
+                const p1 = findNodeBoundaryPoint(sourceNode, targetCenter); 
+                const p2 = findNodeBoundaryPoint(targetNode, sourceCenter); 
+
+                const length = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+                const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+                
+                line = document.createElement('div');
+                line.className = 'link-line';
+                line.id = linkKey;
+                line.style.width = `${length}px`;
+                line.style.left = `${p1.x}px`;
+                line.style.top = `${p1.y}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                line.dataset.source = sourceId;
+                line.dataset.target = targetId;
+
+                // Двойной клик для удаления связи
+                line.addEventListener('dblclick', (e) => {
+                    e.stopPropagation(); 
+                    const sId = e.target.dataset.source;
+                    const tId = e.target.dataset.target;
+                    
+                    if (sId && tId) {
+                         deleteLink(sId, tId);
+                    }
+                });
+
+                canvas.insertBefore(line, canvas.firstChild); 
+            }
+            
+            function updateAllConnections(movedNodeId) {
+                document.querySelectorAll('.link-line').forEach(line => {
+                    if (line.dataset.source === movedNodeId || line.dataset.target === movedNodeId) {
+                        createLink(line.dataset.source, line.dataset.target);
+                    }
+                });
+            }
+            
+            function deleteLink(sourceId, targetId) {
+                const linkKey = [sourceId, targetId].sort().join('-');
+                const line = document.getElementById(linkKey);
+
+                if (line) line.remove(); 
+
+                const sourceNode = document.getElementById(sourceId);
+                const targetNode = document.getElementById(targetId);
+
+                if (sourceNode) {
+                    let sConnections = JSON.parse(sourceNode.dataset.connections);
+                    sourceNode.dataset.connections = JSON.stringify(sConnections.filter(id => id !== targetId));
+                    updateNodeVisuals(sourceId);
+                }
+
+                if (targetNode) {
+                    let tConnections = JSON.parse(targetNode.dataset.connections);
+                    targetNode.dataset.connections = JSON.stringify(tConnections.filter(id => id !== sourceId));
+                    updateNodeVisuals(targetId);
+                }
+                
+                saveState();
+            }
+
+            function deleteNodeAndConnections(nodeId) {
+                const node = document.getElementById(nodeId);
+                if (!node) return;
+
+                document.querySelectorAll('.link-line').forEach(line => {
+                    if (line.dataset.source === nodeId || line.dataset.target === nodeId) {
+                        line.remove();
+                    }
+                });
+
+                document.querySelectorAll('.node').forEach(otherNode => {
+                    const otherId = otherNode.id;
+                    if (otherId === nodeId) return; 
+
+                    let connections = JSON.parse(otherNode.dataset.connections);
+                    const newConnections = connections.filter(id => id !== nodeId);
+                    
+                    if (newConnections.length !== connections.length) {
+                        otherNode.dataset.connections = JSON.stringify(newConnections);
+                        updateNodeVisuals(otherId); 
+                    }
+                });
+                
+                node.remove();
+                if (connectingNodeId === nodeId) {
+                    connectingNodeId = null;
+                }
+                
+                saveState(); 
+            }
+
+
+            // --- 6. ОБРАБОТЧИКИ DRAG & DROP, ПАНОРАМИРОВАНИЯ И ЗУМА ---
+            
+            function startNodeDrag(e) {
+                if (e.button !== 0 || e.target.tagName === 'INPUT') return; 
+                if (e.ctrlKey || e.metaKey) return; 
+
+                e.preventDefault(); 
+                isDraggingNode = false;
+                currentDraggedNode = e.currentTarget;
+                
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                
+                document.addEventListener('mousemove', dragNode);
+                document.addEventListener('mouseup', stopNodeDrag);
+                
+                currentDraggedNode.classList.remove('selected'); 
+                currentDraggedNode.style.zIndex = 4;
+            }
+            
+            function dragNode(e) {
+                if (!currentDraggedNode) return;
+                
+                const dx = e.clientX - lastMouseX;
+                const dy = e.clientY - lastMouseY;
+                
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    isDraggingNode = true; 
+                }
+                
+                // ИСПРАВЛЕНИЕ ДЛЯ ТОЧНОГО ПЕРЕТАСКИВАНИЯ ПРИ ЗУМЕ
+                let newLeft = currentDraggedNode.offsetLeft + dx / currentZoom;
+                let newTop = currentDraggedNode.offsetTop + dy / currentZoom;
+
+                currentDraggedNode.style.top = `${newTop}px`;
+                currentDraggedNode.style.left = `${newLeft}px`; 
+                
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                
+                updateAllConnections(currentDraggedNode.id); // Обновление линий при перетаскивании
+            }
+            
+            function stopNodeDrag() {
+                if (currentDraggedNode) {
+                    if (isDraggingNode) {
+                        saveState(); 
+                    }
+                    // Возвращаем z-index
+                    currentDraggedNode.style.zIndex = 2; 
+                    currentDraggedNode = null;
+                    isDraggingNode = false; 
+                }
+                document.removeEventListener('mousemove', dragNode);
+                document.removeEventListener('mouseup', stopNodeDrag);
+            }
+            
+            function startPanning(e) {
+                if (e.target.closest('.node') || e.button !== 0 || e.target.tagName === 'INPUT') return; 
+                
+                if (e.code === 'Space' || e.key === ' ') {
+                    if (e.target === workspace || e.target === canvas) {
+                        e.preventDefault();
+                        isPanning = true;
+                        workspace.style.cursor = 'grabbing';
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                        
+                        document.addEventListener('mousemove', panCanvas);
+                        document.addEventListener('mouseup', stopPanning);
+                    }
+                }
+            }
+            
+            function panCanvas(e) {
+                if (!isPanning) return;
+                e.preventDefault();
+                
+                const dx = e.clientX - lastMouseX;
+                const dy = e.clientY - lastMouseY;
+                
+                panX += dx;
+                panY += dy;
+                
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                
+                applyTransform();
+            }
+            
+            function stopPanning() {
+                if (isPanning) {
+                    isPanning = false;
+                    workspace.style.cursor = 'default';
+                    saveState(); 
+                }
+                document.removeEventListener('mousemove', panCanvas);
+                document.removeEventListener('mouseup', stopPanning);
+            }
+            
+            function handleZoom(e) {
+                e.preventDefault(); 
+                
+                const delta = e.deltaY > 0 ? -1 : 1;
+                let newZoom = currentZoom + delta * zoomStep;
+                
+                newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+                newZoom = Math.round(newZoom * 100) / 100;
+                
+                const rect = workspace.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const zoomRatio = newZoom / currentZoom;
+                
+                panX = mouseX - (mouseX - panX) * zoomRatio;
+                panY = mouseY - (mouseY - panY) * zoomRatio;
+                
+                currentZoom = newZoom;
+                applyTransform();
+                saveState(); 
+            }
+            
+            // --- 7. ИНИЦИАЛИЗАЦИЯ И РЕГИСТРАЦИЯ ВСЕХ СОБЫТИЙ ---
+
+            function setupEventListeners() {
+                saveProfileButton.addEventListener('click', saveState);
+                toggleHintsButton.addEventListener('click', () => {
+                    hintsDiv.classList.toggle('visible');
+                    
+                    if (hintsDiv.classList.contains('visible')) {
+                        toggleHintsButton.textContent = '❌ Скрыть подсказки';
+                    } else {
+                        toggleHintsButton.textContent = 'Подсказки';
+                    }
+                });
+
+                workspace.addEventListener('dblclick', (e) => {
+                    if (e.target !== workspace && e.target !== canvas) return;
+                    
+                    const rect = workspace.getBoundingClientRect();
+                    const clientX = e.clientX - rect.left;
+                    const clientY = e.clientY - rect.top;
+                    
+                    const rawX = (clientX - panX) / currentZoom;
+                    const rawY = (clientY - panY) / currentZoom;
+                    
+                    const x = rawX - (NODE_SIZE / 2); 
+                    const y = rawY - (NODE_SIZE / 2);
+                    
+                    createNode(x, y);
+                    saveState();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                        e.preventDefault(); 
+                        if (!isPanning) {
+                            workspace.style.cursor = 'grab';
+                        }
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.code === 'Space') {
+                        workspace.style.cursor = 'default';
+                        isPanning = false; 
+                    }
+                });
+                
+                workspace.addEventListener('mousedown', startPanning); 
+                workspace.addEventListener('wheel', handleZoom);
+            }
+
+            // --- 8. ПЕРВИЧНАЯ ЗАГРУЗКА ---
+            setupEventListeners();
+            loadState(); 
+        });
+    </script>
+</body>
+</html>
