@@ -1,4 +1,4 @@
-/* --- HRAIN v6.7 CSS (Context Menu) --- */
+/* --- HRAIN v6.8 CSS (Cyrillic Fix) --- */
 :root {
     --bg-main: #f4f7f6;
     --bg-canvas: #ffffff;
@@ -153,17 +153,16 @@ button:active { transform: scale(0.95); }
 #context-menu-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1999;
-    /* Фон не нужен, клик и так будет его закрывать */
 }
 #context-menu {
-    position: fixed; /* ВАЖНО: fixed, а не absolute */
+    position: fixed;
     background: white;
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.15);
     border: 1px solid var(--border-color);
     z-index: 2000;
     padding: 8px;
-    width: 150px; /* Фикс. ширина */
+    width: 150px;
 }
 #context-menu-buttons {
     display: flex;
@@ -175,7 +174,7 @@ button:active { transform: scale(0.95); }
     background: var(--aux-btn);
     color: var(--text-light);
     text-align: left;
-    margin: 0; /* Сброс */
+    margin: 0;
 }
 .context-btn:hover { background: var(--aux-btn-hover); }
 .context-btn.red {
@@ -192,7 +191,7 @@ button:active { transform: scale(0.95); }
     border-top: 1px solid var(--border-color);
 }
 .color-swatch {
-    width: 25px; /* Чуть меньше */
+    width: 25px;
     height: 25px;
     border-radius: 50%;
     margin: 4px;
