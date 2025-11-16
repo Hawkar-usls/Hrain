@@ -149,7 +149,7 @@ button:active { transform: scale(0.95); }
 #pin-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
 #pin-buttons button { width: 48%; }
 
-/* --- 5. НОВОЕ v6.7: Контекстное Меню --- */
+/* --- 5. v6.7: Контекстное Меню --- */
 #context-menu-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1999;
