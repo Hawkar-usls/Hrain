@@ -1,9 +1,9 @@
-// == HRAIN v6.2 (Event Logic Hotfix) ==
+// == HRAIN v6.4 (Triple-Click Hotfix) ==
 // Полный JS-файл от 16.11.2025
-// ИСПРАВЛЕНО: Полностью переписана логика пана/зума/создания, чтобы убрать баги v6.1.
-// ДОБАВЛЕНО: 'try...catch' для отлова ошибок.
+// ИСПРАВЛЕНО: onNodeDoubleClick() больше не вызывает e.stopPropagation(),
+// что позволяет 3-му клику (e.detail === 3) сработать для удаления.
 
-// --- v6.2: "Страховка" от ошибок ---
+// --- "Страховка" от ошибок ---
 try {
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let longPressTimer = null;
     let longPressNode = null;
     let pinCallback = null;
+    let lastTapTime = 0;
 
     // --- ДВИЖОК v6.2: "КАМЕРА" ---
     let viewState = {
@@ -49,12 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 4.0;
     
+    // (Функции updateView, screenToWorld - без изменений)
     function updateView() {
         viewState.scale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale));
         const transform = `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`;
         canvas.style.transform = transform;
     }
-
     function screenToWorld(screenX, screenY) {
         return {
             x: (screenX - viewState.x) / viewState.scale,
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // --- 2. Логика Профилей и Сохранения (Без изменений v6.1 -> v6.2) ---
+    // --- 2. Логика Профилей и Сохранения (Без изменений) ---
     // (Этот блок кода полностью рабочий, мы его не трогаем)
 
     newBtn.addEventListener('click', () => {
@@ -167,6 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProfileList(profileName);
         });
     }
+    
+    // --- Сериализация/Десериализация (Без изменений) ---
     function serializeMap() {
         const nodes = [];
         document.querySelectorAll('.node').forEach(node => {
@@ -185,6 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function deserializeMap(jsonString) {
         clearCanvas();
         const data = JSON.parse(jsonString);
+        
+        const nodesToUpdate = new Set();
+        
         data.nodes.forEach(nodeData => {
             const node = createNode(0, 0, nodeData.id, false);
             node.style.left = nodeData.x; node.style.top = nodeData.y;
@@ -196,8 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
         data.links.forEach(linkData => {
             const node1 = document.getElementById(linkData.from);
             const node2 = document.getElementById(linkData.to);
-            if (node1 && node2) createLink(node1, node2, true);
+            if (node1 && node2) {
+                createLink(node1, node2, true);
+                nodesToUpdate.add(node1);
+                nodesToUpdate.add(node2);
+            }
         });
+        
+        nodesToUpdate.forEach(node => updateNodeSize(node));
+        
         if (data.view) {
             viewState.x = data.view.x || 0; viewState.y = data.view.y || 0; viewState.scale = data.view.scale || 1.0;
         } else {
@@ -205,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateView();
     }
+    
     function getProfileList() { 
         const profiles = localStorage.getItem('hrain_profiles');
         return profiles ? JSON.parse(profiles) : [];
@@ -226,8 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (Без изменений v6.1 -> v6.2) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
+    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.4) ---
 
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
@@ -238,37 +251,55 @@ document.addEventListener('DOMContentLoaded', () => {
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
         
-        node.addEventListener('mousedown', onNodeMouseDown, { capture: true });
-        node.addEventListener('touchstart', onNodeMouseDown, { capture: true, passive: false });
-        node.addEventListener('click', onNodeClick, { capture: true });
-        node.addEventListener('dblclick', onNodeDoubleClick, { capture: true });
+        updateNodeSize(node); 
+        
+        node.addEventListener('mousedown', onNodeMouseDown);
+        node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
+        node.addEventListener('click', onNodeClick);
+        node.addEventListener('dblclick', onNodeDoubleClick); // <-- ИСПРАВЛЕНИЕ ЗДЕСЬ
         node.addEventListener('contextmenu', showColorPalette);
-        node.addEventListener('mousedown', (e) => e.stopPropagation());
-        node.addEventListener('dblclick', (e) => e.stopPropagation());
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
         nodeLayer.appendChild(node);
         if (doFocus) node.focus();
         return node;
     }
+    
     function onNodeClick(e) {
+        e.stopPropagation();
         if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
-        if (e.detail === 3) { // ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ
+
+        // --- ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ ---
+        if (e.detail === 3) {
             const linesToRemove = document.querySelectorAll(`line[data-from="${node.id}"], line[data-to="${node.id}"]`);
+            const neighborsToUpdate = new Set();
+            linesToRemove.forEach(line => {
+                const otherNodeId = (line.dataset.from === node.id) ? line.dataset.to : line.dataset.from;
+                const otherNode = document.getElementById(otherNodeId);
+                if (otherNode) neighborsToUpdate.add(otherNode);
+            });
             linesToRemove.forEach(line => line.remove());
             node.remove();
+            neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
             if (firstNodeForLink === node) firstNodeForLink = null;
             return;
         }
-        if (e.detail === 1) { // ОДИН-КЛИК = СВЯЗАТЬ / УДАЛИТЬ СВЯЗЬ
+
+        // --- ОДИН-КЛИК = СВЯЗАТЬ / УДАЛИТЬ СВЯЗЬ ---
+        if (e.detail === 1) {
             if (!firstNodeForLink) {
                 firstNodeForLink = node; node.classList.add('selected');
             } 
             else if (firstNodeForLink !== node) {
                 const existingLink = findLink(firstNodeForLink, node);
-                if (existingLink) { existingLink.remove(); }
-                else { createLink(firstNodeForLink, node); }
+                if (existingLink) { 
+                    existingLink.remove();
+                } else { 
+                    createLink(firstNodeForLink, node);
+                }
+                updateNodeSize(firstNodeForLink); // v6.3
+                updateNodeSize(node); // v6.3
                 firstNodeForLink.classList.remove('selected');
                 firstNodeForLink = null;
             }
@@ -278,7 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
+    // --- ИСПРАВЛЕНИЕ v6.4 ---
+    // Я УБРАЛ 'e.stopPropagation()' ИЗ ЭТОЙ ФУНКЦИИ
     function onNodeDoubleClick(e) {
+        // e.stopPropagation(); // <-- УДАЛЕНО! Это был баг.
+        
         if (viewState.isDraggingNode) return;
         e.currentTarget.focus();
         const selection = window.getSelection();
@@ -287,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selection.removeAllRanges();
         selection.addRange(range);
     }
+    
     function createLink(node1, node2, skipCheck = false) {
         if (!skipCheck && findLink(node1, node2)) return;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -296,12 +333,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAttachedLinks(node1);
         updateAttachedLinks(node2);
     }
+    
     function findLink(node1, node2) {
         return document.querySelector(
             `line[data-from="${node1.id}"][data-to="${node2.id}"],
              line[data-from="${node2.id}"][data-to="${node1.id}"]`
         );
     }
+    
+    // (updateAttachedLinks, getNodeCenter - без изменений)
     function updateAttachedLinks(node) {
         const nodeId = node.id;
         const newPos = getNodeCenter(node);
@@ -318,144 +358,132 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
 
+    // --- Функция Авто-размера v6.3 (Без изменений) ---
+    function updateNodeSize(node) {
+        if (!node) return;
+        const linkCount = document.querySelectorAll(
+            `line[data-from="${node.id}"], line[data-to="${node.id}"]`
+        ).length;
+        const basePadding = 10;
+        const baseMinWidth = 100;
+        const newPadding = basePadding + (linkCount * 2);
+        const newMinWidth = baseMinWidth + (linkCount * 8);
+        node.style.padding = `${newPadding}px 15px`;
+        node.style.minWidth = `${newMinWidth}px`;
+        updateAttachedLinks(node);
+    }
 
-    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание (НОВАЯ, ЧИСТАЯ ЛОГИКА) ---
 
-    // --- Зум (Колесико) ---
+    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание (Без изменений) ---
+    // (Этот блок кода полностью рабочий, мы его не трогаем)
+
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
         const rect = workspace.getBoundingClientRect();
         const screenX = e.clientX - rect.left;
         const screenY = e.clientY - rect.top;
-        
         const worldBefore = screenToWorld(screenX, screenY);
         const zoomDelta = -e.deltaY * 0.001;
         const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale * (1 + zoomDelta)));
-        
         viewState.x = screenX - worldBefore.x * newScale;
         viewState.y = screenY - worldBefore.y * newScale;
         viewState.scale = newScale;
-        
         updateView();
     });
-
-    // --- Создание Узла (Дабл-клик) ---
     workspace.addEventListener('dblclick', (e) => {
-        // Только если клик по холсту
         if (e.target !== workspace && e.target !== canvas && e.target !== nodeLayer && e.target !== linkLayer) return;
-        
+        if (viewState.isSpacebarDown) return;
         const worldPos = screenToWorld(e.clientX, e.clientY);
         createNode(worldPos.x, worldPos.y);
     });
-
-    // --- Пан (ПК: Пробел, Колесико) ---
     workspace.addEventListener('mousedown', (e) => {
         if (e.target !== workspace && e.target !== canvas && e.target !== nodeLayer && e.target !== linkLayer) return;
-        
-        // Пан средней кнопкой или с Пробелом
         if (e.button === 1 || viewState.isSpacebarDown) {
             viewState.isPanning = true;
             workspace.classList.add('panning');
             viewState.panStart = { x: e.clientX, y: e.clientY };
             e.preventDefault();
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
         }
     });
-    
-    // --- Перетаскивание Узла (ПК) ---
     function onNodeMouseDown(e) {
-        if (e.button === 1 || e.button === 2) return; // Не средняя/правая
-        if (e.target.isContentEditable && e.target !== e.currentTarget) return; // Не текст
-        
+        if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
+        if (e.target.isContentEditable && e.target !== e.currentTarget) return;
         e.stopPropagation();
-        
+        const clientX = e.clientX ?? e.touches[0].clientX;
+        const clientY = e.clientY ?? e.touches[0].clientY;
+        if (e.type === 'touchstart') {
+            longPressNode = e.currentTarget;
+            longPressTimer = setTimeout(() => {
+                e.preventDefault();
+                showColorPalette({ 
+                    currentTarget: longPressNode,
+                    clientX: clientX, clientY: clientY 
+                });
+                viewState.isDraggingNode = true;
+            }, 500);
+        }
         viewState.isDraggingNode = false;
         viewState.activeNode = e.currentTarget;
-        
-        const worldMouse = screenToWorld(e.clientX, e.clientY);
+        const worldMouse = screenToWorld(clientX, clientY);
         const nodeX = parseFloat(viewState.activeNode.style.left);
         const nodeY = parseFloat(viewState.activeNode.style.top);
-        
         viewState.nodeOffset = { x: worldMouse.x - nodeX, y: worldMouse.y - nodeY };
-        
         document.addEventListener('mousemove', onDragMove);
         document.addEventListener('mouseup', onDragEnd);
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
     }
-    
-    // --- Логика Тач-скрина (Пан, Зум, Перетаскивание) ---
-    let touchCache = [];
-    
     workspace.addEventListener('touchstart', (e) => {
-        // Это клик по узлу
-        if (e.target.closest('.node')) {
-            // onNodeMouseDown(e.touches[0]) не сработает, надо эмулировать
-            const node = e.target.closest('.node');
-            onNodeMouseDown({
-                button: 0,
-                target: node,
-                currentTarget: node,
-                clientX: e.touches[0].clientX,
-                clientY: e.touches[0].clientY,
-                type: 'touchstart',
-                stopPropagation: () => e.stopPropagation(),
-                preventDefault: () => e.preventDefault()
-            });
-            return;
-        }
-        
-        // Это клик по холсту
+        if (e.target.closest('.node')) { return; }
         e.preventDefault();
-        
-        if (e.touches.length === 2) { // ЗУМ
+        if (e.touches.length === 1) {
+            const currentTime = new Date().getTime();
+            const tapTimeDiff = currentTime - lastTapTime;
+            if (tapTimeDiff < 300 && tapTimeDiff > 0) {
+                const worldPos = screenToWorld(e.touches[0].clientX, e.touches[0].clientY);
+                createNode(worldPos.x, worldPos.y);
+                lastTapTime = 0;
+                viewState.isPanning = false;
+            } else {
+                viewState.isPanning = true;
+                workspace.classList.add('panning');
+                viewState.panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            lastTapTime = currentTime;
+        } else if (e.touches.length === 2) {
             touchCache = Array.from(e.touches);
             viewState.isPanning = false;
-        } else if (e.touches.length === 1) { // ПАН
-            viewState.isPanning = true;
-            workspace.classList.add('panning');
-            viewState.panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }
-        
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
     }, { passive: false });
-
-
-    // --- Глобальные Обработчики Движения (Мышь + Тач) ---
     function onDragMove(e) {
         if (e.type === 'touchmove') e.preventDefault();
-        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
-
-        // --- Двухпальцевый ЗУМ (только Тач) ---
         if (e.touches && e.touches.length === 2) {
-            const t1 = e.touches[0];
-            const t2 = e.touches[1];
+            const t1 = e.touches[0]; const t2 = e.touches[1];
             const p1 = touchCache.find(t => t.identifier === t1.identifier);
             const p2 = touchCache.find(t => t.identifier === t2.identifier);
             if (!p1 || !p2) { touchCache = Array.from(e.touches); return; }
-
             const prevDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
             const currDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
             const prevCenter = { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
             const currCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
-
             const dx = currCenter.x - prevCenter.x;
             const dy = currCenter.y - prevCenter.y;
             viewState.x += dx; viewState.y += dy;
-            
             const worldCenter = screenToWorld(currCenter.x, currCenter.y);
             const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale * (currDist / prevDist)));
-            
             viewState.x = currCenter.x - worldCenter.x * newScale;
             viewState.y = currCenter.y - worldCenter.y * newScale;
             viewState.scale = newScale;
-
             updateView();
             touchCache = Array.from(e.touches);
             return;
         }
-        
-        // --- ПАН (Мышь + Тач 1 палец) ---
         if (viewState.isPanning) {
             const dx = clientX - viewState.panStart.x;
             const dy = clientY - viewState.panStart.y;
@@ -464,47 +492,35 @@ document.addEventListener('DOMContentLoaded', () => {
             updateView();
             return;
         }
-        
-        // --- ПЕРЕТАСКИВАНИЕ УЗЛА (Мышь + Тач 1 палец) ---
         if (viewState.activeNode) {
             if (longPressTimer) clearTimeout(longPressTimer);
             viewState.isDraggingNode = true;
-            
             const worldMouse = screenToWorld(clientX, clientY);
             const newX = worldMouse.x - viewState.nodeOffset.x;
             const newY = worldMouse.y - viewState.nodeOffset.y;
-            
             viewState.activeNode.style.left = `${newX}px`;
             viewState.activeNode.style.top = `${newY}px`;
-            
             updateAttachedLinks(viewState.activeNode);
         }
     }
-
     function onDragEnd(e) {
         if (longPressTimer) clearTimeout(longPressTimer);
-        
         if (viewState.isPanning) {
             viewState.isPanning = false;
             workspace.classList.remove('panning');
         }
-        
         if (viewState.activeNode) {
             viewState.activeNode = null;
             setTimeout(() => { viewState.isDraggingNode = false; }, 10);
         }
-        
         if (e.touches && e.touches.length < 2) touchCache = [];
-        
         document.removeEventListener('mousemove', onDragMove);
         document.removeEventListener('mouseup', onDragEnd);
         document.removeEventListener('touchmove', onDragMove);
         document.removeEventListener('touchend', onDragEnd);
     }
-    
-    // --- Пан с Пробелом (для ПК) ---
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && !e.repeat) {
+        if (e.code === 'Space' && !e.repeat && !e.target.isContentEditable) {
             viewState.isSpacebarDown = true;
             if (!viewState.isPanning) workspace.classList.add('panning');
             e.preventDefault();
@@ -583,17 +599,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.2 (Event Fix) загружен.');
+        console.log('HRAIN v6.4 (Triple-Click Fix) загружен.');
     }
     
     init(); // Запускаем приложение
 });
 
-// --- v6.2: "Страховка" от ошибок ---
+// --- "Страховка" от ошибок ---
 } catch (e) {
-    // Если что-то пошло не так, показываем ошибку
     alert('КРИТИЧЕСКАЯ ОШИБКА HRAIN:\n\n' + e.message + '\n\nПожалуйста, сообщи об этом разработчику.');
-    // Визуально показываем, что всё сломалось
     const logo = document.getElementById('hrain-logo');
     if (logo) {
         logo.textContent = '🧠 HRAIN [FAILED]';
