@@ -171,3 +171,11 @@ button:active {
 #analytics.visible {
     left: 10px;
 }
+/* ДОБАВИТЬ В КОНЕЦ style.css */
+
+/* Стиль для плейсхолдера (подсказки) в пустом узле */
+[contenteditable="true"]:empty:before {
+    content: attr(placeholder); /* Берет текст из атрибута 'placeholder' */
+    color: #aaa;
+    cursor: text;
+}
