@@ -8,6 +8,7 @@
     --green-btn: #4CAF50;
     --red-btn: #F44336;
     --blue-btn: #007aff;
+    --line-color: #a2a9b1;
 }
 
 body, html {
@@ -17,6 +18,8 @@ body, html {
     overflow: hidden;
     background-color: var(--bg-main);
     color: var(--text-color);
+    /* Запрещаем браузеру "отскакивать" при прокрутке на мобильных */
+    overscroll-behavior: none;
 }
 
 /* --- 1. Панель Управления (Верхняя) --- */
@@ -30,152 +33,4 @@ body, html {
     padding: 8px 15px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-#hrain-title {
-    font-size: 1.2em;
-    margin: 0;
-    color: var(--text-color);
-}
-
-/* Стили кнопок и селекторов */
-.control-select {
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    margin: 0 5px;
-}
-
-button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: transform 0.1s ease;
-}
-button:active {
-    transform: scale(0.95);
-}
-
-.green-button {
-    background-color: var(--green-btn);
-    color: white;
-}
-.red-button {
-    background-color: var(--red-btn);
-    color: white;
-}
-.aux-button {
-    background-color: #e9e9eb;
-    color: #333;
-}
-
-/* --- 2. Рабочая Область --- */
-#workspace {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden; /* Это будет управлять зумом и паном */
-    background: var(--bg-canvas);
-}
-
-/* Холст, который будет двигаться и масштабироваться */
-#canvas {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    /* transform-origin: 0 0;  Будет добавлено в JS */
-}
-
-/* Слой для SVG-линий */
-#link-layer {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none; /* Линии не должны мешать кликам */
-    overflow: visible;
-}
-
-/* --- 3. Узлы (Ноды) --- */
-.node {
-    position: absolute;
-    min-width: 100px;
-    min-height: 40px;
-    background: #fff;
-    border: 2px solid #a2a9b1;
-    border-radius: 25px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    padding: 10px;
-    cursor: grab;
-    user-select: none;
-    text-align: center;
-    /* Устанавливаем contentEditable, чтобы текст можно было редактировать */
-    box-sizing: border-box; /* Чтобы padding не ломал размеры */
-}
-.node:focus {
-    border-color: var(--blue-btn);
-    box-shadow: 0 0 10px rgba(0,122,255,0.5);
-    outline: none;
-    cursor: text;
-}
-.node.selected {
-    border-color: var(--blue-btn);
-    border-width: 3px;
-}
-
-
-/* --- 4. Боковые Панели --- */
-.side-panel {
-    position: absolute;
-    top: 80px; /* Ниже панели управления */
-    bottom: 20px;
-    width: 250px;
-    z-index: 90;
-    background: var(--bg-controls);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    padding: 15px;
-    overflow-y: auto;
-    
-    /* Скрываем по умолчанию */
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-
-#hints {
-    right: -300px; /* Изначально за экраном */
-    transition: right 0.3s ease-out;
-}
-#analytics {
-    left: -300px; /* Изначально за экраном */
-    transition: left 0.3s ease-out;
-}
-
-/* Класс 'visible' будет управлять отображением */
-.side-panel.visible {
-    visibility: visible;
-    opacity: 1;
-}
-#hints.visible {
-    right: 10px;
-}
-#analytics.visible {
-    left: 10px;
-}
-/* ДОБАВИТЬ В КОНЕЦ style.css */
-
-/* Стиль для плейсхолдера (подсказки) в пустом узле */
-[contenteditable="true"]:empty:before {
-    content: attr(placeholder); /* Берет текст из атрибута 'placeholder' */
-    color: #aaa;
-    cursor: text;
-}
+    box
