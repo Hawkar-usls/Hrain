@@ -1,21 +1,15 @@
-// == HRAIN v6.5 (The Final Click Fix) ==
-// Полный JS-файл от 16.11.2025
-// ИСПРАВЛЕНО: 'dblclick' полностью удален с узлов.
-// ИСПРАВЛЕНО: 'onNodeClick' теперь управляет 1, 2 и 3 кликами.
+// == HRAIN v6.6 (Cache Buster Fix) ==
+// Этот код ИДЕНТИЧЕН v6.5, который ты не мог загрузить.
+// 'click' управляет 1, 2 и 3 кликами.
 // 1 = Линка, 2 = Редактирование, 3 = Удаление.
 
-// --- "Страховка" от ошибок ---
 try {
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Получаем все наши HTML-элементы ---
     const workspace = document.getElementById('workspace');
     const canvas = document.getElementById('canvas');
     const nodeLayer = document.getElementById('node-layer');
     const linkLayer = document.getElementById('link-layer');
-    
-    // ... (все остальные getElementById без изменений) ...
     const profileSelect = document.getElementById('profile-select');
     const saveBtn = document.getElementById('saveProfileButton');
     const newBtn = document.getElementById('newProfileButton');
@@ -30,14 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const pinOkBtn = document.getElementById('pin-ok-btn');
     const colorPalette = document.getElementById('color-palette');
 
-    // --- Глобальные переменные ---
     let firstNodeForLink = null;
     let longPressTimer = null;
     let longPressNode = null;
     let pinCallback = null;
     let lastTapTime = 0;
 
-    // --- ДВИЖОК v6.2: "КАМЕРА" ---
     let viewState = {
         x: 0, y: 0, scale: 1.0,
         isPanning: false,
@@ -63,9 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // --- 2. Логика Профилей и Сохранения (Без изменений) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
-
     newBtn.addEventListener('click', () => {
         const profileName = prompt('Введите имя нового профиля:');
         if (!profileName || profileName.trim() === '') return;
@@ -168,8 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProfileList(profileName);
         });
     }
-    
-    // --- Сериализация/Десериализация (Без изменений) ---
     function serializeMap() {
         const nodes = [];
         document.querySelectorAll('.node').forEach(node => {
@@ -188,9 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function deserializeMap(jsonString) {
         clearCanvas();
         const data = JSON.parse(jsonString);
-        
         const nodesToUpdate = new Set();
-        
         data.nodes.forEach(nodeData => {
             const node = createNode(0, 0, nodeData.id, false);
             node.style.left = nodeData.x; node.style.top = nodeData.y;
@@ -208,9 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nodesToUpdate.add(node2);
             }
         });
-        
         nodesToUpdate.forEach(node => updateNodeSize(node));
-        
         if (data.view) {
             viewState.x = data.view.x || 0; viewState.y = data.view.y || 0; viewState.scale = data.view.scale || 1.0;
         } else {
@@ -218,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateView();
     }
-    
     function getProfileList() { 
         const profiles = localStorage.getItem('hrain_profiles');
         return profiles ? JSON.parse(profiles) : [];
@@ -240,8 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.5) ---
-
+    // --- 3. Базовая Логика Холста (v6.5 - ФИКС) ---
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
         node.className = 'node';
@@ -250,19 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
         node.id = id || 'node_' + Date.now();
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
-        
         updateNodeSize(node); 
         
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
         
-        // --- ИСПРАВЛЕНИЕ v6.5 ---
         // 'click' теперь управляет ВСЕМ
         node.addEventListener('click', onNodeClick); 
-        // 'dblclick' больше не нужен, УДАЛЯЕМ его
-        // node.addEventListener('dblclick', onNodeDoubleClick); // <-- УДАЛЕНО
-        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-
+        
         node.addEventListener('contextmenu', showColorPalette);
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
@@ -271,16 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
     
-    // --- ИСПРАВЛЕНИЕ v6.5: 'onNodeClick' теперь делает ВСЁ ---
     function onNodeClick(e) {
         e.stopPropagation();
-        if (viewState.isDraggingNode) return; // Игнор, если это было перетаскивание
+        if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
 
         // --- ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ ---
         if (e.detail === 3) {
-            e.preventDefault(); // Остановить выделение текста браузером
-            
+            e.preventDefault();
             const linesToRemove = document.querySelectorAll(`line[data-from="${node.id}"], line[data-to="${node.id}"]`);
             const neighborsToUpdate = new Set();
             linesToRemove.forEach(line => {
@@ -292,27 +266,23 @@ document.addEventListener('DOMContentLoaded', () => {
             node.remove();
             neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
             if (firstNodeForLink === node) firstNodeForLink = null;
-            return; // Готово
+            return;
         }
 
         // --- ДАБЛ-КЛИК = РЕДАКТИРОВАТЬ ТЕКСТ ---
         if (e.detail === 2) {
-            e.preventDefault(); // Остановить выделение текста браузером
-            
+            e.preventDefault();
             node.focus();
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(node);
             selection.removeAllRanges();
             selection.addRange(range);
-            return; // Готово
+            return;
         }
 
         // --- ОДИН-КЛИК = СВЯЗАТЬ / УДАЛИТЬ СВЯЗЬ ---
         if (e.detail === 1) {
-            // (Ждем 10мс, чтобы убедиться, что это не дабл-клик)
-            // (Не нужно, e.detail уже = 1)
-            
             if (!firstNodeForLink) {
                 firstNodeForLink = node; node.classList.add('selected');
             } 
@@ -335,8 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 'onNodeDoubleClick' БОЛЬШЕ НЕ НУЖЕН ---
-    
     function createLink(node1, node2, skipCheck = false) {
         if (!skipCheck && findLink(node1, node2)) return;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -354,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     
-    // (updateAttachedLinks, getNodeCenter - без изменений)
     function updateAttachedLinks(node) {
         const nodeId = node.id;
         const newPos = getNodeCenter(node);
@@ -370,8 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const y = parseFloat(node.style.top || 0);
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
-
-    // --- Функция Авто-размера v6.3 (Без изменений) ---
+    
     function updateNodeSize(node) {
         if (!node) return;
         const linkCount = document.querySelectorAll(
@@ -387,9 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание (Без изменений) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
-
+    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание ---
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
         const rect = workspace.getBoundingClientRect();
@@ -423,8 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function onNodeMouseDown(e) {
         if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
         if (e.target.isContentEditable && e.target !== e.currentTarget) return;
-        
-        // v6.5: НЕ вызываем stopPropagation() здесь, чтобы click мог сработать
         
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
@@ -614,13 +576,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.5 (The Final Click Fix) загружен.');
+        console.log('HRAIN v6.6 (Cache Buster Fix) загружен.');
     }
     
     init(); // Запускаем приложение
 });
 
-// --- "Страховка" от ошибок ---
 } catch (e) {
     alert('КРИТИЧЕСКАЯ ОШИБКА HRAIN:\n\n' + e.message + '\n\nПожалуйста, сообщи об этом разработчику.');
     const logo = document.getElementById('hrain-logo');
