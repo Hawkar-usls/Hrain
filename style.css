@@ -1,4 +1,4 @@
-/* --- HRAIN v6.6 CSS (Cache Buster) --- */
+/* --- HRAIN v6.7 CSS (Context Menu) --- */
 :root {
     --bg-main: #f4f7f6;
     --bg-canvas: #ffffff;
@@ -15,7 +15,7 @@
     --aux-btn: #f0f2f5;
     --aux-btn-hover: #e4e6e9;
 
-    --line-color: #c0c8d1; /* Еще мягче */
+    --line-color: #c0c8d1;
     
     /* Цвета узлов */
     --color-red: #ffcdd2;
@@ -26,61 +26,43 @@
 }
 
 body, html {
-    height: 100%;
-    margin: 0;
+    height: 100%; margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    overflow: hidden;
-    background-color: var(--bg-main);
-    color: var(--text-color);
-    overscroll-behavior: none;
+    overflow: hidden; background-color: var(--bg-main);
+    color: var(--text-color); overscroll-behavior: none;
 }
 .hidden { display: none !important; }
 
 /* --- 1. Панель Управления --- */
 #controls {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    z-index: 100;
-    background: var(--bg-controls);
-    padding: 10px 15px;
-    border-radius: 12px;
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    z-index: 100; background: var(--bg-controls);
+    padding: 10px 15px; border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 15px;
     flex-wrap: wrap; 
 }
 #hrain-logo { 
-    font-size: 1.5em; 
-    margin: 0; 
-    color: var(--text-color);
-    font-weight: 600;
-    white-space: nowrap; /* v6.3: Не переносить логотип */
+    font-size: 1.5em; margin: 0; 
+    color: var(--text-color); font-weight: 600;
+    white-space: nowrap;
 }
 #profile-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: flex-end; /* v6.3: Кнопки прижимаются вправо */
+    display: flex; align-items: center;
+    gap: 8px; flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .control-select {
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 6px 8px; border-radius: 8px;
     border: 1px solid var(--border-color);
-    background: #fafafa;
-    color: var(--text-light);
+    background: #fafafa; color: var(--text-light);
     font-weight: 500;
 }
 button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    padding: 6px 12px; border: none;
+    border-radius: 8px; cursor: pointer;
     font-weight: 500;
     transition: transform 0.1s ease, background-color 0.2s ease;
 }
@@ -92,57 +74,37 @@ button:active { transform: scale(0.95); }
 .aux-button { background-color: var(--aux-btn); color: var(--text-light); }
 .aux-button:hover { background-color: var(--aux-btn-hover); }
 
-
 /* --- 2. Рабочая Область --- */
 #workspace {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden; 
-    background: var(--bg-canvas);
-    touch-action: none;
-    cursor: grab;
+    width: 100%; height: 100%; position: relative;
+    overflow: hidden; background: var(--bg-canvas);
+    touch-action: none; cursor: grab;
 }
 #workspace:active { cursor: grabbing; }
 #workspace.panning { cursor: grabbing; }
 
 #canvas {
-    position: absolute;
-    width: 1px; 
-    height: 1px;
-    transform-origin: 0 0; 
-    will-change: transform;
+    position: absolute; width: 1px; height: 1px;
+    transform-origin: 0 0; will-change: transform;
 }
 #link-layer, #node-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
 }
 #link-layer { overflow: visible; }
 #link-layer line {
-    stroke: var(--line-color);
-    stroke-width: 2.5px;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
+    stroke: var(--line-color); stroke-width: 2.5px;
+    stroke-linecap: round; vector-effect: non-scaling-stroke;
 }
 
-/* --- 3. Узлы (Ноды) (v6.3 - Обновлен стиль) --- */
+/* --- 3. Узлы (Ноды) --- */
 .node {
-    position: absolute;
-    /* min-width будет управляться из JS */
-    min-height: 2.5em; /* Базовая высота */
-    background: #fff;
-    border: 1px solid #d0d7de; /* Мягче */
-    border-radius: 20px; /* Более "облачно" */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* Мягче */
-    padding: 10px 15px; /* Базовый padding */
-    cursor: grab;
-    user-select: none;
-    text-align: center;
+    position: absolute; min-height: 2.5em;
+    background: #fff; border: 1px solid #d0d7de;
+    border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 10px 15px; cursor: grab;
+    user-select: none; text-align: center;
     box-sizing: border-box; 
-    /* Плавный переход размера! */
     transition: box-shadow 0.2s ease, border-color 0.2s ease, 
                 background-color 0.2s ease, padding 0.3s ease, 
                 min-width 0.3s ease;
@@ -151,27 +113,21 @@ button:active { transform: scale(0.95); }
 .node:active { cursor: grabbing; }
 .node:focus {
     border-color: var(--blue-btn);
-    box-shadow: 0 0 10px rgba(0,122,255,0.3); /* Мягче */
-    outline: none;
-    cursor: text;
+    box-shadow: 0 0 10px rgba(0,122,255,0.3);
+    outline: none; cursor: text;
 }
 .node.selected {
-    border-color: var(--blue-btn);
-    border-width: 2px;
+    border-color: var(--blue-btn); border-width: 2px;
     box-shadow: 0 0 15px rgba(0,122,255,0.5);
 }
 [contenteditable="true"]:empty:before {
-    content: attr(placeholder);
-    color: #aaa;
-    cursor: text;
+    content: attr(placeholder); color: #aaa; cursor: text;
 }
-/* Цвета узлов */
 .node[data-color="red"] { background-color: var(--color-red); }
 .node[data-color="green"] { background-color: var(--color-green); }
 .node[data-color="blue"] { background-color: var(--color-blue); }
 .node[data-color="yellow"] { background-color: var(--color-yellow); }
 .node[data-color="purple"] { background-color: var(--color-purple); }
-
 
 /* --- 4. Модальное окно ПИН-кода --- */
 #pin-modal-backdrop {
@@ -193,25 +149,57 @@ button:active { transform: scale(0.95); }
 #pin-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
 #pin-buttons button { width: 48%; }
 
-/* --- 5. Палитра Цветов --- */
-#color-palette {
-    position: fixed;
+/* --- 5. НОВОЕ v6.7: Контекстное Меню --- */
+#context-menu-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1999;
+    /* Фон не нужен, клик и так будет его закрывать */
+}
+#context-menu {
+    position: fixed; /* ВАЖНО: fixed, а не absolute */
     background: white;
     border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    display: flex;
-    padding: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    border: 1px solid var(--border-color);
     z-index: 2000;
+    padding: 8px;
+    width: 150px; /* Фикс. ширина */
+}
+#context-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.context-btn {
+    width: 100%;
+    background: var(--aux-btn);
+    color: var(--text-light);
+    text-align: left;
+    margin: 0; /* Сброс */
+}
+.context-btn:hover { background: var(--aux-btn-hover); }
+.context-btn.red {
+    background: var(--red-btn);
+    color: white;
+}
+.context-btn.red:hover { background: var(--red-btn-hover); }
+
+#palette-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border-color);
 }
 .color-swatch {
-    width: 30px;
-    height: 30px;
+    width: 25px; /* Чуть меньше */
+    height: 25px;
     border-radius: 50%;
-    margin: 5px;
+    margin: 4px;
     cursor: pointer;
     border: 2px solid var(--border-color);
     transition: transform 0.1s ease;
 }
 .color-swatch:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
