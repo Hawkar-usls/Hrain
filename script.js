@@ -1,3 +1,6 @@
+// == HRAIN v2.0-Alpha.2 ==
+// Полный JS-файл от 16.11.2025
+
 // Ждем, пока весь HTML-документ загрузится
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -23,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. Базовая логика узлов ---
     
     // Создаем узел по дабл-клику на холсте
-    // (Пока без учета зума и панорамирования)
     canvas.addEventListener('dblclick', (e) => {
         // Убедимся, что кликнули именно на холст, а не на узел
         if (e.target === canvas) {
@@ -40,7 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const node = document.createElement('div');
         node.className = 'node';
         node.contentEditable = 'true'; // Делаем текст редактируемым
-        node.textContent = 'Новая идея...';
+        
+        // ОБНОВЛЕНО: Создаем пустой узел с подсказкой
+        node.textContent = ''; // Убираем текст по умолчанию
+        node.setAttribute('placeholder', 'Идея...'); // Добавляем подсказку
         
         // Позиционируем узел
         // (ВАЖНО: пока это координаты относительно ОКНА, 
@@ -51,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Добавляем узел на холст
         canvas.appendChild(node);
         
-        // Сразу выделяем текст для удобства
-        selectText(node);
+        // ОБНОВЛЕНО: Сразу ставим курсор в узел
+        node.focus(); 
 
         // TODO: Добавить логику перетаскивания (makeDraggable)
         // TODO: Добавить логику удаления (двойной клик по узлу)
@@ -60,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Вспомогательная функция для выделения текста в новом узле
+     * Вспомогательная функция для выделения текста в старом узле
+     * (Сейчас не используется, но может пригодиться)
      */
     function selectText(element) {
         const range = document.createRange();
@@ -70,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selection.addRange(range);
     }
     
-    console.log('HRAIN v2.0-Alpha (Мини-версия) загружена.');
+    console.log('HRAIN v2.0-Alpha.2 (Мини-версия) загружена.');
     console.log('TODO: Перетаскивание, Зум, SVG-Линии, Сохранение.');
 
 }); // Конец DOMContentLoaded
