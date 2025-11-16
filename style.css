@@ -1,14 +1,28 @@
-/* --- HRAIN v4.0 CSS --- */
+/* --- HRAIN v6.0 CSS (The Engine Rebuild) --- */
 :root {
-    --bg-main: #f0f2f5;
+    --bg-main: #f4f7f6; /* Мягкий фон */
     --bg-canvas: #ffffff;
     --bg-controls: #ffffff;
-    --border-color: #d9d9d9;
+    --border-color: #dfe3e6; /* Мягче */
     --text-color: #333;
+    --text-light: #555;
+    
     --green-btn: #4CAF50;
+    --green-btn-hover: #45a049;
     --red-btn: #F44336;
+    --red-btn-hover: #e53935;
     --blue-btn: #007aff;
-    --line-color: #a2a9b1;
+    --aux-btn: #f0f2f5;
+    --aux-btn-hover: #e4e6e9;
+
+    --line-color: #b0b8c0; /* Мягче */
+    
+    /* Цвета узлов */
+    --color-red: #ffcdd2;
+    --color-green: #c8e6c9;
+    --color-blue: #bbdefb;
+    --color-yellow: #fff9c4;
+    --color-purple: #d1c4e9;
 }
 
 body, html {
@@ -18,8 +32,9 @@ body, html {
     overflow: hidden;
     background-color: var(--bg-main);
     color: var(--text-color);
-    overscroll-behavior: none;
+    overscroll-behavior: none; /* Запрет "отскока" на iOS */
 }
+.hidden { display: none !important; }
 
 /* --- 1. Панель Управления --- */
 #controls {
@@ -29,20 +44,34 @@ body, html {
     right: 10px;
     z-index: 100;
     background: var(--bg-controls);
-    padding: 8px 15px;
+    padding: 10px 15px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 15px;
 }
-#hrain-title { font-size: 1.2em; margin: 0; color: var(--text-color); }
+/* Логотип v6.0 */
+#hrain-logo { 
+    font-size: 1.5em; 
+    margin: 0; 
+    color: var(--text-color);
+    font-weight: 600;
+}
+#profile-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Расстояние между кнопками */
+}
 .control-select {
-    padding: 5px;
-    border-radius: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
-    margin: 0 5px;
+    background: #fafafa;
+    color: var(--text-light);
+    font-weight: 500;
 }
 button {
     padding: 6px 12px;
@@ -50,34 +79,68 @@ button {
     border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
-    transition: transform 0.1s ease;
+    transition: transform 0.1s ease, background-color 0.2s ease;
 }
 button:active { transform: scale(0.95); }
 .green-button { background-color: var(--green-btn); color: white; }
+.green-button:hover { background-color: var(--green-btn-hover); }
 .red-button { background-color: var(--red-btn); color: white; }
+.red-button:hover { background-color: var(--red-btn-hover); }
+.aux-button { background-color: var(--aux-btn); color: var(--text-light); }
+.aux-button:hover { background-color: var(--aux-btn-hover); }
 
-/* --- 2. Рабочая Область --- */
+
+/* --- 2. Рабочая Область (НОВЫЙ ДВИЖОК v6.0) --- */
 #workspace {
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden; 
     background: var(--bg-canvas);
+    /* КЛЮЧЕВОЕ: Запрещает браузеру двигать и зумить */
+    touch-action: none;
+    cursor: grab; /* Курсор для пана */
 }
-#canvas { width: 100%; height: 100%; position: absolute; }
-#link-layer {
+#workspace:active {
+    cursor: grabbing;
+}
+#workspace.panning {
+    cursor: grabbing;
+}
+
+/* #canvas - это наш "мир". 
+  Он будет ОГРОМНЫМ и будет двигаться/зумиться
+*/
+#canvas {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 1px; /* JS будет управлять этим */
+    height: 1px; /* JS будет управлять этим */
+    /* КЛЮЧЕВОЕ: Ускорение GPU для transform */
+    transform-origin: 0 0; 
+    will-change: transform;
+}
+
+#link-layer, #node-layer {
+    position: absolute;
     top: 0;
     left: 0;
-    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    /* pointer-events: none; - НЕ НУЖНО. 
+       События должны проходить на #canvas
+    */
+}
+#link-layer {
     overflow: visible;
 }
 #link-layer line {
     stroke: var(--line-color);
-    stroke-width: 3px;
+    stroke-width: 2.5px; /* Чуть тоньше */
     stroke-linecap: round;
+    /* КЛЮЧЕВОЕ: Предотвращает "размытие" линий при зуме
+      и сохраняет их толщину независимо от масштаба
+    */
+    vector-effect: non-scaling-stroke;
 }
 
 /* --- 3. Узлы (Ноды) --- */
@@ -86,7 +149,7 @@ button:active { transform: scale(0.95); }
     min-width: 100px;
     min-height: 40px;
     background: #fff;
-    border: 2px solid #a2a9b1;
+    border: 2px solid #b0b8c0; /* Мягче */
     border-radius: 25px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     padding: 10px;
@@ -94,7 +157,12 @@ button:active { transform: scale(0.95); }
     user-select: none;
     text-align: center;
     box-sizing: border-box; 
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    /* КЛЮЧЕВОЕ: Чтобы текст внутри не ломался при зуме */
+    will-change: transform;
+}
+.node:active {
+    cursor: grabbing;
 }
 .node:focus {
     border-color: var(--blue-btn);
@@ -112,55 +180,54 @@ button:active { transform: scale(0.95); }
     color: #aaa;
     cursor: text;
 }
+/* Цвета узлов */
+.node[data-color="red"] { background-color: var(--color-red); }
+.node[data-color="green"] { background-color: var(--color-green); }
+.node[data-color="blue"] { background-color: var(--color-blue); }
+.node[data-color="yellow"] { background-color: var(--color-yellow); }
+.node[data-color="purple"] { background-color: var(--color-purple); }
 
-/* --- НОВЫЙ РАЗДЕЛ (v4.0): Модальное окно ПИН-кода --- */
+
+/* --- 4. Модальное окно ПИН-кода --- */
 #pin-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 1999;
+    display: flex; align-items: center; justify-content: center;
 }
-#pin-modal-backdrop.hidden {
-    display: none;
+#pin-modal {
+    background: white; padding: 20px; border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; width: 250px;
+}
+#pin-modal h3 { margin-top: 0; }
+#pin-input {
+    width: 80%; font-size: 2em; text-align: center;
+    letter-spacing: 0.5em; border: 2px solid var(--border-color);
+    border-radius: 8px; margin-top: 10px;
+}
+#pin-error { color: var(--red-btn); min-height: 1.2em; margin-top: 5px; font-size: 0.9em; }
+#pin-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
+#pin-buttons button { width: 48%; }
+
+/* --- 5. Палитра Цветов --- */
+#color-palette {
+    position: fixed; /* ВАЖНО: fixed, а не absolute */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: flex;
+    padding: 8px;
+    z-index: 2000;
+}
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    transition: transform 0.1s ease;
+}
+.color-swatch:hover {
+    transform: scale(1.1);
 }
 
-#pin-modal {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    text-align: center;
-    width: 250px;
-}
-#pin-modal h3 {
-    margin-top: 0;
-}
-#pin-input {
-    width: 80%;
-    font-size: 2em;
-    text-align: center;
-    letter-spacing: 0.5em; /* Расстояние между цифрами */
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    margin-top: 10px;
-}
-#pin-error {
-    color: var(--red-btn);
-    min-height: 1.2em;
-    margin-top: 5px;
-    font-size: 0.9em;
-}
-#pin-buttons {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-}
-#pin-buttons button {
-    width: 48%;
-}
