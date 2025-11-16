@@ -3,31 +3,34 @@
 <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
-    <title>HRAIN - Визуализация Мышления v5.0</title> 
+    <title>HRAIN - Визуализация Мышления v6.1</title> 
      
     <link rel="stylesheet" href="style.css">  
 </head> 
 <body> 
  
     <div id="controls"> 
-        <h1 id="hrain-title">🧠 HRAIN v5.0</h1>  
+        <h1 id="hrain-logo">🧠 HRAIN v6.1</h1>  
          
         <div id="profile-controls"> 
             <label for="profile-select">Профиль:</label> 
             <select id="profile-select" class="control-select"></select> 
             
-            <button id="importProfileButton" class="aux-button">Импорт</button>
-            <button id="exportProfileButton" class="aux-button">Экспорт</button>
-            <button id="saveProfileButton" class="green-button">Сохранить</button> 
-            <button id="newProfileButton" class="green-button">Новый</button> 
-            <button id="deleteProfileButton" class="red-button">Удалить</button> 
+            <button id="importProfileButton" class="aux-button" title="Импорт">Импорт</button>
+            <button id="exportProfileButton" class="aux-button" title="Экспорт">Экспорт</button>
+
+            <button id="saveProfileButton" class="green-button" title="Сохранить">Сохранить</button> 
+            <button id="newProfileButton" class="green-button" title="Новый">Новый</button> 
+            <button id="deleteProfileButton" class="red-button" title="Удалить">Удалить</button> 
         </div> 
     </div> 
  
     <div id="workspace"> 
-        <svg id="link-layer"></svg>  
-        <div id="canvas"> 
-            </div> 
+        <div id="canvas">
+            <svg id="link-layer"></svg>  
+            <div id="node-layer">
+                </div>
+        </div>
     </div> 
     
     <div id="pin-modal-backdrop" class="hidden">
