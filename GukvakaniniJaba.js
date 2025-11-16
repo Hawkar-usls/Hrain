@@ -1,15 +1,20 @@
-// == HRAIN v6.6 (Cache Buster Fix) ==
-// Этот код ИДЕНТИЧЕН v6.5, который ты не мог загрузить.
-// 'click' управляет 1, 2 и 3 кликами.
-// 1 = Линка, 2 = Редактирование, 3 = Удаление.
+// == HRAIN v6.7 (The Real Fix - Context Menu) ==
+// Полный JS-файл от 16.11.2025
+// УДАЛЕНО: Трипл-клик. Он конфликтует с iOS.
+// ДОБАВЛЕНО: Долгое нажатие -> Контекстное меню (Цвет, Удалить).
 
+// --- "Страховка" от ошибок ---
 try {
+
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- 1. Получаем все наши HTML-элементы ---
     const workspace = document.getElementById('workspace');
     const canvas = document.getElementById('canvas');
     const nodeLayer = document.getElementById('node-layer');
     const linkLayer = document.getElementById('link-layer');
+    
+    // ... (все остальные getElementById без изменений) ...
     const profileSelect = document.getElementById('profile-select');
     const saveBtn = document.getElementById('saveProfileButton');
     const newBtn = document.getElementById('newProfileButton');
@@ -22,14 +27,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const pinError = document.getElementById('pin-error');
     const pinCancelBtn = document.getElementById('pin-cancel-btn');
     const pinOkBtn = document.getElementById('pin-ok-btn');
-    const colorPalette = document.getElementById('color-palette');
+    
+    // v6.7: Новое Контекстное Меню
+    const contextMenuBackdrop = document.getElementById('context-menu-backdrop');
+    const contextMenu = document.getElementById('context-menu');
+    const colorMenuBtn = document.getElementById('color-menu-btn');
+    const deleteNodeBtn = document.getElementById('delete-node-btn');
+    const paletteContainer = document.getElementById('palette-container');
+    const colorSwatches = document.querySelectorAll('#palette-container .color-swatch');
 
+    // --- Глобальные переменные ---
     let firstNodeForLink = null;
     let longPressTimer = null;
-    let longPressNode = null;
+    let nodeForMenu = null; // v6.7: Узел, для которого открыто меню
     let pinCallback = null;
     let lastTapTime = 0;
 
+    // --- ДВИЖОК v6.2: "КАМЕРА" ---
     let viewState = {
         x: 0, y: 0, scale: 1.0,
         isPanning: false,
@@ -43,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 4.0;
     
+    // (Функции updateView, screenToWorld - без изменений)
     function updateView() {
         viewState.scale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale));
         const transform = `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`;
@@ -55,6 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
+    // --- 2. Логика Профилей и Сохранения (Без изменений) ---
+    // (Этот блок кода полностью рабочий, мы его не трогаем)
+
     newBtn.addEventListener('click', () => {
         const profileName = prompt('Введите имя нового профиля:');
         if (!profileName || profileName.trim() === '') return;
@@ -157,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProfileList(profileName);
         });
     }
+    
+    // --- Сериализация/Десериализация (Без изменений) ---
     function serializeMap() {
         const nodes = [];
         document.querySelectorAll('.node').forEach(node => {
@@ -175,7 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function deserializeMap(jsonString) {
         clearCanvas();
         const data = JSON.parse(jsonString);
+        
         const nodesToUpdate = new Set();
+        
         data.nodes.forEach(nodeData => {
             const node = createNode(0, 0, nodeData.id, false);
             node.style.left = nodeData.x; node.style.top = nodeData.y;
@@ -193,7 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 nodesToUpdate.add(node2);
             }
         });
+        
         nodesToUpdate.forEach(node => updateNodeSize(node));
+        
         if (data.view) {
             viewState.x = data.view.x || 0; viewState.y = data.view.y || 0; viewState.scale = data.view.scale || 1.0;
         } else {
@@ -201,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateView();
     }
+    
     function getProfileList() { 
         const profiles = localStorage.getItem('hrain_profiles');
         return profiles ? JSON.parse(profiles) : [];
@@ -222,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (v6.5 - ФИКС) ---
+    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.7) ---
+
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
         node.className = 'node';
@@ -231,15 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
         node.id = id || 'node_' + Date.now();
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
+        
         updateNodeSize(node); 
         
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
         
-        // 'click' теперь управляет ВСЕМ
+        // v6.7: 'click' управляет 1 и 2 кликами. 3-й (delete) убран.
         node.addEventListener('click', onNodeClick); 
         
-        node.addEventListener('contextmenu', showColorPalette);
+        // v6.7: Правый клик заменен на 'showContextMenu'
+        node.addEventListener('contextmenu', showContextMenu);
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
         nodeLayer.appendChild(node);
@@ -247,27 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
     
+    // v6.7: 'onNodeClick' теперь управляет 1 и 2 кликами
     function onNodeClick(e) {
         e.stopPropagation();
         if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
 
-        // --- ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ ---
-        if (e.detail === 3) {
-            e.preventDefault();
-            const linesToRemove = document.querySelectorAll(`line[data-from="${node.id}"], line[data-to="${node.id}"]`);
-            const neighborsToUpdate = new Set();
-            linesToRemove.forEach(line => {
-                const otherNodeId = (line.dataset.from === node.id) ? line.dataset.to : line.dataset.from;
-                const otherNode = document.getElementById(otherNodeId);
-                if (otherNode) neighborsToUpdate.add(otherNode);
-            });
-            linesToRemove.forEach(line => line.remove());
-            node.remove();
-            neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
-            if (firstNodeForLink === node) firstNodeForLink = null;
-            return;
-        }
+        // --- ТРИПЛ-КЛИК (УДАЛЕНИЕ) ПОЛНОСТЬЮ УДАЛЕН ---
 
         // --- ДАБЛ-КЛИК = РЕДАКТИРОВАТЬ ТЕКСТ ---
         if (e.detail === 2) {
@@ -322,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     
+    // (updateAttachedLinks, getNodeCenter - без изменений)
     function updateAttachedLinks(node) {
         const nodeId = node.id;
         const newPos = getNodeCenter(node);
@@ -337,7 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const y = parseFloat(node.style.top || 0);
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
-    
+
+    // --- Функция Авто-размера v6.3 (Без изменений) ---
     function updateNodeSize(node) {
         if (!node) return;
         const linkCount = document.querySelectorAll(
@@ -353,7 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание ---
+    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание (Без изменений) ---
+    // (Этот блок кода полностью рабочий, мы его не трогаем)
+
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
         const rect = workspace.getBoundingClientRect();
@@ -384,34 +402,45 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('mouseup', onDragEnd);
         }
     });
+    
+    // v6.7: 'onNodeMouseDown' теперь также отвечает за Долгое Нажатие
     function onNodeMouseDown(e) {
         if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
         if (e.target.isContentEditable && e.target !== e.currentTarget) return;
         
+        e.stopPropagation();
+        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
+
+        // v6.7: Логика Долгого Нажатия
         if (e.type === 'touchstart') {
-            longPressNode = e.currentTarget;
+            nodeForMenu = e.currentTarget; // Запоминаем узел для меню
             longPressTimer = setTimeout(() => {
                 e.preventDefault();
-                showColorPalette({ 
-                    currentTarget: longPressNode,
+                showContextMenu({ 
+                    currentTarget: nodeForMenu,
                     clientX: clientX, clientY: clientY 
                 });
-                viewState.isDraggingNode = true;
-            }, 500);
+                viewState.isDraggingNode = true; // Блокируем узел
+            }, 500); // 500ms
         }
+        
         viewState.isDraggingNode = false;
         viewState.activeNode = e.currentTarget;
+        
         const worldMouse = screenToWorld(clientX, clientY);
         const nodeX = parseFloat(viewState.activeNode.style.left);
         const nodeY = parseFloat(viewState.activeNode.style.top);
+        
         viewState.nodeOffset = { x: worldMouse.x - nodeX, y: worldMouse.y - nodeY };
+        
         document.addEventListener('mousemove', onDragMove);
         document.addEventListener('mouseup', onDragEnd);
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
     }
+    
     workspace.addEventListener('touchstart', (e) => {
         if (e.target.closest('.node')) { return; }
         e.preventDefault();
@@ -436,11 +465,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
     }, { passive: false });
+    
     function onDragMove(e) {
         if (e.type === 'touchmove') e.preventDefault();
+        
+        // v6.7: Если мы начали тащить, отменяем долгое нажатие
+        if (longPressTimer) clearTimeout(longPressTimer);
+        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
+        
         if (e.touches && e.touches.length === 2) {
+            // (Логика зума - без изменений)
             const t1 = e.touches[0]; const t2 = e.touches[1];
             const p1 = touchCache.find(t => t.identifier === t1.identifier);
             const p2 = touchCache.find(t => t.identifier === t2.identifier);
@@ -462,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (viewState.isPanning) {
+            // (Логика пана - без изменений)
             const dx = clientX - viewState.panStart.x;
             const dy = clientY - viewState.panStart.y;
             viewState.x += dx; viewState.y += dy;
@@ -470,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (viewState.activeNode) {
-            if (longPressTimer) clearTimeout(longPressTimer);
+            // (Логика перетаскивания узла - без изменений)
             viewState.isDraggingNode = true;
             const worldMouse = screenToWorld(clientX, clientY);
             const newX = worldMouse.x - viewState.nodeOffset.x;
@@ -529,35 +566,68 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { return null; }
     }
     
-    // --- 6. Логика Палитры Цветов (Без изменений) ---
-    function showColorPalette(e) {
+    // --- 6. НОВАЯ ЛОГИКА v6.7: Контекстное Меню ---
+    function showContextMenu(e) {
         e.preventDefault();
-        hideColorPalette();
-        longPressNode = e.currentTarget;
-        colorPalette.style.left = `${e.clientX}px`;
-        colorPalette.style.top = `${e.clientY}px`;
-        colorPalette.classList.remove('hidden');
+        hideContextMenu();
+        
+        nodeForMenu = e.currentTarget; // Запоминаем узел
+        
+        // Позиционируем меню
+        contextMenu.style.left = `${e.clientX}px`;
+        contextMenu.style.top = `${e.clientY}px`;
+        contextMenuBackdrop.classList.remove('hidden');
+        paletteContainer.classList.add('hidden'); // Палитра по умолч. скрыта
     }
-    function hideColorPalette() {
-        colorPalette.classList.add('hidden');
-        longPressNode = null;
+    
+    function hideContextMenu() {
+        contextMenuBackdrop.classList.add('hidden');
+        nodeForMenu = null;
     }
-    colorPalette.addEventListener('click', (e) => {
-        if (e.target.classList.contains('color-swatch')) {
+    
+    // Клик по "🎨 Цвет"
+    colorMenuBtn.addEventListener('click', (e) => {
+        paletteContainer.classList.toggle('hidden');
+    });
+
+    // Клик по "🗑️ Удалить"
+    deleteNodeBtn.addEventListener('click', (e) => {
+        if (nodeForMenu) {
+            // Это та же логика, что была в 'трипл-клике'
+            const linesToRemove = document.querySelectorAll(`line[data-from="${nodeForMenu.id}"], line[data-to="${nodeForMenu.id}"]`);
+            const neighborsToUpdate = new Set();
+            linesToRemove.forEach(line => {
+                const otherNodeId = (line.dataset.from === nodeForMenu.id) ? line.dataset.to : line.dataset.from;
+                const otherNode = document.getElementById(otherNodeId);
+                if (otherNode) neighborsToUpdate.add(otherNode);
+            });
+            linesToRemove.forEach(line => line.remove());
+            nodeForMenu.remove();
+            neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
+            if (firstNodeForLink === nodeForMenu) firstNodeForLink = null;
+        }
+        hideContextMenu();
+    });
+    
+    // Клик на палитре
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', (e) => {
             const color = e.target.getAttribute('data-color');
-            if (longPressNode) {
+            if (nodeForMenu) {
                 if (color === 'default') {
-                    longPressNode.removeAttribute('data-color');
+                    nodeForMenu.removeAttribute('data-color');
                 } else {
-                    longPressNode.setAttribute('data-color', color);
+                    nodeForMenu.setAttribute('data-color', color);
                 }
             }
-            hideColorPalette();
-        }
+            hideContextMenu();
+        });
     });
-    workspace.addEventListener('click', (e) => {
-        if (!colorPalette.classList.contains('hidden')) {
-            hideColorPalette();
+    
+    // Клик в любом другом месте закрывает меню
+    contextMenuBackdrop.addEventListener('click', (e) => {
+        if (e.target === contextMenuBackdrop) {
+            hideContextMenu();
         }
     });
 
@@ -576,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.6 (Cache Buster Fix) загружен.');
+        console.log('HRAIN v6.7 (Context Menu Fix) загружен.');
     }
     
     init(); // Запускаем приложение
