@@ -1,9 +1,9 @@
-/* --- HRAIN v6.1 CSS (Hotfix) --- */
+/* --- HRAIN v6.3 CSS (Softer UI) --- */
 :root {
-    --bg-main: #f4f7f6; /* Мягкий фон */
+    --bg-main: #f4f7f6;
     --bg-canvas: #ffffff;
     --bg-controls: #ffffff;
-    --border-color: #dfe3e6; /* Мягче */
+    --border-color: #dfe3e6;
     --text-color: #333;
     --text-light: #555;
     
@@ -15,7 +15,7 @@
     --aux-btn: #f0f2f5;
     --aux-btn-hover: #e4e6e9;
 
-    --line-color: #b0b8c0; /* Мягче */
+    --line-color: #c0c8d1; /* Еще мягче */
     
     /* Цвета узлов */
     --color-red: #ffcdd2;
@@ -32,7 +32,7 @@ body, html {
     overflow: hidden;
     background-color: var(--bg-main);
     color: var(--text-color);
-    overscroll-behavior: none; /* Запрет "отскока" на iOS */
+    overscroll-behavior: none;
 }
 .hidden { display: none !important; }
 
@@ -52,23 +52,21 @@ body, html {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    
-    /* --- ИСПРАВЛЕНИЕ v6.1: --- */
-    /* Позволяет кнопкам переноситься, если не влезают */
     flex-wrap: wrap; 
 }
-/* Логотип v6.0 */
 #hrain-logo { 
     font-size: 1.5em; 
     margin: 0; 
     color: var(--text-color);
     font-weight: 600;
+    white-space: nowrap; /* v6.3: Не переносить логотип */
 }
 #profile-controls {
     display: flex;
     align-items: center;
-    gap: 8px; /* Расстояние между кнопками */
-    flex-wrap: wrap; /* Кнопки тоже могут переноситься */
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end; /* v6.3: Кнопки прижимаются вправо */
 }
 .control-select {
     padding: 6px 8px;
@@ -95,7 +93,7 @@ button:active { transform: scale(0.95); }
 .aux-button:hover { background-color: var(--aux-btn-hover); }
 
 
-/* --- 2. Рабочая Область (НОВЫЙ ДВИЖОК v6.0) --- */
+/* --- 2. Рабочая Область --- */
 #workspace {
     width: 100%;
     height: 100%;
@@ -130,34 +128,37 @@ button:active { transform: scale(0.95); }
     vector-effect: non-scaling-stroke;
 }
 
-/* --- 3. Узлы (Ноды) --- */
+/* --- 3. Узлы (Ноды) (v6.3 - Обновлен стиль) --- */
 .node {
     position: absolute;
-    min-width: 100px;
-    min-height: 40px;
+    /* min-width будет управляться из JS */
+    min-height: 2.5em; /* Базовая высота */
     background: #fff;
-    border: 2px solid #b0b8c0;
-    border-radius: 25px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    padding: 10px;
+    border: 1px solid #d0d7de; /* Мягче */
+    border-radius: 20px; /* Более "облачно" */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* Мягче */
+    padding: 10px 15px; /* Базовый padding */
     cursor: grab;
     user-select: none;
     text-align: center;
     box-sizing: border-box; 
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    /* Плавный переход размера! */
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, 
+                background-color 0.2s ease, padding 0.3s ease, 
+                min-width 0.3s ease;
     will-change: transform;
 }
 .node:active { cursor: grabbing; }
 .node:focus {
     border-color: var(--blue-btn);
-    box-shadow: 0 0 10px rgba(0,122,255,0.5);
+    box-shadow: 0 0 10px rgba(0,122,255,0.3); /* Мягче */
     outline: none;
     cursor: text;
 }
 .node.selected {
     border-color: var(--blue-btn);
-    border-width: 3px;
-    box-shadow: 0 0 15px rgba(0,122,255,0.7);
+    border-width: 2px;
+    box-shadow: 0 0 15px rgba(0,122,255,0.5);
 }
 [contenteditable="true"]:empty:before {
     content: attr(placeholder);
