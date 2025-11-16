@@ -3,14 +3,14 @@
 <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
-    <title>HRAIN - Визуализация Мышления v6.6</title> 
+    <title>HRAIN - Визуализация Мышления v6.7</title> 
      
-    <link rel="stylesheet" href="style.css?v=6.6">  
+    <link rel="stylesheet" href="style.css?v=6.7">  
 </head> 
 <body> 
  
     <div id="controls"> 
-        <h1 id="hrain-logo">🧠 HRAIN 🌧️ v6.6</h1>  
+        <h1 id="hrain-logo">🧠 HRAIN 🌧️ v6.7</h1>  
          
         <div id="profile-controls"> 
             <label for="profile-select">Профиль:</label> 
@@ -45,18 +45,26 @@
         </div>
     </div>
     
-    <div id="color-palette" class="hidden">
-        <div class="color-swatch" style="background: #ffffff;" data-color="default"></div>
-        <div class="color-swatch" style="background: #ffcdd2;" data-color="red"></div>
-        <div class="color-swatch" style="background: #c8e6c9;" data-color="green"></div>
-        <div class="color-swatch" style="background: #bbdefb;" data-color="blue"></div>
-        <div class="color-swatch" style="background: #fff9c4;" data-color="yellow"></div>
-        <div class="color-swatch" style="background: #d1c4e9;" data-color="purple"></div>
+    <div id="context-menu-backdrop" class="hidden">
+        <div id="context-menu">
+            <div id="context-menu-buttons">
+                <button id="color-menu-btn" class="context-btn">🎨 Цвет</button>
+                <button id="delete-node-btn" class="context-btn red">🗑️ Удалить</button>
+            </div>
+            
+            <div id="palette-container" class="hidden">
+                <div class="color-swatch" style="background: #ffffff;" data-color="default"></div>
+                <div class="color-swatch" style="background: #ffcdd2;" data-color="red"></div>
+                <div class="color-swatch" style="background: #c8e6c9;" data-color="green"></div>
+                <div class="color-swatch" style="background: #bbdefb;" data-color="blue"></div>
+                <div class="color-swatch" style="background: #fff9c4;" data-color="yellow"></div>
+                <div class="color-swatch" style="background: #d1c4e9;" data-color="purple"></div>
+            </div>
+        </div>
     </div>
     
     <input type="file" id="file-importer" class="hidden" accept=".hrain, .json, .txt">
  
-    <script src="GukvakaniniJaba.js?v=6.6"></script> 
+    <script src="GukvakaniniJaba.js?v=6.7"></script> 
 </body> 
 </html>
-
