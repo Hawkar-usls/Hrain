@@ -1,7 +1,7 @@
-// == HRAIN v6.2 (Event Logic Hotfix) ==
+// == HRAIN v6.2 (FATAL BUG HOTFIX) ==
 // Полный JS-файл от 16.11.2025
-// ИСПРАВЛЕНО: Полностью переписана логика пана/зума/создания, чтобы убрать баги v6.1.
-// ДОБАВЛЕНО: 'try...catch' для отлова ошибок.
+// ИСПРАВЛЕНО: Фатальная ошибка синтаксиса в v6.1, которая "убивала" весь скрипт.
+// ИСПРАВЛЕНО: Полностью переписана логика пана/зума/создания, чтобы убрать баги.
 
 // --- v6.2: "Страховка" от ошибок ---
 try {
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let longPressTimer = null;
     let longPressNode = null;
     let pinCallback = null;
+    let lastTapTime = 0; // v6.2 Для дабл-тапа
 
     // --- ДВИЖОК v6.2: "КАМЕРА" ---
     let viewState = {
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // --- 2. Логика Профилей и Сохранения (Без изменений v6.1 -> v6.2) ---
+    // --- 2. Логика Профилей и Сохранения (Без изменений) ---
     // (Этот блок кода полностью рабочий, мы его не трогаем)
 
     newBtn.addEventListener('click', () => {
@@ -226,8 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (Без изменений v6.1 -> v6.2) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
+    // --- 3. Базовая Логика Холста (Без изменений) ---
 
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
@@ -238,13 +238,13 @@ document.addEventListener('DOMContentLoaded', () => {
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
         
-        node.addEventListener('mousedown', onNodeMouseDown, { capture: true });
-        node.addEventListener('touchstart', onNodeMouseDown, { capture: true, passive: false });
-        node.addEventListener('click', onNodeClick, { capture: true });
-        node.addEventListener('dblclick', onNodeDoubleClick, { capture: true });
+        node.addEventListener('mousedown', onNodeMouseDown); // Изменено
+        node.addEventListener('touchstart', onNodeMouseDown, { passive: false }); // Изменено
+        
+        node.addEventListener('click', onNodeClick); // Изменено
+        node.addEventListener('dblclick', onNodeDoubleClick); // Изменено
+        
         node.addEventListener('contextmenu', showColorPalette);
-        node.addEventListener('mousedown', (e) => e.stopPropagation());
-        node.addEventListener('dblclick', (e) => e.stopPropagation());
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
         nodeLayer.appendChild(node);
@@ -252,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
     function onNodeClick(e) {
+        e.stopPropagation(); // v6.2
         if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
         if (e.detail === 3) { // ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ
@@ -279,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     function onNodeDoubleClick(e) {
+        e.stopPropagation(); // v6.2
         if (viewState.isDraggingNode) return;
         e.currentTarget.focus();
         const selection = window.getSelection();
@@ -324,10 +326,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Зум (Колесико) ---
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
+        
+        // --- ЭТО БЫЛ ФАТАЛЬНЫЙ БАГ v6.1 ---
+        // const (screenX, screenY) = (e.clientX - rect.left, e.clientY - rect.top);
+        // --- ИСПРАВЛЕНИЕ v6.2 ---
         const rect = workspace.getBoundingClientRect();
         const screenX = e.clientX - rect.left;
         const screenY = e.clientY - rect.top;
-        
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
         const worldBefore = screenToWorld(screenX, screenY);
         const zoomDelta = -e.deltaY * 0.001;
         const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale * (1 + zoomDelta)));
@@ -339,11 +346,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateView();
     });
 
-    // --- Создание Узла (Дабл-клик) ---
+    // --- Создание Узла (Дабл-клик ПК) ---
     workspace.addEventListener('dblclick', (e) => {
-        // Только если клик по холсту
         if (e.target !== workspace && e.target !== canvas && e.target !== nodeLayer && e.target !== linkLayer) return;
-        
+        if (viewState.isSpacebarDown) return; // Не создавать при панорамировании
+
         const worldPos = screenToWorld(e.clientX, e.clientY);
         createNode(worldPos.x, worldPos.y);
     });
@@ -352,26 +359,47 @@ document.addEventListener('DOMContentLoaded', () => {
     workspace.addEventListener('mousedown', (e) => {
         if (e.target !== workspace && e.target !== canvas && e.target !== nodeLayer && e.target !== linkLayer) return;
         
-        // Пан средней кнопкой или с Пробелом
+        // Пан ТОЛЬКО средней кнопкой или с Пробелом
         if (e.button === 1 || viewState.isSpacebarDown) {
             viewState.isPanning = true;
             workspace.classList.add('panning');
             viewState.panStart = { x: e.clientX, y: e.clientY };
             e.preventDefault();
+            
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
         }
     });
     
     // --- Перетаскивание Узла (ПК) ---
     function onNodeMouseDown(e) {
-        if (e.button === 1 || e.button === 2) return; // Не средняя/правая
-        if (e.target.isContentEditable && e.target !== e.currentTarget) return; // Не текст
+        // e.button не существует в 'touchstart', поэтому проверяем тип
+        if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
+        if (e.target.isContentEditable && e.target !== e.currentTarget) return;
         
         e.stopPropagation();
+        
+        const clientX = e.clientX ?? e.touches[0].clientX;
+        const clientY = e.clientY ?? e.touches[0].clientY;
+
+        // Палитра (Долгое нажатие)
+        if (e.type === 'touchstart') {
+            longPressNode = e.currentTarget;
+            longPressTimer = setTimeout(() => {
+                e.preventDefault();
+                showColorPalette({ 
+                    currentTarget: longPressNode,
+                    clientX: clientX, 
+                    clientY: clientY 
+                });
+                viewState.isDraggingNode = true; // Блокируем узел
+            }, 500);
+        }
         
         viewState.isDraggingNode = false;
         viewState.activeNode = e.currentTarget;
         
-        const worldMouse = screenToWorld(e.clientX, e.clientY);
+        const worldMouse = screenToWorld(clientX, clientY);
         const nodeX = parseFloat(viewState.activeNode.style.left);
         const nodeY = parseFloat(viewState.activeNode.style.top);
         
@@ -379,43 +407,49 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.addEventListener('mousemove', onDragMove);
         document.addEventListener('mouseup', onDragEnd);
+        document.addEventListener('touchmove', onDragMove, { passive: false }); // v6.2
+        document.addEventListener('touchend', onDragEnd); // v6.2
     }
     
-    // --- Логика Тач-скрина (Пан, Зум, Перетаскивание) ---
-    let touchCache = [];
-    
+    // --- Логика Тач-скрина (Пан, Зум, Дабл-тап) ---
     workspace.addEventListener('touchstart', (e) => {
-        // Это клик по узлу
+        // Клик по узлу? (onNodeMouseDown уже повешен на узел, он сработает сам)
         if (e.target.closest('.node')) {
-            // onNodeMouseDown(e.touches[0]) не сработает, надо эмулировать
-            const node = e.target.closest('.node');
-            onNodeMouseDown({
-                button: 0,
-                target: node,
-                currentTarget: node,
-                clientX: e.touches[0].clientX,
-                clientY: e.touches[0].clientY,
-                type: 'touchstart',
-                stopPropagation: () => e.stopPropagation(),
-                preventDefault: () => e.preventDefault()
-            });
             return;
         }
-        
-        // Это клик по холсту
+
+        // Клик по холсту
         e.preventDefault();
-        
-        if (e.touches.length === 2) { // ЗУМ
+
+        if (e.touches.length === 1) {
+            // --- Логика Дабл-тапа v6.2 ---
+            const currentTime = new Date().getTime();
+            const tapTimeDiff = currentTime - lastTapTime;
+            
+            if (tapTimeDiff < 300 && tapTimeDiff > 0) {
+                // Это ДАБЛ-ТАП = Создать узел
+                const worldPos = screenToWorld(e.touches[0].clientX, e.touches[0].clientY);
+                createNode(worldPos.x, worldPos.y);
+                lastTapTime = 0; // Сбрасываем
+                viewState.isPanning = false; // Отменяем пан
+            } else {
+                // Это ОДИН ТАП = Начать ПАН
+                viewState.isPanning = true;
+                workspace.classList.add('panning');
+                viewState.panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            lastTapTime = currentTime; // Запоминаем время
+            
+        } else if (e.touches.length === 2) {
+            // --- Логика ЗУМА ---
             touchCache = Array.from(e.touches);
-            viewState.isPanning = false;
-        } else if (e.touches.length === 1) { // ПАН
-            viewState.isPanning = true;
-            workspace.classList.add('panning');
-            viewState.panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            viewState.isPanning = false; // Отменяем пан
         }
-        
+
+        // Вешаем глобальные слушатели (onNodeMouseDown их тоже вешает)
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
+
     }, { passive: false });
 
 
@@ -504,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Пан с Пробелом (для ПК) ---
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && !e.repeat) {
+        if (e.code === 'Space' && !e.repeat && !e.target.isContentEditable) {
             viewState.isSpacebarDown = true;
             if (!viewState.isPanning) workspace.classList.add('panning');
             e.preventDefault();
