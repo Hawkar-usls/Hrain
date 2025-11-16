@@ -1,4 +1,4 @@
-/* --- Глобальные переменные и сброс --- */
+/* --- HRAIN v4.0 CSS --- */
 :root {
     --bg-main: #f0f2f5;
     --bg-canvas: #ffffff;
@@ -18,11 +18,10 @@ body, html {
     overflow: hidden;
     background-color: var(--bg-main);
     color: var(--text-color);
-    /* Запрещаем браузеру "отскакивать" при прокрутке на мобильных */
     overscroll-behavior: none;
 }
 
-/* --- 1. Панель Управления (Верхняя) --- */
+/* --- 1. Панель Управления --- */
 #controls {
     position: absolute;
     top: 10px;
@@ -38,16 +37,13 @@ body, html {
     align-items: center;
     justify-content: space-between;
 }
-
 #hrain-title { font-size: 1.2em; margin: 0; color: var(--text-color); }
-
 .control-select {
     padding: 5px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     margin: 0 5px;
 }
-
 button {
     padding: 6px 12px;
     border: none;
@@ -59,7 +55,6 @@ button {
 button:active { transform: scale(0.95); }
 .green-button { background-color: var(--green-btn); color: white; }
 .red-button { background-color: var(--red-btn); color: white; }
-.aux-button { background-color: #e9e9eb; color: #333; }
 
 /* --- 2. Рабочая Область --- */
 #workspace {
@@ -69,24 +64,16 @@ button:active { transform: scale(0.95); }
     overflow: hidden; 
     background: var(--bg-canvas);
 }
-
-#canvas {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-}
-
+#canvas { width: 100%; height: 100%; position: absolute; }
 #link-layer {
     position: absolute;
     width: 100%;
     height: 100%;
     top: 0;
     left: 0;
-    pointer-events: none; /* Линии не мешают кликам */
+    pointer-events: none;
     overflow: visible;
 }
-
-/* НОВЫЙ СТИЛЬ: Сами линии (связи) */
 #link-layer line {
     stroke: var(--line-color);
     stroke-width: 3px;
@@ -107,7 +94,6 @@ button:active { transform: scale(0.95); }
     user-select: none;
     text-align: center;
     box-sizing: border-box; 
-    /* Плавное изменение для красоты */
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .node:focus {
@@ -116,52 +102,65 @@ button:active { transform: scale(0.95); }
     outline: none;
     cursor: text;
 }
-
-/* НОВЫЙ СТИЛЬ: Узел, который ждет 2-го клика для связи */
 .node.selected {
     border-color: var(--blue-btn);
     border-width: 3px;
     box-shadow: 0 0 15px rgba(0,122,255,0.7);
 }
-
-/* Стиль для плейсхолдера (подсказки) в пустом узле */
 [contenteditable="true"]:empty:before {
     content: attr(placeholder);
     color: #aaa;
     cursor: text;
 }
 
-/* --- 4. Боковые Панели --- */
-.side-panel {
-    position: absolute;
-    top: 80px; 
-    bottom: 20px;
-    width: 250px;
-    z-index: 90;
-    background: var(--bg-controls);
-    border: 1px solid var(--border-color);
+/* --- НОВЫЙ РАЗДЕЛ (v4.0): Модальное окно ПИН-кода --- */
+#pin-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#pin-modal-backdrop.hidden {
+    display: none;
+}
+
+#pin-modal {
+    background: white;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    padding: 15px;
-    overflow-y: auto;
-    
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+    width: 250px;
 }
-
-#hints {
-    right: 10px;
-    transform: translateX(110%);
+#pin-modal h3 {
+    margin-top: 0;
 }
-#analytics {
-    left: 10px;
-    transform: translateX(-110%);
+#pin-input {
+    width: 80%;
+    font-size: 2em;
+    text-align: center;
+    letter-spacing: 0.5em; /* Расстояние между цифрами */
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 10px;
 }
-
-.side-panel.visible {
-    visibility: visible;
-    opacity: 1;
-    transform: translateX(0);
+#pin-error {
+    color: var(--red-btn);
+    min-height: 1.2em;
+    margin-top: 5px;
+    font-size: 0.9em;
 }
-
+#pin-buttons {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+#pin-buttons button {
+    width: 48%;
+}
