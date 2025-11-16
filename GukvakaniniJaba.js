@@ -1,7 +1,8 @@
-// == HRAIN v6.4 (Triple-Click Hotfix) ==
+// == HRAIN v6.5 (The Final Click Fix) ==
 // Полный JS-файл от 16.11.2025
-// ИСПРАВЛЕНО: onNodeDoubleClick() больше не вызывает e.stopPropagation(),
-// что позволяет 3-му клику (e.detail === 3) сработать для удаления.
+// ИСПРАВЛЕНО: 'dblclick' полностью удален с узлов.
+// ИСПРАВЛЕНО: 'onNodeClick' теперь управляет 1, 2 и 3 кликами.
+// 1 = Линка, 2 = Редактирование, 3 = Удаление.
 
 // --- "Страховка" от ошибок ---
 try {
@@ -50,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 4.0;
     
-    // (Функции updateView, screenToWorld - без изменений)
     function updateView() {
         viewState.scale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale));
         const transform = `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`;
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.4) ---
+    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.5) ---
 
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
@@ -255,8 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
-        node.addEventListener('click', onNodeClick);
-        node.addEventListener('dblclick', onNodeDoubleClick); // <-- ИСПРАВЛЕНИЕ ЗДЕСЬ
+        
+        // --- ИСПРАВЛЕНИЕ v6.5 ---
+        // 'click' теперь управляет ВСЕМ
+        node.addEventListener('click', onNodeClick); 
+        // 'dblclick' больше не нужен, УДАЛЯЕМ его
+        // node.addEventListener('dblclick', onNodeDoubleClick); // <-- УДАЛЕНО
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
         node.addEventListener('contextmenu', showColorPalette);
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
@@ -265,13 +271,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
     
+    // --- ИСПРАВЛЕНИЕ v6.5: 'onNodeClick' теперь делает ВСЁ ---
     function onNodeClick(e) {
         e.stopPropagation();
-        if (viewState.isDraggingNode) return;
+        if (viewState.isDraggingNode) return; // Игнор, если это было перетаскивание
         const node = e.currentTarget;
 
         // --- ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ ---
         if (e.detail === 3) {
+            e.preventDefault(); // Остановить выделение текста браузером
+            
             const linesToRemove = document.querySelectorAll(`line[data-from="${node.id}"], line[data-to="${node.id}"]`);
             const neighborsToUpdate = new Set();
             linesToRemove.forEach(line => {
@@ -283,11 +292,27 @@ document.addEventListener('DOMContentLoaded', () => {
             node.remove();
             neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
             if (firstNodeForLink === node) firstNodeForLink = null;
-            return;
+            return; // Готово
+        }
+
+        // --- ДАБЛ-КЛИК = РЕДАКТИРОВАТЬ ТЕКСТ ---
+        if (e.detail === 2) {
+            e.preventDefault(); // Остановить выделение текста браузером
+            
+            node.focus();
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            return; // Готово
         }
 
         // --- ОДИН-КЛИК = СВЯЗАТЬ / УДАЛИТЬ СВЯЗЬ ---
         if (e.detail === 1) {
+            // (Ждем 10мс, чтобы убедиться, что это не дабл-клик)
+            // (Не нужно, e.detail уже = 1)
+            
             if (!firstNodeForLink) {
                 firstNodeForLink = node; node.classList.add('selected');
             } 
@@ -298,8 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else { 
                     createLink(firstNodeForLink, node);
                 }
-                updateNodeSize(firstNodeForLink); // v6.3
-                updateNodeSize(node); // v6.3
+                updateNodeSize(firstNodeForLink);
+                updateNodeSize(node);
                 firstNodeForLink.classList.remove('selected');
                 firstNodeForLink = null;
             }
@@ -310,19 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- ИСПРАВЛЕНИЕ v6.4 ---
-    // Я УБРАЛ 'e.stopPropagation()' ИЗ ЭТОЙ ФУНКЦИИ
-    function onNodeDoubleClick(e) {
-        // e.stopPropagation(); // <-- УДАЛЕНО! Это был баг.
-        
-        if (viewState.isDraggingNode) return;
-        e.currentTarget.focus();
-        const selection = window.getSelection();
-        const range = document.createRange();
-        range.selectNodeContents(e.currentTarget);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
+    // --- 'onNodeDoubleClick' БОЛЬШЕ НЕ НУЖЕН ---
     
     function createLink(node1, node2, skipCheck = false) {
         if (!skipCheck && findLink(node1, node2)) return;
@@ -410,7 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function onNodeMouseDown(e) {
         if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
         if (e.target.isContentEditable && e.target !== e.currentTarget) return;
-        e.stopPropagation();
+        
+        // v6.5: НЕ вызываем stopPropagation() здесь, чтобы click мог сработать
+        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
         if (e.type === 'touchstart') {
@@ -599,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.4 (Triple-Click Fix) загружен.');
+        console.log('HRAIN v6.5 (The Final Click Fix) загружен.');
     }
     
     init(); // Запускаем приложение
