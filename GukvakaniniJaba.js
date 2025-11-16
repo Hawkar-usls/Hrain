@@ -1,11 +1,9 @@
-// == HRAIN v6.7 (The Real Fix - Context Menu) ==
+// == HRAIN v6.8 (The Cyrillic & Menu Fix) ==
 // Полный JS-файл от 16.11.2025
-// УДАЛЕНО: Трипл-клик. Он конфликтует с iOS.
-// ДОБАВЛЕНО: Долгое нажатие -> Контекстное меню (Цвет, Удалить).
+// ИСПРАВЛЕНО: Функции encrypt/decrypt "умирали" на кириллице. (Fix #1)
+// ИСПРАВЛЕНО: Меню (Long-press) не появлялось из-за "дрожания" пальца. (Fix #2)
 
-// --- "Страховка" от ошибок ---
 try {
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Получаем все наши HTML-элементы ---
@@ -39,9 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Глобальные переменные ---
     let firstNodeForLink = null;
     let longPressTimer = null;
-    let nodeForMenu = null; // v6.7: Узел, для которого открыто меню
+    let nodeForMenu = null;
     let pinCallback = null;
     let lastTapTime = 0;
+    let dragStartPos = { x: 0, y: 0 }; // v6.8: Для "мертвой зоны"
 
     // --- ДВИЖОК v6.2: "КАМЕРА" ---
     let viewState = {
@@ -57,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 4.0;
     
-    // (Функции updateView, screenToWorld - без изменений)
     function updateView() {
         viewState.scale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, viewState.scale));
         const transform = `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`;
@@ -157,18 +155,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveMap(profileName, isNew) {
         showPinPrompt(isNew ? 'Создайте 4-значный ПИН' : 'Введите 4-значный ПИН', (pin) => {
             const mapData = serializeMap();
-            const encryptedData = encrypt(mapData, pin);
-            localStorage.setItem(`hrain_data_${profileName}`, encryptedData);
-            localStorage.setItem('hrain_lastProfile', profileName);
-            updateProfileList(profileName);
-            alert(`Профиль "${profileName}" успешно сохранен!`);
+            
+            // v6.8: Оборачиваем в try...catch на всякий случай
+            try {
+                const encryptedData = encrypt(mapData, pin); // v6.8: Используем НОВЫЙ encrypt
+                localStorage.setItem(`hrain_data_${profileName}`, encryptedData);
+                localStorage.setItem('hrain_lastProfile', profileName);
+                updateProfileList(profileName);
+                alert(`Профиль "${profileName}" успешно сохранен!`);
+            } catch (e) {
+                alert(`Критическая ошибка сохранения: ${e.message}. \n\nТекст (кириллица) в узлах может быть причиной. Попробуйте сохранить снова.`);
+            }
         });
     }
     function loadMap(profileName) {
         const encryptedData = localStorage.getItem(`hrain_data_${profileName}`);
         if (!encryptedData) { alert('Ошибка: Данные профиля не найдены.'); clearCanvas(); return; }
         showPinPrompt(`ПИН для "${profileName}"`, (pin) => {
-            const mapData = decrypt(encryptedData, pin);
+            const mapData = decrypt(encryptedData, pin); // v6.8: Используем НОВЫЙ decrypt
             if (mapData === null) { alert('Неверный ПИН-код!'); return; }
             deserializeMap(mapData);
             localStorage.setItem('hrain_lastProfile', profileName);
@@ -195,9 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function deserializeMap(jsonString) {
         clearCanvas();
         const data = JSON.parse(jsonString);
-        
         const nodesToUpdate = new Set();
-        
         data.nodes.forEach(nodeData => {
             const node = createNode(0, 0, nodeData.id, false);
             node.style.left = nodeData.x; node.style.top = nodeData.y;
@@ -215,9 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nodesToUpdate.add(node2);
             }
         });
-        
         nodesToUpdate.forEach(node => updateNodeSize(node));
-        
         if (data.view) {
             viewState.x = data.view.x || 0; viewState.y = data.view.y || 0; viewState.scale = data.view.scale || 1.0;
         } else {
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.7) ---
+    // --- 3. Базовая Логика Холста (v6.7) ---
 
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
@@ -257,16 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
         node.id = id || 'node_' + Date.now();
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
-        
         updateNodeSize(node); 
         
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
-        
-        // v6.7: 'click' управляет 1 и 2 кликами. 3-й (delete) убран.
         node.addEventListener('click', onNodeClick); 
-        
-        // v6.7: Правый клик заменен на 'showContextMenu'
         node.addEventListener('contextmenu', showContextMenu);
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
@@ -275,13 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return node;
     }
     
-    // v6.7: 'onNodeClick' теперь управляет 1 и 2 кликами
     function onNodeClick(e) {
         e.stopPropagation();
         if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
-
-        // --- ТРИПЛ-КЛИК (УДАЛЕНИЕ) ПОЛНОСТЬЮ УДАЛЕН ---
 
         // --- ДАБЛ-КЛИК = РЕДАКТИРОВАТЬ ТЕКСТ ---
         if (e.detail === 2) {
@@ -336,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     
-    // (updateAttachedLinks, getNodeCenter - без изменений)
     function updateAttachedLinks(node) {
         const nodeId = node.id;
         const newPos = getNodeCenter(node);
@@ -353,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
 
-    // --- Функция Авто-размера v6.3 (Без изменений) ---
     function updateNodeSize(node) {
         if (!node) return;
         const linkCount = document.querySelectorAll(
@@ -369,8 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 4. ДВИЖОК v6.2: Зум, Пан, Перетаскивание (Без изменений) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
+    // --- 4. ДВИЖОК v6.8: Зум, Пан, Перетаскивание (С ФИКСОМ "МЕРТВОЙ ЗОНЫ") ---
 
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
@@ -403,7 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // v6.7: 'onNodeMouseDown' теперь также отвечает за Долгое Нажатие
     function onNodeMouseDown(e) {
         if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
         if (e.target.isContentEditable && e.target !== e.currentTarget) return;
@@ -412,18 +400,19 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
+        
+        dragStartPos = { x: clientX, y: clientY }; // v6.8: Запоминаем точку старта
 
-        // v6.7: Логика Долгого Нажатия
         if (e.type === 'touchstart') {
-            nodeForMenu = e.currentTarget; // Запоминаем узел для меню
+            nodeForMenu = e.currentTarget;
             longPressTimer = setTimeout(() => {
                 e.preventDefault();
                 showContextMenu({ 
                     currentTarget: nodeForMenu,
                     clientX: clientX, clientY: clientY 
                 });
-                viewState.isDraggingNode = true; // Блокируем узел
-            }, 500); // 500ms
+                viewState.isDraggingNode = true;
+            }, 500);
         }
         
         viewState.isDraggingNode = false;
@@ -469,12 +458,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function onDragMove(e) {
         if (e.type === 'touchmove') e.preventDefault();
         
-        // v6.7: Если мы начали тащить, отменяем долгое нажатие
-        if (longPressTimer) clearTimeout(longPressTimer);
-        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
-        
+
+        // --- ИСПРАВЛЕНИЕ v6.8: "Мертвая зона" для меню ---
+        if (longPressTimer) {
+            const dist = Math.hypot(clientX - dragStartPos.x, clientY - dragStartPos.y);
+            if (dist > 5) { // Если палец сдвинулся > 5px
+                clearTimeout(longPressTimer); // Отменяем меню
+                longPressTimer = null;
+            }
+        }
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
         if (e.touches && e.touches.length === 2) {
             // (Логика зума - без изменений)
             const t1 = e.touches[0]; const t2 = e.touches[1];
@@ -547,14 +543,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // --- 5. Шифрование (Без изменений) ---
+    // --- 5. Шифрование (ИСПРАВЛЕНО v6.8 для КИРИЛЛИЦЫ) ---
+    
     function encrypt(text, key) {
+        // v6.8: Сначала кодируем Unicode (кириллицу) в "безопасную" строку
+        const safeText = encodeURIComponent(text);
         let result = '';
-        for (let i = 0; i < text.length; i++) {
-            result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        for (let i = 0; i < safeText.length; i++) {
+            result += String.fromCharCode(safeText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
         }
-        return btoa(result);
+        return btoa(result); // Теперь btoa() не "умрет"
     }
+
     function decrypt(encryptedText, key) {
         try {
             let text = atob(encryptedText); 
@@ -562,38 +562,45 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < text.length; i++) {
                 result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
             }
-            return result;
-        } catch (e) { return null; }
+            // v6.8: Раскодируем обратно в Unicode (кириллицу)
+            return decodeURIComponent(result);
+        } catch (e) { 
+            // Если ошибка (старый профиль БЕЗ кириллицы или плохой ПИН)
+            // Пытаемся по-старому
+            try {
+                let text = atob(encryptedText); 
+                let result = '';
+                for (let i = 0; i < text.length; i++) {
+                    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+                }
+                // Проверяем, что это JSON, а не мусор
+                JSON.parse(result); 
+                return result;
+            } catch (e2) {
+                return null; // Точно неверный ПИН
+            }
+        }
     }
     
-    // --- 6. НОВАЯ ЛОГИКА v6.7: Контекстное Меню ---
+    // --- 6. Логика Контекстного Меню (v6.7) ---
     function showContextMenu(e) {
         e.preventDefault();
         hideContextMenu();
-        
-        nodeForMenu = e.currentTarget; // Запоминаем узел
-        
-        // Позиционируем меню
+        nodeForMenu = e.currentTarget;
         contextMenu.style.left = `${e.clientX}px`;
         contextMenu.style.top = `${e.clientY}px`;
         contextMenuBackdrop.classList.remove('hidden');
-        paletteContainer.classList.add('hidden'); // Палитра по умолч. скрыта
+        paletteContainer.classList.add('hidden');
     }
-    
     function hideContextMenu() {
         contextMenuBackdrop.classList.add('hidden');
         nodeForMenu = null;
     }
-    
-    // Клик по "🎨 Цвет"
     colorMenuBtn.addEventListener('click', (e) => {
         paletteContainer.classList.toggle('hidden');
     });
-
-    // Клик по "🗑️ Удалить"
     deleteNodeBtn.addEventListener('click', (e) => {
         if (nodeForMenu) {
-            // Это та же логика, что была в 'трипл-клике'
             const linesToRemove = document.querySelectorAll(`line[data-from="${nodeForMenu.id}"], line[data-to="${nodeForMenu.id}"]`);
             const neighborsToUpdate = new Set();
             linesToRemove.forEach(line => {
@@ -608,8 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         hideContextMenu();
     });
-    
-    // Клик на палитре
     colorSwatches.forEach(swatch => {
         swatch.addEventListener('click', (e) => {
             const color = e.target.getAttribute('data-color');
@@ -623,8 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
             hideContextMenu();
         });
     });
-    
-    // Клик в любом другом месте закрывает меню
     contextMenuBackdrop.addEventListener('click', (e) => {
         if (e.target === contextMenuBackdrop) {
             hideContextMenu();
@@ -646,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.7 (Context Menu Fix) загружен.');
+        console.log('HRAIN v6.8 (Cyrillic & Menu Fix) загружен.');
     }
     
     init(); // Запускаем приложение
