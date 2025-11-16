@@ -3,14 +3,14 @@
 <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
-    <title>HRAIN - Визуализация Мышления v2.1.1</title> 
+    <title>HRAIN - Визуализация Мышления v4.0</title> 
      
-    <link rel="stylesheet" href="style.css?v=2.1.1">  
+    <link rel="stylesheet" href="style.css">  
 </head> 
 <body> 
  
     <div id="controls"> 
-        <h1 id="hrain-title">🧠 HRAIN v2.1.1</h1>  
+        <h1 id="hrain-title">🧠 HRAIN v4.0</h1>  
          
         <div id="profile-controls"> 
             <label for="profile-select">Профиль:</label> 
@@ -20,52 +20,26 @@
             <button id="newProfileButton" class="green-button">Новый</button> 
             <button id="deleteProfileButton" class="red-button">Удалить</button> 
         </div> 
- 
-        <div id="aux-controls"> 
-            <button id="toggleHintsButton" class="aux-button">Подсказки</button> 
-            <button id="toggleAnalyticsButton" class="aux-button">📊 Аналитика</button> 
-        </div> 
     </div> 
  
     <div id="workspace"> 
         <svg id="link-layer"></svg>  
-         
         <div id="canvas"> 
             </div> 
     </div> 
+    
+    <div id="pin-modal-backdrop" class="hidden">
+        <div id="pin-modal">
+            <h3 id="pin-title">Введите 4-значный ПИН</h3>
+            <input type="password" id="pin-input" pattern="[0-9]*" inputmode="numeric" maxlength="4" autocomplete="off">
+            <div id="pin-error"></div>
+            <div id="pin-buttons">
+                <button id="pin-cancel-btn" class="red-button">Отмена</button>
+                <button id="pin-ok-btn" class="green-button">OK</button>
+            </div>
+        </div>
+    </div>
  
-    <div id="hints" class="side-panel"> 
-        <h3>Подсказки HRAIN</h3> 
-        <ul> 
-            <li>**Создать узел:** Двойной клик/тап по фону.</li> 
-            <li>**Переместить холст:** Удерживайте ПРОБЕЛ / Тяните 1 пальцем по фону.</li> 
-            <li>**Переместить узел:** Тяните мышью/пальцем по узлу.</li> 
-            <li>**Зум/Масштаб:** Колесико / Pinch-to-Zoom.</li> 
-            <li>**Соединить:** Одинарный клик на 1-м, затем на 2-м узле.</li> 
-            <li>**Удалить узел/связь:** Двойной клик/тап по элементу.</li> 
-        </ul> 
-    </div> 
-     
-    <div id="analytics" class="side-panel"> 
-        <h3>📊 Аналитика Карты</h3> 
-        <p>Узлов на карте: <span id="node-count">0</span></p> 
-        <p>Всего связей: <span id="link-count">0</span></p> 
-         
-        <hr> 
-        <h4>Доминирующие Узлы (Топ-3):</h4> 
-        <ul id="dominant-nodes"> 
-            <li>Нет данных</li> 
-        </ul> 
-         
-        <hr> 
-        <h4>Тип Влияния:</h4> 
-        <select id="influence-type-select" class="control-select"> 
-            <option value="importance">Важность (Желтый)</option> 
-            <option value="flow">Поток (Голубой)</option> 
-            <option value="emotion">Эмоция (Красный)</option> 
-        </select> 
-    </div> 
- 
-    <script src="script.js?v=2.1.2"></script> 
+    <script src="GukvakaniniJaba.js"></script> 
 </body> 
 </html>
