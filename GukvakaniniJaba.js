@@ -1,7 +1,7 @@
-// == HRAIN v6.8 (The Cyrillic & Menu Fix) ==
+// == HRAIN v6.9 (The Quota Fix & Proof) ==
 // Полный JS-файл от 16.11.2025
-// ИСПРАВЛЕНО: Функции encrypt/decrypt "умирали" на кириллице. (Fix #1)
-// ИСПРАВЛЕНО: Меню (Long-press) не появлялось из-за "дрожания" пальца. (Fix #2)
+// ДОБАВЛЕНО: 'alert' в 'init()', чтобы доказать, что v6.9 загружен.
+// УЛУЧШЕНО: 'saveMap()' теперь отлавливает 'QuotaExceededError'.
 
 try {
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('canvas');
     const nodeLayer = document.getElementById('node-layer');
     const linkLayer = document.getElementById('link-layer');
-    
-    // ... (все остальные getElementById без изменений) ...
     const profileSelect = document.getElementById('profile-select');
     const saveBtn = document.getElementById('saveProfileButton');
     const newBtn = document.getElementById('newProfileButton');
@@ -25,8 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pinError = document.getElementById('pin-error');
     const pinCancelBtn = document.getElementById('pin-cancel-btn');
     const pinOkBtn = document.getElementById('pin-ok-btn');
-    
-    // v6.7: Новое Контекстное Меню
     const contextMenuBackdrop = document.getElementById('context-menu-backdrop');
     const contextMenu = document.getElementById('context-menu');
     const colorMenuBtn = document.getElementById('color-menu-btn');
@@ -40,9 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let nodeForMenu = null;
     let pinCallback = null;
     let lastTapTime = 0;
-    let dragStartPos = { x: 0, y: 0 }; // v6.8: Для "мертвой зоны"
+    let dragStartPos = { x: 0, y: 0 };
 
-    // --- ДВИЖОК v6.2: "КАМЕРА" ---
+    // --- ДВИЖОК: "КАМЕРА" ---
     let viewState = {
         x: 0, y: 0, scale: 1.0,
         isPanning: false,
@@ -68,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // --- 2. Логика Профилей и Сохранения (Без изменений) ---
-    // (Этот блок кода полностью рабочий, мы его не трогаем)
+    // --- 2. Логика Профилей и Сохранения (ОБНОВЛЕНО v6.9) ---
 
     newBtn.addEventListener('click', () => {
         const profileName = prompt('Введите имя нового профиля:');
@@ -152,27 +147,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pinCallback) pinCallback(pin);
         pinBackdrop.classList.add('hidden'); pinCallback = null;
     });
+    
+    // --- ИСПРАВЛЕНИЕ v6.9: Улучшена обработка ошибок ---
     function saveMap(profileName, isNew) {
         showPinPrompt(isNew ? 'Создайте 4-значный ПИН' : 'Введите 4-значный ПИН', (pin) => {
             const mapData = serializeMap();
             
-            // v6.8: Оборачиваем в try...catch на всякий случай
             try {
-                const encryptedData = encrypt(mapData, pin); // v6.8: Используем НОВЫЙ encrypt
+                const encryptedData = encrypt(mapData, pin);
+                
+                // Пробуем сохранить
                 localStorage.setItem(`hrain_data_${profileName}`, encryptedData);
                 localStorage.setItem('hrain_lastProfile', profileName);
+                
                 updateProfileList(profileName);
                 alert(`Профиль "${profileName}" успешно сохранен!`);
+                
             } catch (e) {
-                alert(`Критическая ошибка сохранения: ${e.message}. \n\nТекст (кириллица) в узлах может быть причиной. Попробуйте сохранить снова.`);
+                // ПРОВЕРЯЕМ ОШИБКУ КВОТЫ
+                if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    alert('ОШИБКА СОХРАНЕНИЯ: \n\nПамять браузера переполнена! (QuotaExceededError). \n\nЭкспортируйте старые профили, а затем удалите их, чтобы освободить место.');
+                } else {
+                    // Другая ошибка (как ошибка шифрования)
+                    alert(`КРИТИЧЕСКАЯ ОШИБКА СОХРАНЕНИЯ: \n\n${e.name}: ${e.message}.`);
+                }
             }
         });
     }
+    
     function loadMap(profileName) {
         const encryptedData = localStorage.getItem(`hrain_data_${profileName}`);
         if (!encryptedData) { alert('Ошибка: Данные профиля не найдены.'); clearCanvas(); return; }
         showPinPrompt(`ПИН для "${profileName}"`, (pin) => {
-            const mapData = decrypt(encryptedData, pin); // v6.8: Используем НОВЫЙ decrypt
+            const mapData = decrypt(encryptedData, pin);
             if (mapData === null) { alert('Неверный ПИН-код!'); return; }
             deserializeMap(mapData);
             localStorage.setItem('hrain_lastProfile', profileName);
@@ -180,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- Сериализация/Десериализация (Без изменений) ---
     function serializeMap() {
         const nodes = [];
         document.querySelectorAll('.node').forEach(node => {
@@ -225,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateView();
     }
-    
     function getProfileList() { 
         const profiles = localStorage.getItem('hrain_profiles');
         return profiles ? JSON.parse(profiles) : [];
@@ -248,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
     // --- 3. Базовая Логика Холста (v6.7) ---
-
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
         node.className = 'node';
@@ -258,24 +262,19 @@ document.addEventListener('DOMContentLoaded', () => {
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
         updateNodeSize(node); 
-        
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
         node.addEventListener('click', onNodeClick); 
         node.addEventListener('contextmenu', showContextMenu);
         node.addEventListener('wheel', (e) => e.stopPropagation());
-
         nodeLayer.appendChild(node);
         if (doFocus) node.focus();
         return node;
     }
-    
     function onNodeClick(e) {
         e.stopPropagation();
         if (viewState.isDraggingNode) return;
         const node = e.currentTarget;
-
-        // --- ДАБЛ-КЛИК = РЕДАКТИРОВАТЬ ТЕКСТ ---
         if (e.detail === 2) {
             e.preventDefault();
             node.focus();
@@ -286,19 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
             selection.addRange(range);
             return;
         }
-
-        // --- ОДИН-КЛИК = СВЯЗАТЬ / УДАЛИТЬ СВЯЗЬ ---
         if (e.detail === 1) {
             if (!firstNodeForLink) {
                 firstNodeForLink = node; node.classList.add('selected');
             } 
             else if (firstNodeForLink !== node) {
                 const existingLink = findLink(firstNodeForLink, node);
-                if (existingLink) { 
-                    existingLink.remove();
-                } else { 
-                    createLink(firstNodeForLink, node);
-                }
+                if (existingLink) { existingLink.remove(); }
+                else { createLink(firstNodeForLink, node); }
                 updateNodeSize(firstNodeForLink);
                 updateNodeSize(node);
                 firstNodeForLink.classList.remove('selected');
@@ -310,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    
     function createLink(node1, node2, skipCheck = false) {
         if (!skipCheck && findLink(node1, node2)) return;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -320,14 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAttachedLinks(node1);
         updateAttachedLinks(node2);
     }
-    
     function findLink(node1, node2) {
         return document.querySelector(
             `line[data-from="${node1.id}"][data-to="${node2.id}"],
              line[data-from="${node2.id}"][data-to="${node1.id}"]`
         );
     }
-    
     function updateAttachedLinks(node) {
         const nodeId = node.id;
         const newPos = getNodeCenter(node);
@@ -343,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const y = parseFloat(node.style.top || 0);
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
-
     function updateNodeSize(node) {
         if (!node) return;
         const linkCount = document.querySelectorAll(
@@ -358,9 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAttachedLinks(node);
     }
 
-
-    // --- 4. ДВИЖОК v6.8: Зум, Пан, Перетаскивание (С ФИКСОМ "МЕРТВОЙ ЗОНЫ") ---
-
+    // --- 4. ДВИЖОК v6.8: (с фиксом "мертвой зоны") ---
     workspace.addEventListener('wheel', (e) => {
         e.preventDefault();
         const rect = workspace.getBoundingClientRect();
@@ -391,17 +379,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('mouseup', onDragEnd);
         }
     });
-    
     function onNodeMouseDown(e) {
         if (e.type === 'mousedown' && (e.button === 1 || e.button === 2)) return; 
         if (e.target.isContentEditable && e.target !== e.currentTarget) return;
-        
         e.stopPropagation();
-        
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
         
-        dragStartPos = { x: clientX, y: clientY }; // v6.8: Запоминаем точку старта
+        dragStartPos = { x: clientX, y: clientY }; // v6.8
 
         if (e.type === 'touchstart') {
             nodeForMenu = e.currentTarget;
@@ -412,24 +397,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     clientX: clientX, clientY: clientY 
                 });
                 viewState.isDraggingNode = true;
+                longPressTimer = null; // v6.8
             }, 500);
         }
-        
         viewState.isDraggingNode = false;
         viewState.activeNode = e.currentTarget;
-        
         const worldMouse = screenToWorld(clientX, clientY);
         const nodeX = parseFloat(viewState.activeNode.style.left);
         const nodeY = parseFloat(viewState.activeNode.style.top);
-        
         viewState.nodeOffset = { x: worldMouse.x - nodeX, y: worldMouse.y - nodeY };
-        
         document.addEventListener('mousemove', onDragMove);
         document.addEventListener('mouseup', onDragEnd);
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
     }
-    
     workspace.addEventListener('touchstart', (e) => {
         if (e.target.closest('.node')) { return; }
         e.preventDefault();
@@ -454,23 +435,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
     }, { passive: false });
-    
     function onDragMove(e) {
         if (e.type === 'touchmove') e.preventDefault();
         
         const clientX = e.clientX ?? e.touches[0].clientX;
         const clientY = e.clientY ?? e.touches[0].clientY;
 
-        // --- ИСПРАВЛЕНИЕ v6.8: "Мертвая зона" для меню ---
+        // v6.8: "Мертвая зона" для меню
         if (longPressTimer) {
             const dist = Math.hypot(clientX - dragStartPos.x, clientY - dragStartPos.y);
             if (dist > 5) { // Если палец сдвинулся > 5px
-                clearTimeout(longPressTimer); // Отменяем меню
+                clearTimeout(longPressTimer);
                 longPressTimer = null;
             }
         }
-        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-
+        
         if (e.touches && e.touches.length === 2) {
             // (Логика зума - без изменений)
             const t1 = e.touches[0]; const t2 = e.touches[1];
@@ -566,15 +545,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return decodeURIComponent(result);
         } catch (e) { 
             // Если ошибка (старый профиль БЕЗ кириллицы или плохой ПИН)
-            // Пытаемся по-старому
             try {
                 let text = atob(encryptedText); 
                 let result = '';
                 for (let i = 0; i < text.length; i++) {
                     result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
                 }
-                // Проверяем, что это JSON, а не мусор
-                JSON.parse(result); 
+                JSON.parse(result); // Проверяем, что это JSON, а не мусор
                 return result;
             } catch (e2) {
                 return null; // Точно неверный ПИН
@@ -634,8 +611,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 7. Инициализация ---
+    // --- 7. Инициализация (v6.9 - с "Доказательством") ---
     function init() {
+        // v6.9: ДОКАЗАТЕЛЬСТВО
+        alert("HRAIN v6.8 (The Cyrillic Fix) ЗАГРУЖЕН.");
+        
         const lastProfile = localStorage.getItem('hrain_lastProfile');
         updateProfileList(lastProfile);
         
