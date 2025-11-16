@@ -1,8 +1,7 @@
-// == HRAIN v6.3 (The Living Map) ==
+// == HRAIN v6.4 (Triple-Click Hotfix) ==
 // Полный JS-файл от 16.11.2025
-// РЕАЛИЗОВАНО: Авто-размер узлов ("Сфера Влияния")
-// РЕАЛИЗОВАНО: Обновлен логотип
-// РЕАЛИЗОВАНО: Мягкий стиль узлов
+// ИСПРАВЛЕНО: onNodeDoubleClick() больше не вызывает e.stopPropagation(),
+// что позволяет 3-му клику (e.detail === 3) сработать для удаления.
 
 // --- "Страховка" от ошибок ---
 try {
@@ -190,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearCanvas();
         const data = JSON.parse(jsonString);
         
-        // v6.3: Создаем Set узлов для обновления размера
         const nodesToUpdate = new Set();
         
         data.nodes.forEach(nodeData => {
@@ -206,12 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const node2 = document.getElementById(linkData.to);
             if (node1 && node2) {
                 createLink(node1, node2, true);
-                nodesToUpdate.add(node1); // v6.3
-                nodesToUpdate.add(node2); // v6.3
+                nodesToUpdate.add(node1);
+                nodesToUpdate.add(node2);
             }
         });
         
-        // v6.3: Обновляем размер всех узлов после загрузки
         nodesToUpdate.forEach(node => updateNodeSize(node));
         
         if (data.view) {
@@ -222,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateView();
     }
     
-    // (getProfileList, updateProfileList, clearCanvas - без изменений)
     function getProfileList() { 
         const profiles = localStorage.getItem('hrain_profiles');
         return profiles ? JSON.parse(profiles) : [];
@@ -244,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function clearCanvas() { nodeLayer.innerHTML = ''; linkLayer.innerHTML = ''; }
 
-    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.3) ---
+    // --- 3. Базовая Логика Холста (ОБНОВЛЕНО v6.4) ---
 
     function createNode(worldX, worldY, id = null, doFocus = true) {
         const node = document.createElement('div');
@@ -255,13 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
         node.style.left = `${worldX - 60}px`;
         node.style.top = `${worldY - 30}px`;
         
-        // v6.3: Устанавливаем базовый размер
         updateNodeSize(node); 
         
         node.addEventListener('mousedown', onNodeMouseDown);
         node.addEventListener('touchstart', onNodeMouseDown, { passive: false });
         node.addEventListener('click', onNodeClick);
-        node.addEventListener('dblclick', onNodeDoubleClick);
+        node.addEventListener('dblclick', onNodeDoubleClick); // <-- ИСПРАВЛЕНИЕ ЗДЕСЬ
         node.addEventListener('contextmenu', showColorPalette);
         node.addEventListener('wheel', (e) => e.stopPropagation());
 
@@ -278,22 +273,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- ТРИПЛ-КЛИК = УДАЛИТЬ УЗЕЛ ---
         if (e.detail === 3) {
             const linesToRemove = document.querySelectorAll(`line[data-from="${node.id}"], line[data-to="${node.id}"]`);
-            
-            // v6.3: Находим всех "соседей", чтобы обновить их размер
             const neighborsToUpdate = new Set();
             linesToRemove.forEach(line => {
                 const otherNodeId = (line.dataset.from === node.id) ? line.dataset.to : line.dataset.from;
                 const otherNode = document.getElementById(otherNodeId);
                 if (otherNode) neighborsToUpdate.add(otherNode);
             });
-
-            // Удаляем узел и линии
             linesToRemove.forEach(line => line.remove());
             node.remove();
-            
-            // Обновляем размер "соседей"
             neighborsToUpdate.forEach(neighbor => updateNodeSize(neighbor));
-            
             if (firstNodeForLink === node) firstNodeForLink = null;
             return;
         }
@@ -305,17 +293,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } 
             else if (firstNodeForLink !== node) {
                 const existingLink = findLink(firstNodeForLink, node);
-                
                 if (existingLink) { 
-                    existingLink.remove(); // Удаляем связь
+                    existingLink.remove();
                 } else { 
-                    createLink(firstNodeForLink, node); // Создаем связь
+                    createLink(firstNodeForLink, node);
                 }
-                
-                // v6.3: Обновляем размер обоих узлов
-                updateNodeSize(firstNodeForLink);
-                updateNodeSize(node);
-                
+                updateNodeSize(firstNodeForLink); // v6.3
+                updateNodeSize(node); // v6.3
                 firstNodeForLink.classList.remove('selected');
                 firstNodeForLink = null;
             }
@@ -326,9 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // (onNodeDoubleClick - без изменений)
+    // --- ИСПРАВЛЕНИЕ v6.4 ---
+    // Я УБРАЛ 'e.stopPropagation()' ИЗ ЭТОЙ ФУНКЦИИ
     function onNodeDoubleClick(e) {
-        e.stopPropagation();
+        // e.stopPropagation(); // <-- УДАЛЕНО! Это был баг.
+        
         if (viewState.isDraggingNode) return;
         e.currentTarget.focus();
         const selection = window.getSelection();
@@ -344,8 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         line.setAttribute('data-from', node1.id);
         line.setAttribute('data-to', node2.id);
         linkLayer.appendChild(line);
-        
-        // v6.3: Обновляем линии (размер мог измениться)
         updateAttachedLinks(node1);
         updateAttachedLinks(node2);
     }
@@ -374,29 +358,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: x + node.offsetWidth / 2, y: y + node.offsetHeight / 2 };
     }
 
-    // --- НОВАЯ ФУНКЦИЯ v6.3: Авто-размер ---
-    /**
-     * Обновляет размер узла в зависимости от кол-ва связей
-     */
+    // --- Функция Авто-размера v6.3 (Без изменений) ---
     function updateNodeSize(node) {
         if (!node) return;
-        
         const linkCount = document.querySelectorAll(
             `line[data-from="${node.id}"], line[data-to="${node.id}"]`
         ).length;
-        
-        // Базовые значения
-        const basePadding = 10; // (в px)
-        const baseMinWidth = 100; // (в px)
-        
-        // Формула роста
+        const basePadding = 10;
+        const baseMinWidth = 100;
         const newPadding = basePadding + (linkCount * 2);
         const newMinWidth = baseMinWidth + (linkCount * 8);
-        
-        node.style.padding = `${newPadding}px 15px`; // Растет только вверх/вниз
+        node.style.padding = `${newPadding}px 15px`;
         node.style.minWidth = `${newMinWidth}px`;
-        
-        // ВАЖНО: После изменения размера нужно обновить линии
         updateAttachedLinks(node);
     }
 
@@ -626,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Добро пожаловать в HRAIN! \nНажмите "Новый", чтобы создать свой первый профиль.');
             }
         }
-        console.log('HRAIN v6.3 (Living Map) загружен.');
+        console.log('HRAIN v6.4 (Triple-Click Fix) загружен.');
     }
     
     init(); // Запускаем приложение
