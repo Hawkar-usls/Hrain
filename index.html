@@ -1,145 +1,71 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HRaine (Шрайн) v0.2</title>
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            overflow: hidden;
-            background-color: #f4f7f6;
-        }
-
-        #canvas {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        .cloud {
-            position: absolute;
-            min-width: 100px; /* Минимальная ширина */
-            min-height: 30px; /* Минимальная высота */
-            padding: 12px 20px;
-            background-color: #ffffff;
-            border-radius: 25px;
-            border: 2px solid #a2a9b1;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            cursor: grab;
-            user-select: none;
-            color: #333;
-            
-            /* НОВОЕ (Пункт 4): Включаем изменение размера */
-            resize: both; /* Можно тянуть за угол */
-            overflow: auto; /* Показывает скролл, если текст не влезает */
-        }
-
-        .cloud:active {
-            cursor: grabbing;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        /* НОВОЕ (Пункт 2): Стиль для редактирования текста */
-        .cloud:focus {
-            border-color: #007aff; /* Подсветка при вводе текста */
-            cursor: text;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="canvas"></div>
-
-    <script>
-        const canvas = document.getElementById('canvas');
-        let isDragging = false; // Флаг, чтобы отделить клик от перетаскивания
-
-        // 1. СОЗДАНИЕ: Дабл-клик на холсте
-        canvas.addEventListener('dblclick', function(e) {
-            if (e.target === canvas) {
-                createCloud(e.clientX, e.clientY);
-            }
-        });
-
-        function createCloud(x, y) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            
-            // НОВОЕ (Пункт 2): Делаем облако редактируемым
-            cloud.contentEditable = "true";
-            cloud.textContent = 'Идея...'; // Текст по умолчанию
-            
-            cloud.style.left = (x - 60) + 'px';
-            cloud.style.top = (y - 30) + 'px';
-
-            // 2. УДАЛЕНИЕ: Трипл-клик по облаку
-            cloud.addEventListener('click', function(e) {
-                if (e.detail === 3) { // 3 клика
-                    cloud.remove();
-                }
-            });
-
-            // 3. ПЕРЕТАСКИВАНИЕ
-            makeDraggable(cloud);
-
-            canvas.appendChild(cloud);
-        }
-
-        function makeDraggable(element) {
-            let offset = [0, 0];
-
-            element.addEventListener('mousedown', function(e) {
-                // НЕ начинать перетаскивание, если кликнули на угол для resize
-                if (e.target !== element) return; 
-
-                // Не двигать, если это не левая кнопка мыши
-                if (e.button !== 0) return;
-                
-                isDragging = true;
-                element.style.cursor = 'grabbing';
-                element.style.zIndex = 1000;
-                
-                offset = [
-                    element.offsetLeft - e.clientX,
-                    element.offsetTop - e.clientY
-                ];
-            }, false); // 'false' важен для правильного срабатывания
-
-            document.addEventListener('mouseup', function() {
-                if (isDragging) {
-                    isDragging = false;
-                    element.style.cursor = 'grab';
-                    element.style.zIndex = 10;
-                }
-            }, true);
-
-            document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                
-                element.style.left = (e.clientX + offset[0]) + 'px';
-                element.style.top = (e.clientY + offset[1]) + 'px';
-            }, true);
-
-            // НОВОЕ (Пункт 2): Запретить перетаскивание, когда мы редактируем текст
-            element.addEventListener('click', function(e) {
-                // Если это был не тройной клик, фокусируемся для ввода текста
-                if (e.detail < 3) {
-                    element.focus();
-                }
-            });
-
-            // Запрещаем mousedown "всплывать" изнутри, когда мы пишем текст
-            element.addEventListener('mousedown', function(e) {
-                if (element.isContentEditable) {
-                    e.stopPropagation(); // Остановить событие, чтобы не сработало перетаскивание
-                }
-            });
-        }
-    </script>
-</body>
+<!DOCTYPE html> 
+<html lang="ru"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+    <title>HRAIN - Визуализация Мышления v2.1.1</title> 
+     
+    <link rel="stylesheet" href="style.css?v=2.1.1">  
+</head> 
+<body> 
+ 
+    <div id="controls"> 
+        <h1 id="hrain-title">🧠 HRAIN v2.1.1</h1>  
+         
+        <div id="profile-controls"> 
+            <label for="profile-select">Профиль:</label> 
+            <select id="profile-select" class="control-select"></select> 
+             
+            <button id="saveProfileButton" class="green-button">Сохранить</button> 
+            <button id="newProfileButton" class="green-button">Новый</button> 
+            <button id="deleteProfileButton" class="red-button">Удалить</button> 
+        </div> 
+ 
+        <div id="aux-controls"> 
+            <button id="toggleHintsButton" class="aux-button">Подсказки</button> 
+            <button id="toggleAnalyticsButton" class="aux-button">📊 Аналитика</button> 
+        </div> 
+    </div> 
+ 
+    <div id="workspace"> 
+        <svg id="link-layer"></svg>  
+         
+        <div id="canvas"> 
+            </div> 
+    </div> 
+ 
+    <div id="hints" class="side-panel"> 
+        <h3>Подсказки HRAIN</h3> 
+        <ul> 
+            <li>**Создать узел:** Двойной клик/тап по фону.</li> 
+            <li>**Переместить холст:** Удерживайте ПРОБЕЛ / Тяните 1 пальцем по фону.</li> 
+            <li>**Переместить узел:** Тяните мышью/пальцем по узлу.</li> 
+            <li>**Зум/Масштаб:** Колесико / Pinch-to-Zoom.</li> 
+            <li>**Соединить:** Одинарный клик на 1-м, затем на 2-м узле.</li> 
+            <li>**Удалить узел/связь:** Двойной клик/тап по элементу.</li> 
+        </ul> 
+    </div> 
+     
+    <div id="analytics" class="side-panel"> 
+        <h3>📊 Аналитика Карты</h3> 
+        <p>Узлов на карте: <span id="node-count">0</span></p> 
+        <p>Всего связей: <span id="link-count">0</span></p> 
+         
+        <hr> 
+        <h4>Доминирующие Узлы (Топ-3):</h4> 
+        <ul id="dominant-nodes"> 
+            <li>Нет данных</li> 
+        </ul> 
+         
+        <hr> 
+        <h4>Тип Влияния:</h4> 
+        <select id="influence-type-select" class="control-select"> 
+            <option value="importance">Важность (Желтый)</option> 
+            <option value="flow">Поток (Голубой)</option> 
+            <option value="emotion">Эмоция (Красный)</option> 
+        </select> 
+    </div> 
+ 
+    <script src="script.js?v=2.1.2"></script> 
+</body> 
 </html>
