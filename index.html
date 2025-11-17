@@ -1,70 +1,237 @@
-<!DOCTYPE html> 
-<html lang="ru"> 
-<head> 
-    <meta charset="UTF-8"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
-    <title>HRAIN - Визуализация Мышления v6.9</title> 
-     
-    <link rel="stylesheet" href="style.css?v=6.9">  
-</head> 
-<body> 
- 
-    <div id="controls"> 
-        <h1 id="hrain-logo">🧠 HRAIN 🌧️ v6.9</h1>  
-         
-        <div id="profile-controls"> 
-            <label for="profile-select">Профиль:</label> 
-            <select id="profile-select" class="control-select"></select> 
-            
-            <button id="importProfileButton" class="aux-button" title="Импорт">Импорт</button>
-            <button id="exportProfileButton" class="aux-button" title="Экспорт">Экспорт</button>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Тамагочи Спойлера C4</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #111;
+      color: #ffcc80;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      user-select: none;
+    }
+    #game {
+      display: flex;
+      height: 100vh;
+    }
+    canvas {
+      image-rendering: pixelated;
+      background: #1a1a1a;
+      box-shadow: 0 0 20px #330000;
+    }
+    #ui {
+      width: 300px;
+      padding: 15px;
+      background: #222;
+      border-left: 2px solid #444;
+      overflow-y: auto;
+    }
+    .bar {
+      height: 16px;
+      background: #333;
+      border: 1px solid #555;
+      margin: 8px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b6b, #feca57);
+      transition: width 0.3s;
+    }
+    .label { font-size: 14px; margin: 10px 0 5px; color: #ffcc80; }
+    #log {
+      height: 200px;
+      overflow-y: auto;
+      background: #000;
+      padding: 10px;
+      font-size: 13px;
+      border: 1px solid #444;
+      margin-top: 15px;
+    }
+    .log-entry {
+      margin: 2px 0;
+      opacity: 0;
+      animation: fadein 0.5s forwards;
+    }
+    @keyframes fadein { from {opacity:0; transform:translateY(-5px);} to {opacity:1; transform:none;} }
+    h1 { font-size: 18px; color: #ff6b6b; text-align: center; margin-bottom: 10px; }
+    button {
+      background: #333;
+      color: #ffcc80;
+      border: 1px solid #555;
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover { background: #444; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+      <h1>СПойЛЕР C4</h1>
+      <div class="label">Питомец: <span id="petName">Гномёнок</span></div>
+      <div class="label">Уровень: <span id="level">1</span></div>
+      <div class="bar"><div id="expBar" class="fill" style="width:0%"></div></div>
 
-            <button id="saveProfileButton" class="green-button" title="Сохранить">Сохранить</button> 
-            <button id="newProfileButton" class="green-button" title="Новый">Новый</button> 
-            <button id="deleteProfileButton" class="red-button" title="Удалить">Удалить</button> 
-        </div> 
-    </div> 
- 
-    <div id="workspace"> 
-        <div id="canvas">
-            <svg id="link-layer"></svg>  
-            <div id="node-layer">
-                </div>
-        </div>
-    </div> 
-    
-    <div id="pin-modal-backdrop" class="hidden">
-        <div id="pin-modal">
-            <h3 id="pin-title">Введите 4-значный ПИН</h3>
-            <input type="password" id="pin-input" pattern="[0-9]*" inputmode="numeric" maxlength="4" autocomplete="off">
-            <div id="pin-error"></div>
-            <div id="pin-buttons">
-                <button id="pin-cancel-btn" class="red-button">Отмена</button>
-                <button id="pin-ok-btn" class="green-button">OK</button>
-            </div>
-        </div>
+      <div class="label">Спойл-мастерство: <span id="spoilLevel">1</span></div>
+      <div class="bar"><div id="spoilBar" class="fill" style="width:0%"></div></div>
+
+      <div class="label">Аден: <span id="adena">0</span></div>
+      <div class="label">Пудры: <span id="crystals">0</span></div>
+      <div class="label">Материалы: <span id="mats">0</span></div>
+
+      <button id="buyBeer">Купить Пиво (+Bravery, 500 аден)</button>
+
+      <div id="log"></div>
+      <div style="margin-top:10px; font-size:12px; color:#777;">
+        WASD — ходьба<br>
+        Пробел — спойл<br>
+        Клик — выбрать цель
+      </div>
     </div>
-    
-    <div id="context-menu-backdrop" class="hidden">
-        <div id="context-menu">
-            <div id="context-menu-buttons">
-                <button id="color-menu-btn" class="context-btn">🎨 Цвет</button>
-                <button id="delete-node-btn" class="context-btn red">🗑️ Удалить</button>
-            </div>
-            
-            <div id="palette-container" class="hidden">
-                <div class="color-swatch" style="background: #ffffff;" data-color="default"></div>
-                <div class="color-swatch" style="background: #ffcdd2;" data-color="red"></div>
-                <div class="color-swatch" style="background: #c8e6c9;" data-color="green"></div>
-                <div class="color-swatch" style="background: #bbdefb;" data-color="blue"></div>
-                <div class="color-swatch" style="background: #fff9c4;" data-color="yellow"></div>
-                <div class="color-swatch" style="background: #d1c4e9;" data-color="purple"></div>
-            </div>
-        </div>
-    </div>
-    
-    <input type="file" id="file-importer" class="hidden" accept=".hrain, .json, .txt">
- 
-    <script src="GukvakaniniJaba.js?v=6.9"></script> 
-</body> 
-</html>
+  </div>
+
+  <script>
+    // === КОНФИГ ===
+    const CONFIG = {
+      ROOM_SIZE: 300,
+      CELL_SIZE: 60,
+      MOB_RESPAWN: 15000,
+      SPOIL_CHANCE_BASE: 0.3,
+      SPOIL_BONUS_PER_LEVEL: 0.1,
+      ATTACK_RANGE: 80,
+      MOVE_SPEED: { player: 2.5, npc: 1.8, mob: 1.2 },
+      PET_GOAL_ADENA: 10000
+    };
+
+    // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const logEl = document.getElementById('log');
+    let entities = [];
+    let player, pet = {
+      level: 1, exp: 0, expToNext: 100,
+      spoilLevel: 1, spoilExp: 0, spoilToNext: 100,
+      adena: 0, crystals: 0, mats: 0,
+      bravery: 0.5
+    };
+
+    // === РЕСАЙЗ ===
+    function resize() {
+      const w = window.innerWidth - 320;
+      const h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // === КЛАССЫ ===
+    class Unit {
+      constructor(x, y, type, symbol, color, hp = 100, str = 10, def = 5) {
+        this.x = x; this.y = y;
+        this.type = type;
+        this.symbol = symbol;
+        this.color = color;
+        this.hp = hp; this.maxHp = hp;
+        this.str = str; this.def = def;
+        this.target = null;
+        this.allianceId = Math.random() > 0.5 ? 1 : 2;
+        this.spawnRoom = this.getRoom();
+        this.spawnCenter = this.getRoomCenter(this.spawnRoom);
+        this.isFleeing = false;
+        this.fleeTimer = 0;
+        this.bravery = type === 'gnome' ? Math.random() : 0.7;
+        entities.push(this);
+      }
+      getRoom() {
+        const rx = Math.floor(this.x / CONFIG.ROOM_SIZE);
+        const ry = Math.floor(this.y / CONFIG.ROOM_SIZE);
+        return ry * 2 + rx;
+      }
+      getRoomCenter(room) {
+        const rx = room % 2, ry = Math.floor(room / 2);
+        return {
+          x: rx * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE / 2,
+          y: ry * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE / 2
+        };
+      }
+      moveTo(tx, ty, speed) {
+        const dx = tx - this.x, dy = ty - this.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 5) return;
+        this.x += (dx/dist) * speed;
+        this.y += (dy/dist) * speed;
+      }
+      attack(target) {
+        if (!target || target.hp <= 0) return;
+        const dist = Math.hypot(this.x - target.x, this.y - target.y);
+        if (dist > CONFIG.ATTACK_RANGE) return;
+
+        const dmg = Math.max(1, this.str - target.def + (Math.random() * 5 | 0));
+        target.hp -= dmg;
+        log(`${this.symbol} → ${target.symbol}: -${dmg} HP`, this.color);
+
+        // Контратака
+        if (target.target !== this) {
+          target.target = this;
+        }
+
+        if (target.hp <= 0) {
+          this.onKill(target);
+          target.die();
+        }
+      }
+      spoil(target) {
+        if (this.type !== 'player' && this.type !== 'gnome') return;
+        if (!target || target.spoiled) return;
+
+        const chance = CONFIG.SPOIL_CHANCE_BASE + (pet.spoilLevel - 1) * CONFIG.SPOIL_BONUS_PER_LEVEL;
+        if (Math.random() < chance) {
+          target.spoiled = true;
+          const loot = ['Animal Bone', 'Iron Ore', 'Craft Leather', 'Bone Dust', 'Crystal: D'];
+          const item = loot[Math.floor(Math.random() * loot.length)];
+          if (item.includes('Crystal')) pet.crystals++;
+          else pet.mats++;
+          log(`SPOIL! +${item}`, '#ffd700');
+          pet.spoilExp += 10;
+          checkSpoilLevel();
+        } else {
+          log(`Спойл провал...`, '#888');
+        }
+      }
+      onKill(target) {
+        pet.adena += 50 + Math.random() * 100 | 0;
+        pet.exp += 15;
+        checkLevel();
+        if (target.spoiled) {
+          pet.adena += 100;
+          log(`+100 аден (спойл)`, '#ffcc80');
+        }
+      }
+      die() {
+        if (this.type === 'player') {
+          log(`ТЫ УМЕР! -50% адены`, '#ff0000');
+          pet.adena = Math.floor(pet.adena * 0.5);
+          setTimeout(resetDungeon, 2000);
+        }
+        entities = entities.filter(e => e !== this);
+      }
+    }
+
+    class Player extends Unit {
+      constructor() {
+        super(150, 150, 'player', '⚒️', '#ff6b6b', 200, 15, 8);
+        player = this;
+      }
+    }
+
+    class Mob extends Unit
