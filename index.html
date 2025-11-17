@@ -1,774 +1,224 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Pocket RPG: Pixel Grind</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pocket L2 • Telegram Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root {
-      --bg: #0a0a0a;
-      --wall: #111;
-      --floor: #000;
-      --red: #ff4444;
-      --green: #44ff44;
-      --player-color: #ffffff;
-      --gnome-color: #ffd700;
-      --orc-color: #008000;
-      --mob-color: #ff4444;
-      --ui-height: 240px; 
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      background: var(--bg);
-      color: #ffcc80;
-      font-family: 'Press Start 2P', cursive;
-      overflow: hidden;
-      user-select: none;
-      touch-action: none;
-    }
-    #game { 
-      display: flex; 
-      flex-direction: column; 
-      height: 100vh; 
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-      background: var(--floor);
-      box-shadow: 0 0 30px #330000 inset;
-      flex-grow: 1;
-    }
-    #ui-container {
-      display: flex; 
-      flex-direction: column; 
-      height: var(--ui-height);
-    }
-    #ui {
-      padding: 15px;
-      background: #111;
-      border-top: 3px solid #444;
-      font-size: 12px;
-      flex-shrink: 0;
-    }
-    #log {
-      height: 100%;
-      overflow-y: auto;
-      background: #000;
-      padding: 10px;
-      border: 2px solid #444;
-      margin-top: 5px;
-      border-radius: 8px;
-      font-size: 11px;
-      color: #ccc;
-      flex-grow: 1;
-      max-height: 60px;
-      order: 3;
-    }
-
-    .bar {
-      height: 18px;
-      background: #222;
-      border: 2px solid #555;
-      margin: 5px 0;
-      border-radius: 9px;
-      overflow: hidden;
-    }
-    .fill {
-      height: 100%;
-      background: linear-gradient(90deg, #ff6b6b, #feca57, #a0e7a0);
-      border-radius: 6px;
-      transition: width 0.4s ease;
-    }
-    .label {
-      margin: 4px 0 2px;
-      color: #ffcc80;
-      display: flex;
-      justify-content: space-between;
-    }
-    
-    h1 {
-      font-size: 16px;
-      color: #ff6b6b;
-      text-align: center;
-      margin-bottom: 5px;
-      text-shadow: 0 0 10px #ff0000;
-    }
-
-    .shop-btn {
-        font-family:'Press Start 2P', cursive; 
-        font-size:8px; 
-        padding:5px; 
-        margin: 2px;
-        background: #333; 
-        color: #ffcc80; 
-        border: 2px solid #555; 
-        border-radius:5px;
-        flex-grow: 1;
-        min-width: 0;
-    }
-
-    #statusBtn {
-        position: absolute;
-        right: 20px; 
-        bottom: calc(20px + var(--ui-height));
-        width: 100px; height: 100px;
-        background: radial-gradient(circle, #00ff00, #009900);
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        color: #fff;
-        font-weight: bold;
-        box-shadow: 0 0 25px #00ff00;
-        z-index: 100;
-        border: 4px solid #00ff00;
-    }
-    
-    .spoil-effect {
-      position: absolute;
-      color: #ffd700;
-      font-weight: bold;
-      pointer-events: none;
-      animation: float 1s ease-out forwards;
-      z-index: 50;
-    }
-    @keyframes float {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-50px); opacity: 0; }
-    }
-
-    /* СТИЛИ ДЛЯ ВЫБОРА КЛАССА */
-    #classSelect {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.95);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 200;
-        color: white;
-        text-align: center;
-    }
-    .class-option {
-        margin: 10px;
-        padding: 15px 30px;
-        background: #333;
-        border: 2px solid #555;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-        width: 80%;
-        max-width: 300px;
-    }
-    .class-option:hover {
-        background: #555;
-    }
+    body { margin:0; padding:0; background:#000; font-family:'Courier New',monospace; color:#0f0; overflow:hidden; image-rendering:pixelated; }
+    #gameContainer { position:relative; width:100vw; height:100vh; }
+    #ui { position:absolute; top:5px; right:5px; width:150px; background:rgba(0,20,0,0.9); border:2px solid #0f0; padding:8px; border-radius:5px; z-index:100; font-size:9px; }
+    button { width:100%; margin:3px 0; padding:6px; background:#4a4; color:#000; border:1px solid #0f0; font:inherit; font-weight:bold; }
+    #log { height:70px; overflow-y:auto; background:rgba(0,0,0,0.6); padding:3px; font-size:8px; }
+    #chatInput { position:absolute; bottom:10px; left:10px; right:10px; background:#000; color:#0f0; border:2px solid #0f0; padding:8px; font:inherit; display:none; z-index:200; }
+    #minimap { position:absolute; bottom:10px; right:10px; width:70px; height:70px; border:1px solid #0f0; z-index:50; image-rendering:pixelated; }
+    #joystick { position:absolute; bottom:20px; left:20px; width:100px; height:100px; background:rgba(0,255,0,0.2); border-radius:50%; z-index:99; }
+    #joystick-knob { position:absolute; width:40px; height:40px; background:#0f0; border-radius:50%; top:30px; left:30px; }
   </style>
 </head>
 <body>
-  <div id="game">
-    <canvas id="canvas"></canvas>
-
-    <div id="statusBtn">
-      <div style="font-size:18px">🟢</div>
-      FARM
-    </div>
-    
-    <div id="classSelect">
-        <h1>ВЫБЕРИ СУДЬБУ ГНОМА</h1>
-        <p style="font-size:10px; margin: 15px 0;">(Начальные статы)</p>
-        <div class="class-option" onclick="selectClass('fighter')">
-            ВОИН ГНОМ ⚔️<br><span style="font-size:9px; color: #ff6b6b;">STR: 18 / DEF: 7</span>
-        </div>
-        <div class="class-option" onclick="selectClass('spoiler')">
-            СПОЙЛЕР 💰<br><span style="font-size:9px; color: #ffd700;">STR: 16 / DEF: 8 / Spoil Lvl: 3</span>
-        </div>
-        <div class="class-option" onclick="selectClass('crafter')">
-            МАСТЕР (AFK) 🛠️<br><span style="font-size:9px; color: #00ffff;">STR: 15 / DEF: 10 / HP Reg: 1/s</span>
-        </div>
-    </div>
-    <div id="ui-container">
-        <div id="ui">
-            <h1>КАТАКОМБЫ (Micro-Sim)</h1>
-            <div class="label">Уровень: <span id="level">1</span> (STR: <span id="str">16</span> | DEF: <span id="def">9</span>)</div>
-            <div class="bar"><div id="expBar" class="fill" style="width:0%"></div></div>
-
-            <div class="label">Спойл LVL: <span id="spoilLevel">1</span> | Кристаллизация: <span id="crystalChance">0%</span></div>
-            <div class="bar"><div id="spoilBar" class="fill" style="width:0%"></div></div>
-
-            <div class="label">Аден: <span id="adena">0</span> | Пудры (C): <span id="crystals">0</span> | Мат-лы (M): <span id="mats">0</span></div>
-            <div class="label" style="font-size:10px; color:#ffd700;">SPOIL CHANCE BONUS: <span id="allySpoilBonus">0%</span> | HP Reg: <span id="hpReg">0</span>/s</div>
-            
-            <div style="display:flex; justify-content: space-around; margin-top:10px;">
-                <button id="buyWeapon" class="shop-btn">Оружие +1 STR [500 A]</button>
-                <button id="buyArmor" class="shop-btn">Броня +1 DEF [500 A]</button>
-                <button id="upgradeSpd" class="shop-btn" style="background: #004400; border-color:#00ff88;">FARM SPD (+5%) [10 C]</button>
-            </div>
-            <div style="display:flex; justify-content: space-around; margin-top:5px;">
-                <button id="buyHpReg" class="shop-btn" style="background:#550000; border-color:#ff0000;">HP REG (+1/s) [10 M]</button>
-                <button id="upgradeCrystal" class="shop-btn" style="background: #000055; border-color:#0000ff;">CRYSTAL UP (+5%) [15 M]</button>
-                <button id="upgradeSpoil" class="shop-btn" style="background: #555500; border-color:#ffff00;">SPOIL UP (+5%) [15 C]</button>
-            </div>
-        </div>
-        <div id="log"></div>
-    </div>
+<div id="gameContainer">
+  <canvas id="minimap"></canvas>
+  <div id="ui">
+    <div id="name">Герой</div>
+    Ур:<span id="level">1</span> HP:<span id="hp">100</span>/<span id="maxhp">100</span><br>
+    Зол:<span id="gold">0</span>
+    <button id="autofarm">Фарм</button>
+    <button id="pvpBtn">PvP</button>
+    <button id="chatBtn">Чат</button>
+    <div id="log"></div>
   </div>
+  <input type="text" id="chatInput" placeholder="Сообщение..." maxlength="60">
+  <div id="joystick"><div id="joystick-knob"></div></div>
+</div>
 
-  <script>
-    // === ГЛОБАЛЬНЫЕ ===
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const logEl = document.getElementById('log');
-    const classSelectScreen = document.getElementById('classSelect');
-    
-    let entities = [];
-    let player, pet = {}; // Инициализируется в selectClass
-    let camera = { x:0, y:0 }; 
-    let selectedTarget = null;
-    let mobSpawnInterval;
-    
-    const CLASS_STATS = {
-        fighter: { baseStr: 18, baseDef: 7, baseHp: 230, spoilLvl: 1, initialRegen: 0 },
-        spoiler: { baseStr: 16, baseDef: 8, baseHp: 250, spoilLvl: 3, initialRegen: 0 },
-        crafter: { baseStr: 15, baseDef: 10, baseHp: 210, spoilLvl: 1, initialRegen: 1 }
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<script>
+  // ==================== TELEGRAM WEB APP ====================
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  const user = tg.initDataUnsafe.user;
+  const userId = user?.id || 'guest_' + Date.now();
+  const username = user?.username || user?.first_name || 'Герой';
+
+  // ==================== МУЛЬТИПЛЕЕР ====================
+  const WS_URL = 'wss://pocket-l2-multiplayer.glitch.me';
+  let socket, myId, players = {}, inPvp = false, pvpTargetId = null;
+
+  function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML += `<div>${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+    if (el.children.length > 12) el.removeChild(el.children[0]);
+  }
+
+  function initMultiplayer() {
+    socket = new WebSocket(WS_URL);
+    socket.onopen = () => log('Онлайн в мире!');
+    socket.onmessage = e => {
+      const d = JSON.parse(e.data);
+      if (d.type === 'init') { myId = d.yourId; Object.keys(d.players).forEach(id => addPlayer(id, d.players[id])); }
+      if (d.type === 'join') { addPlayer(d.id, d.player); log(`${d.player.name} появился`); }
+      if (d.type === 'leave') { removePlayer(d.id); }
+      if (d.type === 'move') updateRemotePlayer(d);
+      if (d.type === 'chat') log(`[${d.name}]: ${d.msg}`);
+      if (d.type === 'pvp_challenge' && d.targetId === myId) {
+        if (confirm(`${d.challengerName} вызывает тебя на дуэль!`)) acceptPvp(d.challengerId);
+      }
+      if (d.type === 'pvp_attack' && d.targetId === myId) {
+        gameData.hp = Math.max(0, gameData.hp - d.dmg);
+        log(`Удар от ${d.attackerName}: -${d.dmg} HP`);
+        updateUI();
+        if (gameData.hp <= 0) endPvp(false);
+      }
     };
+  }
 
-    const CONFIG = {
-      ROOM_SIZE: 320,
-      ATTACK_RANGE: 300, 
-      ATTACK_SPEED_BASE: 1000, 
-      SPEED_REDUCTION_PER_LEVEL: 0.05, 
-      SPOIL_CHANCE_BASE: 0.35, 
-      CHANCE_PER_SPOIL_LEVEL: 0.05, 
-      CRYSTAL_CHANCE_BASE: 0.10, 
-      CRYSTAL_CHANCE_PER_LEVEL: 0.05,
-      MOB_RESPAWN_TIME: 4000, 
-      ZOOM: 1.7,
-      PIXEL_SIZE: 10, // Размер пикселя в игровом мире
+  function addPlayer(id, p) {
+    if (players[id]) return;
+    const color = Phaser.Math.RND.pick([0x00ffff,0xff00ff,0xffff00,0xff8800,0x88ff88]);
+    const s = scene.add.rectangle(p.x||200, p.y||200, 12,12, color).setDepth(10);
+    const t = scene.add.text(p.x, p.y-12, p.name||'?', {fontSize:'8px', color:'#fff'}).setOrigin(0.5).setDepth(11);
+    players[id] = {sprite:s, text:t, name:p.name||'?', level:p.level||1};
+  }
+  function removePlayer(id) { if (players[id]) { players[id].sprite.destroy(); players[id].text.destroy(); delete players[id]; } }
+  function updateRemotePlayer(d) {
+    if (!players[d.id] || d.id === myId) return;
+    players[d.id].sprite.x = d.x; players[d.id].sprite.y = d.y;
+    players[d.id].text.x = d.x; players[d.id].text.y = d.y-12;
+    players[d.id].text.setText(`${d.name} [${d.level}]`);
+  }
+  function sendPos() {
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({type:'move', x:player.x, y:player.y, name:gameData.name, level:gameData.level}));
+    }
+  }
+  function sendChat(msg) {
+    if (socket && msg.trim()) socket.send(JSON.stringify({type:'chat', msg:msg.trim(), name:gameData.name}));
+    document.getElementById('chatInput').value = '';
+  }
+  function challengePvp(id) { socket.send(JSON.stringify({type:'pvp_challenge', targetId:id, challengerName:gameData.name, challengerId:myId})); }
+  function acceptPvp(id) { socket.send(JSON.stringify({type:'pvp_accept', challengerId:id})); startPvp(id); }
+  function startPvp(target) {
+    inPvp = true; pvpTargetId = target;
+    pvpInterval = setInterval(() => {
+      const dmg = 10 + gameData.level * 3 + Math.floor(Math.random()*15);
+      socket.send(JSON.stringify({type:'pvp_attack', targetId:target, dmg, attackerName:gameData.name}));
+    }, 1800);
+  }
+  function endPvp(won) {
+    clearInterval(pvpInterval); inPvp = false;
+    if (won) { gameData.gold += 100; log('Победа в PvP! +100 золота'); }
+    else { gameData.hp = gameData.maxhp; log('Поражение в PvP'); }
+    updateUI();
+  }
+
+  // ==================== ИГРА ====================
+  let game, scene, player, gameData = {name:username, level:1, xp:0, hp:200, maxhp:200, gold:0};
+  let farming = false, farmInterval;
+
+  const saved = localStorage.getItem('pocketl2_' + userId);
+  if (saved) gameData = JSON.parse(saved);
+
+  function updateUI() {
+    document.getElementById('name').innerText = gameData.name.slice(0,10);
+    document.getElementById('level').innerText = gameData.level;
+    document.getElementById('hp').innerText = gameData.hp;
+    document.getElementById('maxhp').innerText = gameData.maxhp;
+    document.getElementById('gold').innerText = gameData.gold;
+    localStorage.setItem('pocketl2_' + userId, JSON.stringify(gameData));
+  }
+
+  function startGame() {
+    initMultiplayer();
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'gameContainer',
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scale: {mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH},
+      pixelArt: true,
+      physics: {default:'arcade'},
+      scene: {preload:function(){}, create, update}
     };
-    
-    const SHOP_COST = {
-        WEAPON_BASE_A: 500,
-        ARMOR_BASE_A: 500,
-        FARM_SPEED_C: 10,
-        HP_REGEN_M: 10,
-        CRYSTAL_CHANCE_M: 15,
-        SPOIL_CHANCE_C: 15
+    game = new Phaser.Game(config);
+    updateUI();
+  }
+
+  function create() {
+    scene = this;
+    // Мир
+    const g = this.add.graphics();
+    for(let y=0;y<60;y++) for(let x=0;x<60;x++) {
+      g.fillStyle((x+y)%7===0?0x006600:0x00aa00);
+      g.fillRect(x*16,y*16,16,16);
+    }
+
+    player = this.add.rectangle(300,300,12,12,0xff0000).setDepth(20);
+    this.physics.add.existing(player);
+    this.cameras.main.startFollow(player, true, 0.1, 0.1);
+    this.cameras.main.setZoom(2.2);
+
+    this.time.addEvent({delay:100, loop:true, callback:sendPos});
+
+    // UI
+    document.getElementById('autofarm').onclick = () => {
+      farming = !farming;
+      document.getElementById('autofarm').innerText = farming?'Стоп':'Фарм';
+      if(farming) farmInterval = setInterval(()=>{
+        gameData.gold += 3; gameData.xp += 7;
+        if(gameData.xp >= gameData.level*100) { gameData.level++; gameData.maxhp += 40; gameData.hp = gameData.maxhp; log('Уровень повышен!'); }
+        updateUI();
+      },1000); else clearInterval(farmInterval);
     };
+    document.getElementById('pvpBtn').onclick = () => {
+      const list = Object.keys(players).filter(id=>id!==myId);
+      if(list.length===0) return log('Никого рядом');
+      const target = list[0]; // первый попавшийся
+      challengePvp(target);
+      log('Вызов отправлен!');
+    };
+    document.getElementById('chatBtn').onclick = () => document.getElementById('chatInput').style.display = 
+      document.getElementById('chatInput').style.display==='block'?'none':'block';
+    document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChat(e.target.value); });
 
-    // === ФУНКЦИЯ ВЫБОРА КЛАССА ===
-    window.selectClass = function(className) {
-        const stats = CLASS_STATS[className];
-        
-        pet = { 
-            level:1, exp:0, expToNext:100, spoilLevel: stats.spoilLvl, spoilExp:0, spoilToNext:100, 
-            adena:0, crystals:0, mats:0, weaponLevel: 0, armorLevel: 0,
-            crystalChanceLevel: 0, spoilBonusLevel: 0, farmSpeedLevel: 0, 
-            hpRegenRate: stats.initialRegen,
-        };
-
-        player = new Player(stats.baseStr, stats.baseDef, stats.baseHp);
-        
-        classSelectScreen.style.display = 'none';
-        
-        resize();
-        init();
-        if (typeof window.regInterval !== 'undefined') clearInterval(window.regInterval);
-        window.regInterval = setInterval(regenerationTick, 1000); 
-
-        // Запускаем loop (он должен был ждать инициализации player)
-        // Если loop еще не запущен, он запустится сам в конце файла.
-        
-        log(`Класс "${className.toUpperCase()}" выбран! Вперед, в Катакомбы.`, '#ffd700');
-    }
-
-    // === РЕСАЙЗ ===
-    function resize() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight; 
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      if (player) {
-          const c = player.getRoomCenter(0);
-          player.x = c.x;
-          player.y = c.y;
-          camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
-          camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
-      }
-    }
-    window.addEventListener('resize', resize);
-    
-    // === АВТОКРИСТАЛЛИЗАЦИЯ/РЕГЕНЕРАЦИЯ ===
-    function autoCrystallize() {
-        if (pet.mats <= 0) return;
-        const chance = CONFIG.CRYSTAL_CHANCE_BASE + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL;
-        pet.mats--; 
-        if (Math.random() < chance) {
-            pet.crystals += 1; 
-            log(`[CRYSTAL] +1 C`, '#00ffff');
-        } 
-        checkLevel();
-    }
-    
-    function regenerationTick() {
-        if (player && player.hp > 0 && pet.hpRegenRate > 0) {
-            player.heal(pet.hpRegenRate * 1); 
-        }
-        if (pet.mats > 0) {
-             autoCrystallize();
-        }
-    }
-    
-    // === КЛАССЫ ===
-    class Unit {
-      constructor(x, y, type, symbol, color, hp, str, def, mobLvl=1) {
-        this.x = x; this.y = y; this.type = type; this.symbol = symbol;
-        this.color = color; this.hp = hp; this.maxHp = hp;
-        this.baseStr = str; this.baseDef = def; 
-        this.mobLvl = mobLvl; 
-        this.target = null;
-        this.spoiled = false; 
-        this.lastAttack = 0; 
-        entities.push(this);
-      }
-      
-      get str() {
-          if (this.type === 'player') return this.baseStr + pet.weaponLevel;
-          return this.baseStr;
-      }
-      
-      get def() {
-          if (this.type === 'player') return this.baseDef + pet.armorLevel;
-          return this.baseDef;
-      }
-      
-      distTo(t) { return Math.hypot(this.x - t.x, this.y - t.y); }
-      
-      moveTo(tx, ty, s) { return true; } 
-      
-      attack(t) {
-        const now = Date.now();
-        let attackDelay = CONFIG.ATTACK_SPEED_BASE;
-        
-        if (this.type === 'player') {
-             attackDelay *= (1 - pet.farmSpeedLevel * CONFIG.SPEED_REDUCTION_PER_LEVEL);
-        }
-
-        if (!t || t.hp <= 0 || this.distTo(t) > CONFIG.ATTACK_RANGE || now - this.lastAttack < attackDelay) return;
-        
-        this.lastAttack = now;
-
-        if (this.type === 'player') {
-            this.autoSpoil(t);
-        }
-        
-        const dmg = Math.max(1, this.str - t.def + (Math.random()*3|0)); 
-        t.hp -= dmg;
-        log(`${this.symbol} → ${t.symbol}: -${dmg}`, this.color);
-        
-        if (t.hp <= 0) { 
-            this.onKill(t); 
-            t.die(); 
-            this.target = null;
-        }
-      }
-      
-      autoSpoil(t) {
-        if (t.spoiled || t.type !== 'mob' || t.hp <= 0) return;
-        
-        const globalSpoilBonus = pet.spoilBonusLevel * CONFIG.CHANCE_PER_SPOIL_LEVEL;
-        const chance = CONFIG.SPOIL_CHANCE_BASE + (pet.spoilLevel-1) * CONFIG.CHANCE_PER_SPOIL_LEVEL + globalSpoilBonus;
-        
-        if (Math.random() < chance) {
-          t.spoiled = true;
-          log(`[SPOIL] УСПЕХ`, '#ffd700');
-          // Используем отдельный эффект, т.к. символы убраны
-        }
-      }
-      
-      autoSweep(t) {
-          if (t.type !== 'mob' || !t.spoiled || t.hp > 0) return;
-          const chance = CONFIG.SPOIL_CHANCE_BASE + (pet.spoilLevel-1) * CONFIG.CHANCE_PER_SPOIL_LEVEL;
-          
-          if (Math.random() < chance) {
-              let dropType, amount;
-              if (Math.random() < 0.5) { 
-                  dropType = 'Crystal: D';
-                  amount = 1 + (Math.random()*4|0);
-                  pet.crystals += amount;
-              } else {
-                  const items = ['Animal Bone', 'Iron Ore', 'Craft Leather', 'Bone Dust'];
-                  dropType = items[Math.floor(Math.random()*items.length)];
-                  amount = 2 + (Math.random()*5|0);
-                  pet.mats += amount;
-              }
-              log(`[SWEEP] +${dropType} x${amount}`, '#00ff00');
-              pet.spoilExp += 20 * amount; 
-              checkLevel();
-          } else {
-              log(`[SWEEP] ПРОВАЛ.`, '#ff0000');
-          }
-      }
-
-      onKill(t) {
-        if (t.spoiled) {
-             this.autoSweep(t);
-        } else {
-             pet.adena += 100 + (Math.random()*150|0);
-             pet.exp += 30;
-        }
-        checkLevel();
-      }
-      
-      die() {
-        if (this.type === 'player') { 
-            log('ТЫ ПАЛ В БОЮ. ⚔️', '#ff0000');
-            pet.adena = Math.floor(pet.adena * 0.5);
-            classSelectScreen.style.display = 'flex';
-            clearInterval(mobSpawnInterval);
-            clearInterval(window.regInterval);
-            entities = [];
-            return;
-        }
-        if (selectedTarget === this) selectedTarget = null;
-        if (this.type === 'mob') {
-            entities = entities.filter(e => e !== this);
-            const room = this.getRoom();
-            setTimeout(() => spawnMob(room), CONFIG.MOB_RESPAWN_TIME);
-        }
-      }
-      
-      getRoomCenter(r) {
-        const rx = r % 2, ry = Math.floor(r / 2);
-        return { x: rx * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE/2, y: ry * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE/2 };
-      }
-
-      aiTick() {
-        if (this.hp <= 0) return;
-        if (this.type === 'mob') {
-          const nearest = entities.find(e => e.type === 'player' && dist(this, e) < CONFIG.ATTACK_RANGE * 2);
-          if (nearest) this.target = nearest;
-
-          if (this.target) {
-            this.attack(this.target);
-          }
-        }
-      }
-    }
-
-    class Player extends Unit {
-      constructor(baseStr, baseDef, baseHp) { 
-          // Игрок всегда белый
-          super(160, 160, 'player', '⚪', 'var(--player-color)', baseHp, baseStr, baseDef, 0); 
-          this.maxHp = baseHp;
-      }
-      
-      heal(amount) { 
-          this.hp = Math.min(this.maxHp, this.hp + amount); 
-      }
-      
-      update() {
-        const room = Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
-        const center = this.getRoomCenter(room);
-        this.x = center.x;
-        this.y = center.y;
-
-        if (!selectedTarget || selectedTarget.hp <= 0) {
-            selectedTarget = entities
-                .filter(e => e.type === 'mob' && e.hp > 0 && dist(this, e) < CONFIG.ATTACK_RANGE * 2) 
-                .sort((a,b) => dist(player,a) - dist(player,b))[0];
-        } else if (selectedTarget && selectedTarget.hp <= 0) {
-            selectedTarget = null;
-        }
-
-        if (selectedTarget && selectedTarget.hp > 0) {
-            this.attack(selectedTarget);
-        }
-      }
-    }
-
-    // === ФУНКЦИИ ===
-    function addEffect(x, y, text) {
-      const el = document.createElement('div');
-      el.className = 'spoil-effect';
-      el.textContent = text;
-      el.style.left = (x * CONFIG.ZOOM - camera.x * CONFIG.ZOOM) + 'px';
-      el.style.top = (y * CONFIG.ZOOM - camera.y * CONFIG.ZOOM) + 'px';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 1000);
-    }
-    
-    function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
-    
-    function log(msg, color='#fff') {
-      const d = document.createElement('div');
-      d.textContent = msg;
-      d.style.color = color;
-      logEl.prepend(d);
-      while (logEl.children.length > 30) { logEl.removeChild(logEl.lastChild); }
-    }
-
-    // === CHECKLEVEL & UI UPDATE ===
-    function checkLevel() {
-      if (pet.exp >= pet.expToNext) { 
-        pet.level++; 
-        pet.exp = pet.exp - pet.expToNext;
-        pet.expToNext = Math.floor(pet.expToNext * 1.5 + 100); 
-        player.maxHp = Math.floor(player.maxHp * 1.2); 
-        player.heal(player.maxHp);
-        log(`УРОВЕНЬ ${pet.level} UP! HP Max: ${player.maxHp}`, '#00ff00'); 
-      }
-      if (pet.spoilExp >= pet.spoilToNext) { 
-        pet.spoilLevel++; 
-        pet.spoilExp = pet.spoilExp - pet.spoilToNext; 
-        pet.spoilToNext = Math.floor(pet.spoilToNext * 1.5 + 50); 
-        log(`СПОЙЛ УРОВЕНЬ ${pet.spoilLevel} UP!`, '#ffd700'); 
-      }
-      
-      document.getElementById('level').textContent = pet.level;
-      document.getElementById('str').textContent = player.str;
-      document.getElementById('def').textContent = player.def;
-      document.getElementById('expBar').style.width = (pet.exp / pet.expToNext * 100) + '%';
-      
-      document.getElementById('spoilLevel').textContent = pet.spoilLevel;
-      document.getElementById('spoilBar').style.width = (pet.spoilExp / pet.spoilToNext * 100) + '%';
-      
-      document.getElementById('adena').textContent = pet.adena;
-      document.getElementById('crystals').textContent = pet.crystals;
-      document.getElementById('mats').textContent = pet.mats;
-      
-      document.getElementById('allySpoilBonus').textContent = (pet.spoilBonusLevel * CONFIG.CHANCE_PER_SPOIL_LEVEL * 100) + '%';
-      document.getElementById('hpReg').textContent = pet.hpRegenRate;
-      document.getElementById('crystalChance').textContent = (CONFIG.CRYSTAL_CHANCE_BASE * 100 + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL * 100) + '%';
-      
-      const hpWidth = (player.hp / player.maxHp * 100);
-      canvas.style.boxShadow = `0 0 30px ${hpWidth < 20 ? '#ff0000' : '#330000'} inset`;
-      
-      document.getElementById('buyWeapon').textContent = `Оружие +${pet.weaponLevel+1} [${SHOP_COST.WEAPON_BASE_A * (pet.weaponLevel + 1)} A]`;
-      document.getElementById('buyArmor').textContent = `Броня +${pet.armorLevel+1} [${SHOP_COST.ARMOR_BASE_A * (pet.armorLevel + 1)} A]`;
-      document.getElementById('upgradeSpd').textContent = `FARM SPD (+${pet.farmSpeedLevel+1}%) [${SHOP_COST.FARM_SPEED_C * (pet.farmSpeedLevel + 1)} C]`;
-      document.getElementById('buyHpReg').textContent = `HP REG (+1/s) [${SHOP_COST.HP_REGEN_M * (pet.hpRegenRate + 1)} M]`;
-    }
-
-    function checkSpoil() { checkLevel(); } 
-    function reset() { /* ... */ }
-
-    // === ИНИТ & СПАВН ===
-    function init() {
-      entities = [];
-      
-      const c = player.getRoomCenter(0);
-      player.x = c.x;
-      player.y = c.y;
-      
-      camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
-      camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
-
-      for (let i = 0; i < 4; i++) {
-        const mobLvl = 10 + i * 5; 
-        for (let j = 0; j < 5; j++) spawnMob(i, mobLvl); 
-      }
-      
-      if (mobSpawnInterval) clearInterval(mobSpawnInterval);
-      mobSpawnInterval = setInterval(spawnMob, CONFIG.MOB_RESPAWN_TIME);
-      
-      checkLevel();
-    }
-
-    function spawnMob(room = Math.floor(Math.random()*4), mobLvl = 10 + room * 5) {
-      const mobsInRoom = entities.filter(e => e.type === 'mob' && e.getRoom() === room).length;
-      if (mobsInRoom >= 7) return; 
-
-      const c = player.getRoomCenter(room);
-      let symbol, color;
-      
-      if (Math.random() < 0.5) {
-          symbol = '🔴'; // Скелет/Моб (Красный)
-          color = 'var(--mob-color)'; 
-      } else {
-          symbol = '🟢'; // Орк/Гуль (Темно-зеленый)
-          color = 'var(--orc-color)';
-      }
-
-      new Unit(
-        c.x + Math.random()*150-75, 
-        c.y + Math.random()*150-75, 
-        'mob', 
-        symbol, 
-        color, 
-        90 + mobLvl*5, 
-        9 + Math.floor(mobLvl/5), 
-        5 + Math.floor(mobLvl/10), 
-        mobLvl
-      );
-    }
-
-    // === ЛОГИКА МАГАЗИНА ===
-    document.getElementById('buyWeapon').addEventListener('click', () => {
-        const cost = SHOP_COST.WEAPON_BASE_A * (pet.weaponLevel + 1);
-        if (pet.adena >= cost) {
-            pet.adena -= cost;
-            pet.weaponLevel++;
-            log(`Куплено: Оружие +${pet.weaponLevel}. STR: +1`, '#ff6b6b');
-            checkLevel();
-        } else { log(`Недостаточно адены (нужно ${cost} A)!`, '#ff0000'); }
+    // Джойстик
+    const joy = document.getElementById('joystick');
+    const knob = document.getElementById('joystick-knob');
+    let dx=0, dy=0;
+    this.input.on('pointerdown', p => {
+      joy.style.left = (p.x-50)+'px';
+      joy.style.bottom = (window.innerHeight-p.y-50)+'px';
     });
-
-    document.getElementById('buyArmor').addEventListener('click', () => {
-        const cost = SHOP_COST.ARMOR_BASE_A * (pet.armorLevel + 1);
-        if (pet.adena >= cost) {
-            pet.adena -= cost;
-            pet.armorLevel++;
-            log(`Куплено: Броня +${pet.armorLevel}. DEF: +1`, '#00ff88');
-            checkLevel();
-        } else { log(`Недостаточно адены (нужно ${cost} A)!`, '#ff0000'); }
+    this.input.on('pointermove', p => {
+      dx = p.x - (parseInt(joy.style.left)+50);
+      dy = (window.innerHeight-p.y) - (parseInt(joy.style.bottom)+50);
+      const dist = Math.min(45, Math.hypot(dx,dy));
+      const a = Math.atan2(dy,dx);
+      knob.style.left = 30 + dist*Math.cos(a) + 'px';
+      knob.style.top = 30 + dist*Math.sin(a) + 'px';
     });
+    this.input.on('pointerup', () => { knob.style.left='30px'; knob.style.top='30px'; });
+  }
 
-    document.getElementById('upgradeSpd').addEventListener('click', () => {
-        const cost = SHOP_COST.FARM_SPEED_C * (pet.farmSpeedLevel + 1);
-        if (pet.crystals >= cost) {
-            pet.crystals -= cost;
-            pet.farmSpeedLevel++;
-            log(`Скорость фарма +${pet.farmSpeedLevel}!`, '#00ff88');
-            checkLevel();
-        } else { log(`Недостаточно пудр (нужно ${cost} C)!`, '#ff0000'); }
-    });
+  function update() {
+    const speed = 180;
+    const dx = parseInt(document.getElementById('joystick-knob').style.left||30) - 30;
+    const dy = parseInt(document.getElementById('joystick-knob').style.top||30) - 30;
+    const len = Math.hypot(dx,dy);
+    if(len>5) player.body.setVelocity(dx/len*speed, dy/len*speed);
+    else player.body.setVelocity(0,0);
 
-    document.getElementById('buyHpReg').addEventListener('click', () => {
-        const cost = SHOP_COST.HP_REGEN_M * (pet.hpRegenRate + 1);
-        if (pet.mats >= cost) {
-            pet.mats -= cost;
-            pet.hpRegenRate++;
-            log(`Реген HP +1/s!`, '#ff0000');
-            checkLevel();
-        } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
-    });
-    
-    document.getElementById('upgradeCrystal').addEventListener('click', () => {
-        const cost = SHOP_COST.CRYSTAL_CHANCE_M;
-        if (pet.mats >= cost) {
-            pet.mats -= cost;
-            pet.crystalChanceLevel++; 
-            log(`Шанс кристаллизации увеличен!`, '#00ffff');
-            checkLevel();
-        } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
-    });
+    // Мини-карта
+    const c = document.getElementById('minimap').getContext('2d');
+    c.clearRect(0,0,70,70);
+    c.fillStyle='#004400'; c.fillRect(0,0,70,70);
+    c.fillStyle='#ff0000'; c.fillRect(player.x/16*1.16-2, player.y/16*1.16-2,4,4);
+  }
 
-    document.getElementById('upgradeSpoil').addEventListener('click', () => {
-        const cost = SHOP_COST.SPOIL_CHANCE_C * (pet.spoilBonusLevel + 1);
-        if (pet.crystals >= cost) {
-            pet.crystals -= cost;
-            pet.spoilBonusLevel++; 
-            log(`Шанс Spoil увеличен!`, '#ffd700');
-            checkLevel();
-        } else { log(`Недостаточно пудр (нужно ${cost} C)!`, '#ff0000'); }
-    });
-    
-    // === РЕНДЕР & ЛУП ===
-    function render() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.save();
-      
-      ctx.translate(-camera.x * CONFIG.ZOOM, -camera.y * CONFIG.ZOOM);
-      ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
-
-      // 1. Карта: имитация пиксельного мира
-      ctx.fillStyle = 'var(--floor)';
-      ctx.fillRect(0,0,CONFIG.ROOM_SIZE*2,CONFIG.ROOM_SIZE*2);
-      ctx.strokeStyle = 'var(--wall)';
-      ctx.lineWidth = 2; 
-      for (let i=0; i<=2; i++) {
-        ctx.beginPath();
-        ctx.moveTo(i*CONFIG.ROOM_SIZE, 0);
-        ctx.lineTo(i*CONFIG.ROOM_SIZE, CONFIG.ROOM_SIZE*2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i*CONFIG.ROOM_SIZE);
-        ctx.lineTo(CONFIG.ROOM_SIZE*2, i*CONFIG.ROOM_SIZE);
-        ctx.stroke();
-      }
-
-      // 2. Юниты (Рендеринг как пиксели)
-      entities.forEach(e => {
-        if (e.hp <= 0) return; 
-        
-        const pixelSize = CONFIG.PIXEL_SIZE;
-        const halfPixel = pixelSize / 2;
-        
-        // Рендеринг Пикселя Юнита
-        ctx.fillStyle = e.type === 'player' ? 'var(--player-color)' : e.color;
-        
-        if (e.type === 'player') {
-            // Игрок как 2x2 пикселя
-            ctx.fillRect(e.x - pixelSize, e.y - pixelSize, pixelSize * 2, pixelSize * 2);
-        } else {
-            // Мобы как 1x1 пиксель
-            ctx.fillRect(e.x - halfPixel, e.y - halfPixel, pixelSize, pixelSize);
-        }
-        
-        // 3. Выделение цели/Спойла
-        if (e === selectedTarget) {
-          ctx.strokeStyle = '#ffff00';
-          ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(e.x, e.y, pixelSize * 3, 0, Math.PI*2); ctx.stroke();
-        }
-        
-        if (e.spoiled) {
-           // Желтый круг вокруг спойленного моба
-           ctx.strokeStyle = 'var(--gnome-color)'; 
-           ctx.lineWidth = 2;
-           ctx.beginPath(); ctx.arc(e.x, e.y, pixelSize * 2, 0, Math.PI*2); ctx.stroke();
-        }
-      });
-
-      ctx.restore();
-    }
-
-    function updateCamera() {
-      camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
-      camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
-    }
-
-    function loop() {
-      if (!player) {
-          // Если игрок еще не выбран (ждем на экране выбора класса)
-          requestAnimationFrame(loop);
-          return;
-      }
-      
-      player.update();
-      entities.forEach(e => { if (e !== player) e.aiTick(); });
-      updateCamera();
-      render();
-      requestAnimationFrame(loop);
-    }
-    
-    // === ОБРАБОТКА КЛИКА ===
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      
-      const tx = (e.touches[0].clientX - rect.left) / CONFIG.ZOOM + camera.x;
-      const ty = (e.touches[0].clientY - rect.top) / CONFIG.ZOOM + camera.y;
-      
-      // Радиус клика увеличен для попадания по маленьким пикселям
-      selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40); 
-    });
-
-    // Инициализация при старте (показываем экран выбора класса)
-    resize();
-    loop();
-  </script>
+  startGame();
+</script>
 </body>
 </html>
