@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Pocket Lineage 2: Essence Auto-Farm</title>
+  <title>Pocket L2: AFK-Фарм</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -108,7 +108,7 @@
         min-width: 0;
     }
 
-    /* КНОПКА ФАРМА (отображение статуса) */
+    /* КНОПКА СТАТУСА ФАРМА */
     #statusBtn {
         position: absolute;
         right: 20px; 
@@ -153,7 +153,7 @@
 
     <div id="ui-container">
         <div id="ui">
-            <h1>Pocket L2: Essence AFK</h1>
+            <h1>КАТАКОМБЫ</h1>
             <div class="label">Уровень: <span id="level">1</span> (STR: <span id="str">16</span> | DEF: <span id="def">9</span>)</div>
             <div class="bar"><div id="expBar" class="fill" style="width:0%"></div></div>
 
@@ -173,7 +173,7 @@
                 <button id="upgradeCrystal" class="shop-btn" style="background: #000055; border-color:#0000ff;">CRYSTAL UP (+5%) [15 M]</button>
                 <button id="upgradeSpoil" class="shop-btn" style="background: #555500; border-color:#ffff00;">SPOIL UP (+5%) [15 C]</button>
             </div>
-            </div>
+        </div>
         <div id="log"></div>
     </div>
   </div>
@@ -191,29 +191,25 @@
         adena:0, crystals:0, mats:0,
         weaponLevel: 0, armorLevel: 0,
         crystalChanceLevel: 0,
-        spoilBonusLevel: 0, // Уровень бонуса спойла (заменяет гномов)
-        farmSpeedLevel: 0, // Уровень скорости атаки
-        hpRegenRate: 0, // Регенерация HP
+        spoilBonusLevel: 0, 
+        farmSpeedLevel: 0, 
+        hpRegenRate: 0, 
     };
-    let camera = { x:0, y:0, targetX: 0, targetY: 0 };
+    let camera = { x:0, y:0 }; // Упрощенная камера
     let selectedTarget = null;
     let mobSpawnInterval;
-    let regTick = 0; // Тик для регенерации
-    
-    // NPC удалены, все бонусы теперь для игрока
     
     const CONFIG = {
       ROOM_SIZE: 320,
-      ATTACK_RANGE: 300, // Увеличенный радиус атаки для Essence
-      ATTACK_SPEED_BASE: 1000, // Базовая задержка атаки (мс)
-      SPEED_REDUCTION_PER_LEVEL: 0.05, // 5% уменьшение задержки за уровень
+      ATTACK_RANGE: 300, 
+      ATTACK_SPEED_BASE: 1000, 
+      SPEED_REDUCTION_PER_LEVEL: 0.05, 
       SPOIL_CHANCE_BASE: 0.35, 
       CHANCE_PER_SPOIL_LEVEL: 0.05, 
       CRYSTAL_CHANCE_BASE: 0.10, 
       CRYSTAL_CHANCE_PER_LEVEL: 0.05,
-      MOB_RESPAWN_TIME: 4000, // Ускоренный респаун
+      MOB_RESPAWN_TIME: 4000, 
       ZOOM: 1.7,
-      CAMERA_SMOOTHING: 0.05,
     };
     
     // === СТОИМОСТЬ МАГАЗИНА ===
@@ -226,7 +222,7 @@
         SPOIL_CHANCE_C: 15
     };
 
-    // === РЕСАЙЗ и УДАЛЕНИЕ ДЖОЙСТИКА ===
+    // === РЕСАЙЗ ===
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = canvas.clientHeight; 
@@ -236,7 +232,7 @@
     window.addEventListener('resize', resize);
     resize();
     
-    // === АВТОКРИСТАЛЛИЗАЦИЯ (теперь глобальная, не привязана к гномам) ===
+    // === АВТОКРИСТАЛЛИЗАЦИЯ ===
     function autoCrystallize() {
         if (pet.mats <= 0) return;
         
@@ -253,14 +249,12 @@
     // === ТИК РЕГЕНЕРАЦИИ ===
     function regenerationTick() {
         if (player && player.hp > 0 && pet.hpRegenRate > 0) {
-            player.heal(pet.hpRegenRate * 1); // 1 тик = 1 секунда
+            player.heal(pet.hpRegenRate * 1); 
         }
-        // Автоматическая кристаллизация (на каждом тике, если есть мат-лы)
         if (pet.mats > 0) {
              autoCrystallize();
         }
     }
-    // Запускаем тик каждую секунду
     setInterval(regenerationTick, 1000); 
 
     // === КЛАССЫ ===
@@ -272,7 +266,7 @@
         this.mobLvl = mobLvl; 
         this.target = null;
         this.spoiled = false; 
-        this.lastAttack = 0; // Время последней атаки
+        this.lastAttack = 0; 
         entities.push(this);
       }
       
@@ -288,7 +282,6 @@
       
       distTo(t) { return Math.hypot(this.x - t.x, this.y - t.y); }
       
-      // В Essence нет движения
       moveTo(tx, ty, s) { return true; } 
       
       attack(t) {
@@ -296,7 +289,6 @@
         let attackDelay = CONFIG.ATTACK_SPEED_BASE;
         
         if (this.type === 'player') {
-             // Скорость фарма: уменьшаем задержку
              attackDelay *= (1 - pet.farmSpeedLevel * CONFIG.SPEED_REDUCTION_PER_LEVEL);
         }
 
@@ -304,7 +296,6 @@
         
         this.lastAttack = now;
 
-        // Автоматический Spoil при атаке
         if (this.type === 'player') {
             this.autoSpoil(t);
         }
@@ -328,7 +319,7 @@
         
         if (Math.random() < chance) {
           t.spoiled = true;
-          log(`[SPOIL] УСПЕХ: Цель помечена.`, '#ffd700');
+          log(`[SPOIL] УСПЕХ`, '#ffd700');
           addEffect(t.x, t.y, `SPOIL!`);
         }
       }
@@ -358,7 +349,7 @@
               pet.spoilExp += 20 * amount; 
               checkLevel();
           } else {
-              log(`[SWEEP] ПРОВАЛ. Лут потерян.`, '#ff0000');
+              log(`[SWEEP] ПРОВАЛ.`, '#ff0000');
           }
       }
 
@@ -366,7 +357,6 @@
         if (t.spoiled) {
              this.autoSweep(t);
         } else {
-             // Увеличиваем дроп, чтобы фарм был быстрым
              pet.adena += 100 + (Math.random()*150|0);
              pet.exp += 30;
         }
@@ -393,9 +383,7 @@
       aiTick() {
         if (this.hp <= 0) return;
         
-        // Только мобы атакуют
         if (this.type === 'mob') {
-          // Моб ищет ближайшего игрока
           const nearest = entities.find(e => e.type === 'player' && dist(this, e) < CONFIG.ATTACK_RANGE * 2);
           if (nearest) this.target = nearest;
 
@@ -414,27 +402,25 @@
       
       heal(amount) { 
           this.hp = Math.min(this.maxHp, this.hp + amount); 
-          // log(`Лечение +${Math.round(amount)} HP.`, '#44ff44'); 
       }
       
       update() {
-        // Персонаж всегда телепортируется в центр текущей комнаты (Essence style)
+        // ESSENCE STYLE: Персонаж ВСЕГДА стоит в центре своей комнаты (статика)
         const room = Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
         const center = this.getRoomCenter(room);
         this.x = center.x;
         this.y = center.y;
 
-        // 1. АВТО-ФАРМ ЛОГИКА (ВСЕГДА АКТИВНА)
-        // Ищем ближайшую живую цель в радиусе
+        // 1. АВТО-ФАРМ ЛОГИКА
         if (!selectedTarget || selectedTarget.hp <= 0) {
             selectedTarget = entities
-                .filter(e => e.type === 'mob' && e.hp > 0)
+                .filter(e => e.type === 'mob' && e.hp > 0 && dist(this, e) < CONFIG.ATTACK_RANGE * 2) 
                 .sort((a,b) => dist(player,a) - dist(player,b))[0];
         } else if (selectedTarget && selectedTarget.hp <= 0) {
             selectedTarget = null;
         }
 
-        // 2. Атака по цели (если она в радиусе)
+        // 2. Атака по цели
         if (selectedTarget && selectedTarget.hp > 0) {
             this.attack(selectedTarget);
         }
@@ -442,8 +428,20 @@
     }
 
     // === ФУНКЦИИ ===
-    function addEffect(x, y, text) { /* ... */ }
+    function addEffect(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'spoil-effect';
+      el.textContent = text;
+      // ВАЖНО: Применяем масштабирование к координатам
+      el.style.left = (x * CONFIG.ZOOM - camera.x * CONFIG.ZOOM) + 'px';
+      el.style.top = (y * CONFIG.ZOOM - camera.y * CONFIG.ZOOM) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+    
+    // ИСПРАВЛЕННЫЙ DIST
     function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
+    
     function log(msg, color='#fff') {
       const d = document.createElement('div');
       d.textContent = msg;
@@ -452,13 +450,13 @@
       while (logEl.children.length > 30) { logEl.removeChild(logEl.lastChild); }
     }
 
-    // === CHECKLEVEL & UI UPDATE ===
+    // === CHECKLEVEL & UI UPDATE (без изменений) ===
     function checkLevel() {
       if (pet.exp >= pet.expToNext) { 
         pet.level++; 
         pet.exp = pet.exp - pet.expToNext;
         pet.expToNext = Math.floor(pet.expToNext * 1.5 + 100); 
-        player.maxHp = Math.floor(player.maxHp * 1.2); // Быстрый рост HP
+        player.maxHp = Math.floor(player.maxHp * 1.2); 
         player.heal(player.maxHp);
         log(`УРОВЕНЬ ${pet.level} UP! HP Max: ${player.maxHp}`, '#00ff00'); 
       }
@@ -469,7 +467,6 @@
         log(`СПОЙЛ УРОВЕНЬ ${pet.spoilLevel} UP!`, '#ffd700'); 
       }
       
-      // Обновление UI
       document.getElementById('level').textContent = pet.level;
       document.getElementById('str').textContent = player.str;
       document.getElementById('def').textContent = player.def;
@@ -486,7 +483,6 @@
       document.getElementById('hpReg').textContent = pet.hpRegenRate;
       document.getElementById('crystalChance').textContent = (CONFIG.CRYSTAL_CHANCE_BASE * 100 + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL * 100) + '%';
       
-      // Обновление HP-бара и цен
       const hpWidth = (player.hp / player.maxHp * 100);
       canvas.style.boxShadow = `0 0 30px ${hpWidth < 20 ? '#ff0000' : '#330000'} inset`;
       
@@ -504,14 +500,17 @@
       entities = [];
       player = new Player();
       
-      // Начинаем в центре первой комнаты
       const c = player.getRoomCenter(0);
       player.x = c.x;
       player.y = c.y;
       
+      // ИНИЦИАЛИЗАЦИЯ КАМЕРЫ (Мгновенная центровка)
+      camera.x = c.x - canvas.width / (2 * CONFIG.ZOOM);
+      camera.y = c.y - canvas.height / (2 * CONFIG.ZOOM);
+
       for (let i = 0; i < 4; i++) {
         const mobLvl = 10 + i * 5; 
-        for (let j = 0; j < 5; j++) spawnMob(i, mobLvl); // Больше мобов
+        for (let j = 0; j < 5; j++) spawnMob(i, mobLvl); 
       }
       
       if (mobSpawnInterval) clearInterval(mobSpawnInterval);
@@ -526,7 +525,7 @@
 
       const c = player.getRoomCenter(room);
       new Unit(
-        c.x + Math.random()*150-75, // Больший разброс мобов
+        c.x + Math.random()*150-75, 
         c.y + Math.random()*150-75, 
         'mob', 
         Math.random() > 0.5 ? '💀' : '👹', 
@@ -559,7 +558,6 @@
         } else { log(`Недостаточно адены (нужно ${cost} A)!`, '#ff0000'); }
     });
     
-    // Улучшение скорости фарма (Attack Speed)
     document.getElementById('upgradeSpd').addEventListener('click', () => {
         const cost = SHOP_COST.FARM_SPEED_C * (pet.farmSpeedLevel + 1);
         if (pet.crystals >= cost) {
@@ -570,7 +568,6 @@
         } else { log(`Недостаточно пудр (нужно ${cost} C)!`, '#ff0000'); }
     });
 
-    // Улучшение регенерации HP
     document.getElementById('buyHpReg').addEventListener('click', () => {
         const cost = SHOP_COST.HP_REGEN_M * (pet.hpRegenRate + 1);
         if (pet.mats >= cost) {
@@ -581,7 +578,6 @@
         } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
     });
     
-    // Улучшение шанса кристаллизации
     document.getElementById('upgradeCrystal').addEventListener('click', () => {
         const cost = SHOP_COST.CRYSTAL_CHANCE_M;
         if (pet.mats >= cost) {
@@ -592,7 +588,6 @@
         } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
     });
 
-    // Улучшение шанса Spoil
     document.getElementById('upgradeSpoil').addEventListener('click', () => {
         const cost = SHOP_COST.SPOIL_CHANCE_C * (pet.spoilBonusLevel + 1);
         if (pet.crystals >= cost) {
@@ -608,7 +603,7 @@
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.save();
       
-      // Камера центрируется на игроке (который не двигается)
+      // Применяем камеру
       ctx.translate(-camera.x * CONFIG.ZOOM, -camera.y * CONFIG.ZOOM);
       ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
 
@@ -632,18 +627,15 @@
       entities.forEach(e => {
         if (e.hp <= 0) return; 
 
-        // 1. Выделение цели
         if (e === selectedTarget) {
           ctx.strokeStyle = '#ffff00';
           ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(e.x, e.y, 25, 0, Math.PI*2); ctx.stroke();
         }
         
-        // 2. Символ
         ctx.font = '36px Arial';
         ctx.fillText(e.symbol, e.x, e.y + 2);
         
-        // 3. Полоса HP
         if (e.hp > 0) {
             ctx.fillStyle = '#ff0000';
             ctx.fillRect(e.x-22, e.y-35, 44, 6);
@@ -651,14 +643,12 @@
             ctx.fillRect(e.x-22, e.y-35, 44*(e.hp/e.maxHp), 6);
         }
         
-        // 4. Метка Spoiled
         if (e.spoiled) {
            ctx.fillStyle = '#ffd700';
            ctx.font = '10px Arial';
            ctx.fillText('SPOIL', e.x, e.y - 40);
         }
         
-        // 5. Текущие статы
         ctx.fillStyle = '#fff';
         ctx.font = '8px Arial';
         const statText = `L${e.mobLvl || e.level} STR:${e.str} DEF:${e.def}`;
@@ -668,19 +658,11 @@
       ctx.restore();
     }
 
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ КАМЕРЫ (без лишних расчетов)
     function updateCamera() {
-      // Камера всегда центрируется на игроке
-      camera.targetX = player.x - canvas.width/(2*CONFIG.ZOOM);
-      camera.targetY = player.y - canvas.height/(2*CONFIG.ZOOM);
-      
-      camera.x += (camera.targetX - camera.x) * CONFIG.CAMERA_SMOOTHING;
-      camera.y += (camera.targetY - camera.y) * CONFIG.CAMERA_SMOOTHING;
-      
-      const maxCamX = CONFIG.ROOM_SIZE*2 - canvas.width/CONFIG.ZOOM;
-      const maxCamY = CONFIG.ROOM_SIZE*2 - canvas.height/CONFIG.ZOOM;
-      
-      camera.x = Math.max(0, Math.min(camera.x, maxCamX));
-      camera.y = Math.max(0, Math.min(camera.y, maxCamY));
+      // Центр игрового мира (x, y) должен быть в центре экрана canvas.
+      camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
+      camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
     }
 
     function loop() {
@@ -691,14 +673,15 @@
       requestAnimationFrame(loop);
     }
     
-    // === ОБРАБОТКА КЛИКА (Только для смены цели) ===
+    // === ОБРАБОТКА КЛИКА ===
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
+      
+      // Расчет координат касания с учетом масштабирования и камеры
       const tx = (e.touches[0].clientX - rect.left) / CONFIG.ZOOM + camera.x;
       const ty = (e.touches[0].clientY - rect.top) / CONFIG.ZOOM + camera.y;
       
-      // Клик сменяет цель
       selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40);
     });
 
