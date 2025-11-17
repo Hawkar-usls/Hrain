@@ -1,204 +1,138 @@
-/* --- HRAIN v6.8 CSS (Cyrillic Fix) --- */
 :root {
-    --bg-main: #f4f7f6;
-    --bg-canvas: #ffffff;
-    --bg-controls: #ffffff;
-    --border-color: #dfe3e6;
-    --text-color: #333;
-    --text-light: #555;
-    
-    --green-btn: #4CAF50;
-    --green-btn-hover: #45a049;
-    --red-btn: #F44336;
-    --red-btn-hover: #e53935;
-    --blue-btn: #007aff;
-    --aux-btn: #f0f2f5;
-    --aux-btn-hover: #e4e6e9;
-
-    --line-color: #c0c8d1;
-    
-    /* Цвета узлов */
-    --color-red: #ffcdd2;
-    --color-green: #c8e6c9;
-    --color-blue: #bbdefb;
-    --color-yellow: #fff9c4;
-    --color-purple: #d1c4e9;
+  --bg: #0a0a0a;
+  --wall: #222;
+  --floor: #111;
+  --red: #ff4444;
+  --green: #44ff44;
+  --ui-height: 240px; 
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: #ffcc80;
+  font-family: 'Press Start 2P', cursive;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+#game { 
+  display: flex; 
+  flex-direction: column; 
+  height: 100vh; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+canvas {
+  /* КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ДЛЯ ОТОБРАЖЕНИЯ */
+  width: 100%;
+  height: 100%;
+  /* --- */
+  image-rendering: pixelated;
+  background: var(--floor);
+  box-shadow: 0 0 30px #330000 inset;
+  flex-grow: 1;
+}
+#ui-container {
+  display: flex; 
+  flex-direction: column; 
+  height: var(--ui-height);
+}
+#ui {
+  padding: 15px;
+  background: #111;
+  border-top: 3px solid #444;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+#log {
+  height: 100%;
+  overflow-y: auto;
+  background: #000;
+  padding: 10px;
+  border: 2px solid #444;
+  margin-top: 5px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #ccc;
+  flex-grow: 1;
+  max-height: 60px;
+  order: 3;
 }
 
-body, html {
-    height: 100%; margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    overflow: hidden; background-color: var(--bg-main);
-    color: var(--text-color); overscroll-behavior: none;
+.bar {
+  height: 18px;
+  background: #222;
+  border: 2px solid #555;
+  margin: 5px 0;
+  border-radius: 9px;
+  overflow: hidden;
 }
-.hidden { display: none !important; }
-
-/* --- 1. Панель Управления --- */
-#controls {
-    position: absolute; top: 10px; left: 10px; right: 10px;
-    z-index: 100; background: var(--bg-controls);
-    padding: 10px 15px; border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex; align-items: center;
-    justify-content: space-between; gap: 15px;
-    flex-wrap: wrap; 
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b6b, #feca57, #a0e7a0);
+  border-radius: 6px;
+  transition: width 0.4s ease;
 }
-#hrain-logo { 
-    font-size: 1.5em; margin: 0; 
-    color: var(--text-color); font-weight: 600;
-    white-space: nowrap;
-}
-#profile-controls {
-    display: flex; align-items: center;
-    gap: 8px; flex-wrap: wrap;
-    justify-content: flex-end;
-}
-.control-select {
-    padding: 6px 8px; border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: #fafafa; color: var(--text-light);
-    font-weight: 500;
-}
-button {
-    padding: 6px 12px; border: none;
-    border-radius: 8px; cursor: pointer;
-    font-weight: 500;
-    transition: transform 0.1s ease, background-color 0.2s ease;
-}
-button:active { transform: scale(0.95); }
-.green-button { background-color: var(--green-btn); color: white; }
-.green-button:hover { background-color: var(--green-btn-hover); }
-.red-button { background-color: var(--red-btn); color: white; }
-.red-button:hover { background-color: var(--red-btn-hover); }
-.aux-button { background-color: var(--aux-btn); color: var(--text-light); }
-.aux-button:hover { background-color: var(--aux-btn-hover); }
-
-/* --- 2. Рабочая Область --- */
-#workspace {
-    width: 100%; height: 100%; position: relative;
-    overflow: hidden; background: var(--bg-canvas);
-    touch-action: none; cursor: grab;
-}
-#workspace:active { cursor: grabbing; }
-#workspace.panning { cursor: grabbing; }
-
-#canvas {
-    position: absolute; width: 1px; height: 1px;
-    transform-origin: 0 0; will-change: transform;
-}
-#link-layer, #node-layer {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-}
-#link-layer { overflow: visible; }
-#link-layer line {
-    stroke: var(--line-color); stroke-width: 2.5px;
-    stroke-linecap: round; vector-effect: non-scaling-stroke;
+.label {
+  margin: 4px 0 2px;
+  color: #ffcc80;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* --- 3. Узлы (Ноды) --- */
-.node {
-    position: absolute; min-height: 2.5em;
-    background: #fff; border: 1px solid #d0d7de;
-    border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 10px 15px; cursor: grab;
-    user-select: none; text-align: center;
-    box-sizing: border-box; 
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, 
-                background-color 0.2s ease, padding 0.3s ease, 
-                min-width 0.3s ease;
-    will-change: transform;
+h1 {
+  font-size: 16px;
+  color: #ff6b6b;
+  text-align: center;
+  margin-bottom: 5px;
+  text-shadow: 0 0 10px #ff0000;
 }
-.node:active { cursor: grabbing; }
-.node:focus {
-    border-color: var(--blue-btn);
-    box-shadow: 0 0 10px rgba(0,122,255,0.3);
-    outline: none; cursor: text;
-}
-.node.selected {
-    border-color: var(--blue-btn); border-width: 2px;
-    box-shadow: 0 0 15px rgba(0,122,255,0.5);
-}
-[contenteditable="true"]:empty:before {
-    content: attr(placeholder); color: #aaa; cursor: text;
-}
-.node[data-color="red"] { background-color: var(--color-red); }
-.node[data-color="green"] { background-color: var(--color-green); }
-.node[data-color="blue"] { background-color: var(--color-blue); }
-.node[data-color="yellow"] { background-color: var(--color-yellow); }
-.node[data-color="purple"] { background-color: var(--color-purple); }
 
-/* --- 4. Модальное окно ПИН-кода --- */
-#pin-modal-backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 1999;
-    display: flex; align-items: center; justify-content: center;
+.shop-btn {
+    font-family:'Press Start 2P', cursive; 
+    font-size:8px; 
+    padding:5px; 
+    margin: 2px;
+    background: #333; 
+    color: #ffcc80; 
+    border: 2px solid #555; 
+    border-radius:5px;
+    flex-grow: 1;
+    min-width: 0;
 }
-#pin-modal {
-    background: white; padding: 20px; border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; width: 250px;
-}
-#pin-modal h3 { margin-top: 0; }
-#pin-input {
-    width: 80%; font-size: 2em; text-align: center;
-    letter-spacing: 0.5em; border: 2px solid var(--border-color);
-    border-radius: 8px; margin-top: 10px;
-}
-#pin-error { color: var(--red-btn); min-height: 1.2em; margin-top: 5px; font-size: 0.9em; }
-#pin-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
-#pin-buttons button { width: 48%; }
 
-/* --- 5. v6.7: Контекстное Меню --- */
-#context-menu-backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 1999;
-}
-#context-menu {
-    position: fixed;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    border: 1px solid var(--border-color);
-    z-index: 2000;
-    padding: 8px;
-    width: 150px;
-}
-#context-menu-buttons {
+/* КНОПКА СТАТУСА ФАРМА */
+#statusBtn {
+    position: absolute;
+    right: 20px; 
+    bottom: calc(20px + var(--ui-height));
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, #00ff00, #009900);
+    border-radius: 50%;
     display: flex;
     flex-direction: column;
-    gap: 5px;
-}
-.context-btn {
-    width: 100%;
-    background: var(--aux-btn);
-    color: var(--text-light);
-    text-align: left;
-    margin: 0;
-}
-.context-btn:hover { background: var(--aux-btn-hover); }
-.context-btn.red {
-    background: var(--red-btn);
-    color: white;
-}
-.context-btn.red:hover { background: var(--red-btn-hover); }
-
-#palette-container {
-    display: flex;
+    align-items: center;
     justify-content: center;
-    padding-top: 8px;
-    margin-top: 8px;
-    border-top: 1px solid var(--border-color);
+    font-size: 11px;
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 0 25px #00ff00;
+    z-index: 100;
+    border: 4px solid #00ff00;
 }
-.color-swatch {
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    margin: 4px;
-    cursor: pointer;
-    border: 2px solid var(--border-color);
-    transition: transform 0.1s ease;
+
+.spoil-effect {
+  position: absolute;
+  color: #ffd700;
+  font-weight: bold;
+  pointer-events: none;
+  animation: float 1s ease-out forwards;
+  z-index: 50;
 }
-.color-swatch:hover {
-    transform: scale(1.15);
+@keyframes float {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50px); opacity: 0; }
 }
