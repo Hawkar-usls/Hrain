@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>КАТАКОМБЫ</title>
+  <title>Pocket RPG: Pixel Grind</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -13,6 +13,9 @@
       --red: #ff4444;
       --green: #44ff44;
       --ui-height: 240px; 
+      --gnome-color: #ffd700; /* Желтый */
+      --orc-color: #008000;   /* Темно-зеленый */
+      --mob-color: #ff4444;   /* Красный */
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -34,10 +37,8 @@
       bottom: 0;
     }
     canvas {
-      /* КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ДЛЯ ОТОБРАЖЕНИЯ */
       width: 100%;
       height: 100%;
-      /* --- */
       image-rendering: pixelated;
       background: var(--floor);
       box-shadow: 0 0 30px #330000 inset;
@@ -112,7 +113,6 @@
         min-width: 0;
     }
 
-    /* КНОПКА СТАТУСА ФАРМА */
     #statusBtn {
         position: absolute;
         right: 20px; 
@@ -144,6 +144,34 @@
       0% { transform: translateY(0); opacity: 1; }
       100% { transform: translateY(-50px); opacity: 0; }
     }
+
+    /* СТИЛИ ДЛЯ ВЫБОРА КЛАССА */
+    #classSelect {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        color: white;
+        text-align: center;
+    }
+    .class-option {
+        margin: 10px;
+        padding: 15px 30px;
+        background: #333;
+        border: 2px solid #555;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 80%;
+        max-width: 300px;
+    }
+    .class-option:hover {
+        background: #555;
+    }
   </style>
 </head>
 <body>
@@ -154,7 +182,20 @@
       <div style="font-size:18px">🟢</div>
       FARM
     </div>
-
+    
+    <div id="classSelect">
+        <h1>ВЫБЕРИ КЛАСС</h1>
+        <p style="font-size:10px; margin: 15px 0;">(Начальные статы)</p>
+        <div class="class-option" onclick="selectClass('warrior')">
+            ВОИН ⚔️<br><span style="font-size:9px; color: #ff6b6b;">STR: 18 / DEF: 7</span>
+        </div>
+        <div class="class-option" onclick="selectClass('mage')">
+            МАГ 🔮<br><span style="font-size:9px; color: #44ff44;">STR: 14 / DEF: 9</span>
+        </div>
+        <div class="class-option" onclick="selectClass('spoiler')">
+            СПОЙЛЕР 💰<br><span style="font-size:9px; color: #ffd700;">STR: 16 / DEF: 8 / Spoil Lvl: 3</span>
+        </div>
+    </div>
     <div id="ui-container">
         <div id="ui">
             <h1>КАТАКОМБЫ</h1>
@@ -187,6 +228,7 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const logEl = document.getElementById('log');
+    const classSelectScreen = document.getElementById('classSelect');
     
     let entities = [];
     let player, pet = { 
@@ -203,6 +245,12 @@
     let selectedTarget = null;
     let mobSpawnInterval;
     
+    const CLASS_STATS = {
+        warrior: { baseStr: 18, baseDef: 7, baseHp: 230, spoilLvl: 1, symbol: '🛡️' },
+        mage: { baseStr: 14, baseDef: 9, baseHp: 200, spoilLvl: 1, symbol: '🔮' },
+        spoiler: { baseStr: 16, baseDef: 8, baseHp: 250, spoilLvl: 3, symbol: '💰' }
+    };
+
     const CONFIG = {
       ROOM_SIZE: 320,
       ATTACK_RANGE: 300, 
@@ -216,7 +264,6 @@
       ZOOM: 1.7,
     };
     
-    // === СТОИМОСТЬ МАГАЗИНА ===
     const SHOP_COST = {
         WEAPON_BASE_A: 500,
         ARMOR_BASE_A: 500,
@@ -226,15 +273,31 @@
         SPOIL_CHANCE_C: 15
     };
 
+    // === ФУНКЦИЯ ВЫБОРА КЛАССА ===
+    window.selectClass = function(className) {
+        const stats = CLASS_STATS[className];
+        
+        // Инициализация игрока с выбранными статами
+        player = new Player(stats.baseStr, stats.baseDef, stats.baseHp, stats.symbol);
+        pet.spoilLevel = stats.spoilLvl;
+        
+        // Скрываем экран выбора класса и запускаем игру
+        classSelectScreen.style.display = 'none';
+        
+        // Инициализация игрового цикла
+        resize();
+        init();
+        loop();
+        log(`Класс "${className.toUpperCase()}" выбран! Удачи в AFK-фарме.`, '#ffd700');
+    }
+
     // === РЕСАЙЗ ===
     function resize() {
-      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем clientWidth/Height для синхронизации с CSS
       canvas.width = canvas.clientWidth;
       canvas.height = canvas.clientHeight; 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // КРИТИЧЕСКАЯ ПЕРЕЦЕНТРОВКА КАМЕРЫ ПОСЛЕ РЕСАЙЗА
       if (player) {
           const c = player.getRoomCenter(0);
           player.x = c.x;
@@ -245,7 +308,7 @@
     }
     window.addEventListener('resize', resize);
     
-    // === АВТОКРИСТАЛЛИЗАЦИЯ ===
+    // === АВТОКРИСТАЛЛИЗАЦИЯ (без изменений) ===
     function autoCrystallize() {
         if (pet.mats <= 0) return;
         const chance = CONFIG.CRYSTAL_CHANCE_BASE + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL;
@@ -266,7 +329,8 @@
              autoCrystallize();
         }
     }
-    setInterval(regenerationTick, 1000); 
+    // Запускаем тик только после выбора класса
+    // setInterval(regenerationTick, 1000); 
 
     // === КЛАССЫ ===
     class Unit {
@@ -371,7 +435,15 @@
       }
       
       die() {
-        if (this.type === 'player') { /* ... */ }
+        if (this.type === 'player') { 
+            log('ТЫ ПАЛ В БОЮ. ⚔️', '#ff0000');
+            pet.adena = Math.floor(pet.adena * 0.5);
+            // Возвращаем на экран выбора класса для "респауна"
+            classSelectScreen.style.display = 'flex';
+            clearInterval(mobSpawnInterval);
+            entities = [];
+            return;
+        }
         if (selectedTarget === this) selectedTarget = null;
         if (this.type === 'mob') {
             entities = entities.filter(e => e !== this);
@@ -399,9 +471,9 @@
     }
 
     class Player extends Unit {
-      constructor() { 
-          super(160, 160, 'player', '⚒️', '#ff6b6b', 250, 16, 9, 0); 
-          this.maxHp = 250;
+      constructor(baseStr, baseDef, baseHp, symbol) { 
+          super(160, 160, 'player', symbol, '#ff6b6b', baseHp, baseStr, baseDef, 0); 
+          this.maxHp = baseHp;
       }
       
       heal(amount) { 
@@ -409,7 +481,7 @@
       }
       
       update() {
-        // ESSENCE STYLE: Персонаж ВСЕГДА стоит в центре своей комнаты (статика)
+        // Статическая позиция в центре комнаты
         const room = Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
         const center = this.getRoomCenter(room);
         this.x = center.x;
@@ -495,19 +567,18 @@
     }
 
     function checkSpoil() { checkLevel(); } 
-    function reset() { /* ... */ init(); }
+    function reset() { /* ... */ }
 
     // === ИНИТ & СПАВН ===
     function init() {
       entities = [];
-      player = new Player();
+      
+      // Персонаж уже создан в selectClass
       
       const c = player.getRoomCenter(0);
       player.x = c.x;
       player.y = c.y;
       
-      // КРИТИЧЕСКАЯ ИНИЦИАЛИЗАЦИЯ КАМЕРЫ
-      resize(); 
       camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
       camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
 
@@ -527,12 +598,23 @@
       if (mobsInRoom >= 7) return; 
 
       const c = player.getRoomCenter(room);
+      let symbol, color;
+      
+      // Случайный выбор моба: Гном или Орк (согласно запросу)
+      if (Math.random() < 0.5) {
+          symbol = '⛏️'; // Гном
+          color = 'var(--gnome-color)'; 
+      } else {
+          symbol = '👺'; // Орк
+          color = 'var(--orc-color)';
+      }
+
       new Unit(
         c.x + Math.random()*150-75, 
         c.y + Math.random()*150-75, 
         'mob', 
-        Math.random() > 0.5 ? '💀' : '👹', 
-        '#ff4444', 
+        symbol, 
+        color, 
         90 + mobLvl*5, 
         9 + Math.floor(mobLvl/5), 
         5 + Math.floor(mobLvl/10), 
@@ -580,7 +662,7 @@
             checkLevel();
         } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
     });
-
+    
     document.getElementById('upgradeCrystal').addEventListener('click', () => {
         const cost = SHOP_COST.CRYSTAL_CHANCE_M;
         if (pet.mats >= cost) {
@@ -661,12 +743,17 @@
     }
 
     function updateCamera() {
-      // Камера центрируется на игроке (x, y)
       camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
       camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
     }
 
     function loop() {
+      // КРИТИЧНО: Не запускать loop до выбора класса
+      if (!player) {
+          requestAnimationFrame(loop);
+          return;
+      }
+      
       player.update();
       entities.forEach(e => { if (e !== player) e.aiTick(); });
       updateCamera();
@@ -685,8 +772,17 @@
       selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40);
     });
 
-    // Запуск
-    resize();
-    init();
-    loop();
+    // Инициализация при старте (показываем экран выбора класса)
+    // resize() и loop() будут запущены после выбора класса.
+    // Если игрок уже был, запускаем игру сразу
+    if (player) {
+        resize();
+        init();
+        loop();
+        classSelectScreen.style.display = 'none';
+    } else {
+        loop(); // Запускаем loop для рендеринга экрана выбора
+    }
   </script>
+</body>
+</html>
