@@ -3,18 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>L2 C4: Спойлер Катакомб (Улучшено)</title>
+  <title>Pocket Lineage 2: Essence Auto-Farm</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0a0a;
       --wall: #222;
       --floor: #111;
-      --gold: #ffd700;
       --red: #ff4444;
       --green: #44ff44;
-      /* Фиксируем высоту UI для стабильности и позиционирования джойстика */
-      --ui-height: 180px; 
+      --ui-height: 240px; 
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -39,11 +37,11 @@
       image-rendering: pixelated;
       background: var(--floor);
       box-shadow: 0 0 30px #330000 inset;
-      flex-grow: 1; /* Позволяет Flexbox управлять высотой */
+      flex-grow: 1;
     }
     #ui-container {
-      display: flex;
-      flex-direction: column;
+      display: flex; 
+      flex-direction: column; 
       height: var(--ui-height);
     }
     #ui {
@@ -54,34 +52,36 @@
       flex-shrink: 0;
     }
     #log {
-      height: 100%; /* Управляется Flexbox */
+      height: 100%;
       overflow-y: auto;
       background: #000;
       padding: 10px;
       border: 2px solid #444;
-      margin-top: 10px;
+      margin-top: 5px;
       border-radius: 8px;
       font-size: 11px;
       color: #ccc;
       flex-grow: 1;
+      max-height: 60px;
+      order: 3;
     }
 
     .bar {
-      height: 20px;
+      height: 18px;
       background: #222;
       border: 2px solid #555;
-      margin: 10px 0;
-      border-radius: 10px;
+      margin: 5px 0;
+      border-radius: 9px;
       overflow: hidden;
     }
     .fill {
       height: 100%;
       background: linear-gradient(90deg, #ff6b6b, #feca57, #a0e7a0);
-      border-radius: 8px;
+      border-radius: 6px;
       transition: width 0.4s ease;
     }
     .label {
-      margin: 8px 0 4px;
+      margin: 4px 0 2px;
       color: #ffcc80;
       display: flex;
       justify-content: space-between;
@@ -91,52 +91,43 @@
       font-size: 16px;
       color: #ff6b6b;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       text-shadow: 0 0 10px #ff0000;
     }
 
-    /* ДЖОЙСТИК - Поднят над UI-контейнером */
-    #joystick {
-      position: absolute;
-      left: 20px; 
-      bottom: calc(20px + var(--ui-height));
-      width: 130px; height: 130px;
-      background: rgba(100,100,100,0.3);
-      border: 4px solid #666;
-      border-radius: 50%;
-      z-index: 100;
-    }
-    #knob {
-      position: absolute;
-      width: 55px; height: 55px;
-      background: radial-gradient(circle at 30% 30%, #ff6b6b, #cc0000);
-      border-radius: 50%;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px #ff0000;
-      transition: all 0.05s;
+    .shop-btn {
+        font-family:'Press Start 2P', cursive; 
+        font-size:8px; 
+        padding:5px; 
+        margin: 2px;
+        background: #333; 
+        color: #ffcc80; 
+        border: 2px solid #555; 
+        border-radius:5px;
+        flex-grow: 1;
+        min-width: 0;
     }
 
-    /* СПОЙЛ - Поднят над UI-контейнером */
-    #spoilBtn {
-      position: absolute;
-      right: 20px; 
-      bottom: calc(20px + var(--ui-height));
-      width: 100px; height: 100px;
-      background: radial-gradient(circle, #ffd700, #cc9900);
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      color: #000;
-      font-weight: bold;
-      box-shadow: 0 0 25px #ff0;
-      z-index: 100;
+    /* КНОПКА ФАРМА (отображение статуса) */
+    #statusBtn {
+        position: absolute;
+        right: 20px; 
+        bottom: calc(20px + var(--ui-height));
+        width: 100px; height: 100px;
+        background: radial-gradient(circle, #00ff00, #009900);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: #fff;
+        font-weight: bold;
+        box-shadow: 0 0 25px #00ff00;
+        z-index: 100;
+        border: 4px solid #00ff00;
     }
-    #spoilBtn:active { transform: scale(0.85); }
-
+    
     .spoil-effect {
       position: absolute;
       color: #ffd700;
@@ -155,23 +146,34 @@
   <div id="game">
     <canvas id="canvas"></canvas>
 
-    <div id="joystick"><div id="knob"></div></div>
-    <div id="spoilBtn">
-      <div style="font-size:18px">✨</div>
-      СПОЙЛ
+    <div id="statusBtn">
+      <div style="font-size:18px">🟢</div>
+      FARM
     </div>
 
     <div id="ui-container">
         <div id="ui">
-            <h1>L2 C4: КАТАКОМБЫ</h1>
-            <div class="label">Уровень: <span id="level">1</span></div>
+            <h1>Pocket L2: Essence AFK</h1>
+            <div class="label">Уровень: <span id="level">1</span> (STR: <span id="str">16</span> | DEF: <span id="def">9</span>)</div>
             <div class="bar"><div id="expBar" class="fill" style="width:0%"></div></div>
 
-            <div class="label">Спойл: <span id="spoilLevel">1</span> | Пудры: <span id="crystals">0</span></div>
+            <div class="label">Спойл LVL: <span id="spoilLevel">1</span> | Кристаллизация: <span id="crystalChance">0%</span></div>
             <div class="bar"><div id="spoilBar" class="fill" style="width:0%"></div></div>
 
-            <div class="label">Аден: <span id="adena">0</span> | Мат-лы: <span id="mats">0</span></div>
-        </div>
+            <div class="label">Аден: <span id="adena">0</span> | Пудры (C): <span id="crystals">0</span> | Мат-лы (M): <span id="mats">0</span></div>
+            <div class="label" style="font-size:10px; color:#ffd700;">SPOIL CHANCE BONUS: <span id="allySpoilBonus">0%</span> | HP Reg: <span id="hpReg">0</span>/s</div>
+            
+            <div style="display:flex; justify-content: space-around; margin-top:10px;">
+                <button id="buyWeapon" class="shop-btn">Оружие +1 STR [500 A]</button>
+                <button id="buyArmor" class="shop-btn">Броня +1 DEF [500 A]</button>
+                <button id="upgradeSpd" class="shop-btn" style="background: #004400; border-color:#00ff88;">FARM SPD (+5%) [10 C]</button>
+            </div>
+            <div style="display:flex; justify-content: space-around; margin-top:5px;">
+                <button id="buyHpReg" class="shop-btn" style="background:#550000; border-color:#ff0000;">HP REG (+1/s) [10 M]</button>
+                <button id="upgradeCrystal" class="shop-btn" style="background: #000055; border-color:#0000ff;">CRYSTAL UP (+5%) [15 M]</button>
+                <button id="upgradeSpoil" class="shop-btn" style="background: #555500; border-color:#ffff00;">SPOIL UP (+5%) [15 C]</button>
+            </div>
+            </div>
         <div id="log"></div>
     </div>
   </div>
@@ -181,119 +183,132 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const logEl = document.getElementById('log');
+    
     let entities = [];
-    let player, pet = { level:1, exp:0, expToNext:100, spoilLevel:1, spoilExp:0, spoilToNext:100, adena:0, crystals:0, mats:0 };
-    let camera = { x:0, y:0, targetX: 0, targetY: 0 }; // Добавлены целевые координаты
-    let joystick = { active:false, dx:0, dy:0 };
+    let player, pet = { 
+        level:1, exp:0, expToNext:100, 
+        spoilLevel:1, spoilExp:0, spoilToNext:100, 
+        adena:0, crystals:0, mats:0,
+        weaponLevel: 0, armorLevel: 0,
+        crystalChanceLevel: 0,
+        spoilBonusLevel: 0, // Уровень бонуса спойла (заменяет гномов)
+        farmSpeedLevel: 0, // Уровень скорости атаки
+        hpRegenRate: 0, // Регенерация HP
+    };
+    let camera = { x:0, y:0, targetX: 0, targetY: 0 };
     let selectedTarget = null;
     let mobSpawnInterval;
-
+    let regTick = 0; // Тик для регенерации
+    
+    // NPC удалены, все бонусы теперь для игрока
+    
     const CONFIG = {
       ROOM_SIZE: 320,
-      ATTACK_RANGE: 85,
-      SPOIL_RANGE: 120, // Немного увеличен радиус для спойла
-      MOVE_SPEED: 4.2,
-      SPOIL_CHANCE: 0.32,
-      SPOIL_BONUS: 0.09,
-      MOB_RESPAWN_TIME: 8000,
-      GOAL_ADENA: 10000,
+      ATTACK_RANGE: 300, // Увеличенный радиус атаки для Essence
+      ATTACK_SPEED_BASE: 1000, // Базовая задержка атаки (мс)
+      SPEED_REDUCTION_PER_LEVEL: 0.05, // 5% уменьшение задержки за уровень
+      SPOIL_CHANCE_BASE: 0.35, 
+      CHANCE_PER_SPOIL_LEVEL: 0.05, 
+      CRYSTAL_CHANCE_BASE: 0.10, 
+      CRYSTAL_CHANCE_PER_LEVEL: 0.05,
+      MOB_RESPAWN_TIME: 4000, // Ускоренный респаун
       ZOOM: 1.7,
-      CAMERA_SMOOTHING: 0.05 // Плавность следования камеры
+      CAMERA_SMOOTHING: 0.05,
+    };
+    
+    // === СТОИМОСТЬ МАГАЗИНА ===
+    const SHOP_COST = {
+        WEAPON_BASE_A: 500,
+        ARMOR_BASE_A: 500,
+        FARM_SPEED_C: 10,
+        HP_REGEN_M: 10,
+        CRYSTAL_CHANCE_M: 15,
+        SPOIL_CHANCE_C: 15
     };
 
-    // === РЕСАЙЗ ===
+    // === РЕСАЙЗ и УДАЛЕНИЕ ДЖОЙСТИКА ===
     function resize() {
       canvas.width = window.innerWidth;
-      // ИСПРАВЛЕНО: Синхронизация JS-размера с CSS-размером, заданным Flexbox
       canvas.height = canvas.clientHeight; 
-      // Устанавливаем настройки рендеринга для юнитов
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
     }
     window.addEventListener('resize', resize);
     resize();
-
-    // === ДЖОЙСТИК ===
-    // ... (код джойстика без изменений, он был корректен)
-
-    const joy = document.getElementById('joystick');
-    const knob = document.getElementById('knob');
-    let joyCenter = {};
-
-    joy.addEventListener('touchstart', e => {
-      e.preventDefault();
-      joystick.active = true;
-      const r = joy.getBoundingClientRect();
-      joyCenter = { x: r.left + r.width/2, y: r.top + r.height/2 };
-      updateJoy(e.touches[0]);
-    });
-    joy.addEventListener('touchmove', e => updateJoy(e.touches[0]));
-    joy.addEventListener('touchend', () => {
-      joystick.active = false;
-      joystick.dx = joystick.dy = 0;
-      knob.style.transform = 'translate(-50%, -50%)';
-    });
-
-    function updateJoy(t) {
-      if (!joystick.active) return;
-      const dx = t.clientX - joyCenter.x;
-      const dy = t.clientY - joyCenter.y;
-      const dist = Math.min(60, Math.hypot(dx, dy));
-      const angle = Math.atan2(dy, dx);
-      joystick.dx = Math.cos(angle) * dist / 60;
-      joystick.dy = Math.sin(angle) * dist / 60;
-      knob.style.transform = `translate(${dx * 0.7}px, ${dy * 0.7}px)`;
+    
+    // === АВТОКРИСТАЛЛИЗАЦИЯ (теперь глобальная, не привязана к гномам) ===
+    function autoCrystallize() {
+        if (pet.mats <= 0) return;
+        
+        const chance = CONFIG.CRYSTAL_CHANCE_BASE + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL;
+        
+        pet.mats--; 
+        if (Math.random() < chance) {
+            pet.crystals += 1; 
+            log(`[CRYSTAL] +1 C`, '#00ffff');
+        } 
+        checkLevel();
     }
-
-    // === СПОЙЛ ===
-    document.getElementById('spoilBtn').addEventListener('touchstart', e => {
-      e.preventDefault();
-      // Выбираем ближайшую цель, если нет выбранной или она мертва
-      if (!selectedTarget || selectedTarget.hp <= 0) {
-        selectedTarget = entities
-          .filter(e => e.type === 'mob' && e.hp > 0 && dist(player, e) < 500)
-          .sort((a,b) => dist(player,a) - dist(player,b))[0];
-      }
-      
-      // Добавлена проверка дальности для кнопки SPOIL
-      if (selectedTarget && !selectedTarget.spoiled && dist(player, selectedTarget) < CONFIG.SPOIL_RANGE) {
-        player.spoil(selectedTarget);
-      } else if (selectedTarget && selectedTarget.hp > 0 && selectedTarget.spoiled) {
-         log(`Цель уже спойлена!`, '#888');
-      } else if (selectedTarget && dist(player, selectedTarget) >= CONFIG.SPOIL_RANGE) {
-         log(`Слишком далеко для спойла!`, '#888');
-      } else {
-         log(`Нет подходящей цели.`, '#888');
-      }
-    });
+    
+    // === ТИК РЕГЕНЕРАЦИИ ===
+    function regenerationTick() {
+        if (player && player.hp > 0 && pet.hpRegenRate > 0) {
+            player.heal(pet.hpRegenRate * 1); // 1 тик = 1 секунда
+        }
+        // Автоматическая кристаллизация (на каждом тике, если есть мат-лы)
+        if (pet.mats > 0) {
+             autoCrystallize();
+        }
+    }
+    // Запускаем тик каждую секунду
+    setInterval(regenerationTick, 1000); 
 
     // === КЛАССЫ ===
     class Unit {
-      constructor(x, y, type, symbol, color, hp, str, def) {
+      constructor(x, y, type, symbol, color, hp, str, def, mobLvl=1) {
         this.x = x; this.y = y; this.type = type; this.symbol = symbol;
         this.color = color; this.hp = hp; this.maxHp = hp;
-        this.str = str; this.def = def; this.target = null;
-        this.spoiled = false; this.allianceId = Math.random() > 0.5 ? 1 : 2;
-        this.bravery = type === 'gnome' ? Math.random() : 0.7;
+        this.baseStr = str; this.baseDef = def; 
+        this.mobLvl = mobLvl; 
+        this.target = null;
+        this.spoiled = false; 
+        this.lastAttack = 0; // Время последней атаки
         entities.push(this);
       }
-      distTo(t) { return Math.hypot(this.x - t.x, this.y - t.y); }
-      moveTo(tx, ty, s) {
-        const dx = tx - this.x, dy = ty - this.y;
-        const d = Math.hypot(dx, dy);
-        if (d < s) { 
-           this.x = tx; 
-           this.y = ty; 
-           return true; // Достиг цели
-        }
-        this.x += (dx/d) * s;
-        this.y += (dy/d) * s;
-        return false; // Еще движется
+      
+      get str() {
+          if (this.type === 'player') return this.baseStr + pet.weaponLevel;
+          return this.baseStr;
       }
+      
+      get def() {
+          if (this.type === 'player') return this.baseDef + pet.armorLevel;
+          return this.baseDef;
+      }
+      
+      distTo(t) { return Math.hypot(this.x - t.x, this.y - t.y); }
+      
+      // В Essence нет движения
+      moveTo(tx, ty, s) { return true; } 
+      
       attack(t) {
-        if (!t || t.hp <= 0 || this.distTo(t) > CONFIG.ATTACK_RANGE) return;
+        const now = Date.now();
+        let attackDelay = CONFIG.ATTACK_SPEED_BASE;
         
-        // Убрано Math.random()*5|0 для более предсказуемого урона
+        if (this.type === 'player') {
+             // Скорость фарма: уменьшаем задержку
+             attackDelay *= (1 - pet.farmSpeedLevel * CONFIG.SPEED_REDUCTION_PER_LEVEL);
+        }
+
+        if (!t || t.hp <= 0 || this.distTo(t) > CONFIG.ATTACK_RANGE || now - this.lastAttack < attackDelay) return;
+        
+        this.lastAttack = now;
+
+        // Автоматический Spoil при атаке
+        if (this.type === 'player') {
+            this.autoSpoil(t);
+        }
+        
         const dmg = Math.max(1, this.str - t.def + (Math.random()*3|0)); 
         t.hp -= dmg;
         log(`${this.symbol} → ${t.symbol}: -${dmg}`, this.color);
@@ -301,229 +316,299 @@
         if (t.hp <= 0) { 
             this.onKill(t); 
             t.die(); 
-            this.target = null; // Сброс цели после убийства
+            this.target = null;
         }
       }
-      spoil(t) {
-        // Увеличена дальность проверки для корректной работы с кнопкой
-        if (t.spoiled || t.type !== 'mob' || this.distTo(t) > CONFIG.SPOIL_RANGE) return; 
+      
+      autoSpoil(t) {
+        if (t.spoiled || t.type !== 'mob' || t.hp <= 0) return;
         
-        const chance = CONFIG.SPOIL_CHANCE + (pet.spoilLevel-1)*CONFIG.SPOIL_BONUS;
+        const globalSpoilBonus = pet.spoilBonusLevel * CONFIG.CHANCE_PER_SPOIL_LEVEL;
+        const chance = CONFIG.SPOIL_CHANCE_BASE + (pet.spoilLevel-1) * CONFIG.CHANCE_PER_SPOIL_LEVEL + globalSpoilBonus;
         
         if (Math.random() < chance) {
           t.spoiled = true;
-          const items = ['Animal Bone', 'Iron Ore', 'Craft Leather', 'Bone Dust', 'Crystal: D'];
-          const item = items[Math.floor(Math.random()*items.length)];
-          const amt = 1 + (Math.random()*2|0);
-          if (item.includes('Crystal')) pet.crystals += amt;
-          else pet.mats += amt;
-          log(`SPOIL +${item} x${amt}`, '#ffd700');
-          addEffect(t.x, t.y, `+${item}`);
-          pet.spoilExp += 12 * amt;
-          checkSpoil();
-        } else {
-          log('Провал...', '#888');
+          log(`[SPOIL] УСПЕХ: Цель помечена.`, '#ffd700');
+          addEffect(t.x, t.y, `SPOIL!`);
         }
       }
+      
+      autoSweep(t) {
+          if (t.type !== 'mob' || !t.spoiled || t.hp > 0) return;
+          
+          const chance = CONFIG.SPOIL_CHANCE_BASE + (pet.spoilLevel-1) * CONFIG.CHANCE_PER_SPOIL_LEVEL;
+          
+          if (Math.random() < chance) {
+              let dropType, amount;
+              
+              if (Math.random() < 0.5) { 
+                  dropType = 'Crystal: D';
+                  amount = 1 + (Math.random()*4|0);
+                  pet.crystals += amount;
+              } else {
+                  const items = ['Animal Bone', 'Iron Ore', 'Craft Leather', 'Bone Dust'];
+                  dropType = items[Math.floor(Math.random()*items.length)];
+                  amount = 2 + (Math.random()*5|0);
+                  pet.mats += amount;
+              }
+              
+              log(`[SWEEP] +${dropType} x${amount}`, '#00ff00');
+              addEffect(t.x, t.y, `+${dropType}`);
+              
+              pet.spoilExp += 20 * amount; 
+              checkLevel();
+          } else {
+              log(`[SWEEP] ПРОВАЛ. Лут потерян.`, '#ff0000');
+          }
+      }
+
       onKill(t) {
-        pet.adena += 60 + (Math.random()*80|0);
-        pet.exp += 18;
+        if (t.spoiled) {
+             this.autoSweep(t);
+        } else {
+             // Увеличиваем дроп, чтобы фарм был быстрым
+             pet.adena += 100 + (Math.random()*150|0);
+             pet.exp += 30;
+        }
         checkLevel();
-        if (t.spoiled) { pet.adena += 120; log('+120 аден!', '#ffcc80'); }
       }
+      
       die() {
-        if (this.type === 'player') {
-          log('ТЫ УМЕР!', '#ff0000');
-          pet.adena = Math.floor(pet.adena * 0.5);
-          setTimeout(reset, 2000);
-          return;
-        }
-        // Сброс цели, если убитый юнит был целью
+        if (this.type === 'player') { /* ... */ }
+        
         if (selectedTarget === this) selectedTarget = null;
-        // Убираем юнит из списка
-        entities = entities.filter(e => e !== this);
-        // Запускаем респаун моба (если это моб)
+        
         if (this.type === 'mob') {
-           const room = this.getRoom();
-           setTimeout(() => spawnMob(room), CONFIG.MOB_RESPAWN_TIME);
+            entities = entities.filter(e => e !== this);
+            const room = this.getRoom();
+            setTimeout(() => spawnMob(room), CONFIG.MOB_RESPAWN_TIME);
         }
       }
-      getRoom() {
-        return Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
-      }
+      
       getRoomCenter(r) {
         const rx = r % 2, ry = Math.floor(r / 2);
         return { x: rx * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE/2, y: ry * CONFIG.ROOM_SIZE + CONFIG.ROOM_SIZE/2 };
       }
+
       aiTick() {
         if (this.hp <= 0) return;
-        const room = this.getRoom();
-        const inRoom = entities.filter(e => e.getRoom() === room && e.hp > 0);
         
-        // 1. Удерживаем цель, если она жива
-        if (this.target && this.target.hp > 0) {
-          if (this.distTo(this.target) < CONFIG.ATTACK_RANGE) {
-             this.attack(this.target);
-          } else {
-             this.moveTo(this.target.x, this.target.y, 2);
-          }
-          return;
-        } else {
-            this.target = null; // Цель мертва или потеряна
-        }
-
-        // 2. Выбор новой цели
-        if (this.type === 'gnome') {
-          // Гном спойлит ближайшего неспойленого моба
-          const freeMob = inRoom.find(e => e.type === 'mob' && !e.spoiled);
-          if (freeMob && this.distTo(freeMob) < 400) { 
-            this.target = freeMob; 
-            this.spoil(freeMob); 
-          }
-        } else if (this.type === 'sk') {
-          // Рыцарь ищет ближайшего моба, чтобы помочь (аггро)
-          const freeMob = inRoom.find(e => e.type === 'mob' && e.distTo(this) < 400);
-          if (freeMob) this.target = freeMob;
-        } else if (this.type === 'mob') {
-          // Моб ищет ближайшую цель (игрок/gnome/sk)
-          const nearest = inRoom.sort((a,b) => dist(this, a) - dist(this, b))
-             .find(e => (e.type === 'player' || e.type === 'gnome' || e.type === 'sk') && dist(this, e) < 400);
+        // Только мобы атакуют
+        if (this.type === 'mob') {
+          // Моб ищет ближайшего игрока
+          const nearest = entities.find(e => e.type === 'player' && dist(this, e) < CONFIG.ATTACK_RANGE * 2);
           if (nearest) this.target = nearest;
-        }
 
-        // 3. Движение к цели или центру
-        if (this.target && this.target.hp > 0) {
-          if (this.distTo(this.target) > CONFIG.ATTACK_RANGE) {
-             this.moveTo(this.target.x, this.target.y, 1.8);
+          if (this.target) {
+            this.attack(this.target);
           }
-        } else {
-          // Идем в центр, если нет цели
-          const center = this.getRoomCenter(this.getRoom());
-          this.moveTo(center.x, center.y, 1.5);
         }
       }
     }
 
     class Player extends Unit {
-      constructor() { super(160, 160, 'player', '⚒️', '#ff6b6b', 250, 16, 9); }
-      update() {
-        let isMoving = false;
-        if (joystick.active) {
-          this.x += joystick.dx * CONFIG.MOVE_SPEED;
-          this.y += joystick.dy * CONFIG.MOVE_SPEED;
-          isMoving = true;
-        }
-        
-        // Ограничение движения по карте
-        this.x = Math.max(30, Math.min(this.x, CONFIG.ROOM_SIZE*2 - 30));
-        this.y = Math.max(30, Math.min(this.y, CONFIG.ROOM_SIZE*2 - 30));
-
-        if (selectedTarget && selectedTarget.hp > 0) {
-          if (this.distTo(selectedTarget) < CONFIG.ATTACK_RANGE) {
-            this.attack(selectedTarget);
-          } else if (!isMoving) {
-            // Автоматическое следование, если джойстик не активен
-            this.moveTo(selectedTarget.x, selectedTarget.y, CONFIG.MOVE_SPEED * 0.8);
-          }
-        } else {
-             selectedTarget = null;
-        }
-      }
-    }
-
-    // === ЭФФЕКТЫ ===
-    // ... (код addEffect без изменений)
-    function addEffect(x, y, text) {
-      const el = document.createElement('div');
-      el.className = 'spoil-effect';
-      el.textContent = text;
-      el.style.left = (x * CONFIG.ZOOM - camera.x * CONFIG.ZOOM) + 'px';
-      el.style.top = (y * CONFIG.ZOOM - camera.y * CONFIG.ZOOM) + 'px';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 1000);
-    }
-
-
-    // === ИНИТ ===
-    function init() {
-      entities = [];
-      player = new Player();
-      for (let i = 0; i < 4; i++) {
-        const c = player.getRoomCenter(i);
-        new Unit(c.x-40, c.y, 'gnome', '🧙', '#ffd700', 160, 13, 7);
-        new Unit(c.x+40, c.y, 'gnome', '🧙', '#ffd700', 160, 13, 7);
-        new Unit(c.x, c.y+50, 'sk', '🛡️', '#00ff88', 280, 19, 11);
-        for (let j = 0; j < 3; j++) spawnMob(i);
+      constructor() { 
+          super(160, 160, 'player', '⚒️', '#ff6b6b', 250, 16, 9, 0); 
+          this.maxHp = 250;
       }
       
-      // Запуск интервала респауна мобов
-      if (mobSpawnInterval) clearInterval(mobSpawnInterval);
-      mobSpawnInterval = setInterval(spawnMob, CONFIG.MOB_RESPAWN_TIME);
+      heal(amount) { 
+          this.hp = Math.min(this.maxHp, this.hp + amount); 
+          // log(`Лечение +${Math.round(amount)} HP.`, '#44ff44'); 
+      }
+      
+      update() {
+        // Персонаж всегда телепортируется в центр текущей комнаты (Essence style)
+        const room = Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
+        const center = this.getRoomCenter(room);
+        this.x = center.x;
+        this.y = center.y;
+
+        // 1. АВТО-ФАРМ ЛОГИКА (ВСЕГДА АКТИВНА)
+        // Ищем ближайшую живую цель в радиусе
+        if (!selectedTarget || selectedTarget.hp <= 0) {
+            selectedTarget = entities
+                .filter(e => e.type === 'mob' && e.hp > 0)
+                .sort((a,b) => dist(player,a) - dist(player,b))[0];
+        } else if (selectedTarget && selectedTarget.hp <= 0) {
+            selectedTarget = null;
+        }
+
+        // 2. Атака по цели (если она в радиусе)
+        if (selectedTarget && selectedTarget.hp > 0) {
+            this.attack(selectedTarget);
+        }
+      }
     }
 
-    function spawnMob(room = Math.floor(Math.random()*4)) {
-      const mobsInRoom = entities.filter(e => e.type === 'mob' && e.getRoom() === room).length;
-      if (mobsInRoom >= 4) return; 
-
-      const c = player.getRoomCenter(room);
-      const newMob = new Unit(
-         c.x + Math.random()*80-40, 
-         c.y + Math.random()*80-40, 
-         'mob', 
-         Math.random() > 0.5 ? '💀' : '👹', 
-         '#ff4444', 90, 9, 5
-      );
-      // Если новый моб — ближайшая цель, выделяем его
-      if (!selectedTarget) selectedTarget = newMob;
-    }
-
+    // === ФУНКЦИИ ===
+    function addEffect(x, y, text) { /* ... */ }
     function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
-
     function log(msg, color='#fff') {
       const d = document.createElement('div');
       d.textContent = msg;
       d.style.color = color;
-      logEl.prepend(d); // Новые сообщения сверху
-      // Ограничение лога, чтобы избежать переполнения DOM
-      while (logEl.children.length > 50) {
-        logEl.removeChild(logEl.lastChild);
-      }
+      logEl.prepend(d);
+      while (logEl.children.length > 30) { logEl.removeChild(logEl.lastChild); }
     }
 
+    // === CHECKLEVEL & UI UPDATE ===
     function checkLevel() {
-      // ... (логика уровней без изменений)
       if (pet.exp >= pet.expToNext) { 
         pet.level++; 
-        pet.exp = pet.exp - pet.expToNext; 
-        pet.expToNext = pet.expToNext * 1.5; 
-        log('УРОВЕНЬ UP!', '#00ff00'); 
+        pet.exp = pet.exp - pet.expToNext;
+        pet.expToNext = Math.floor(pet.expToNext * 1.5 + 100); 
+        player.maxHp = Math.floor(player.maxHp * 1.2); // Быстрый рост HP
+        player.heal(player.maxHp);
+        log(`УРОВЕНЬ ${pet.level} UP! HP Max: ${player.maxHp}`, '#00ff00'); 
       }
       if (pet.spoilExp >= pet.spoilToNext) { 
         pet.spoilLevel++; 
         pet.spoilExp = pet.spoilExp - pet.spoilToNext; 
-        pet.spoilToNext = pet.spoilToNext * 1.5; 
-        log('СПОЙЛ UP!', '#ffd700'); 
+        pet.spoilToNext = Math.floor(pet.spoilToNext * 1.5 + 50); 
+        log(`СПОЙЛ УРОВЕНЬ ${pet.spoilLevel} UP!`, '#ffd700'); 
       }
+      
+      // Обновление UI
       document.getElementById('level').textContent = pet.level;
+      document.getElementById('str').textContent = player.str;
+      document.getElementById('def').textContent = player.def;
       document.getElementById('expBar').style.width = (pet.exp / pet.expToNext * 100) + '%';
+      
       document.getElementById('spoilLevel').textContent = pet.spoilLevel;
       document.getElementById('spoilBar').style.width = (pet.spoilExp / pet.spoilToNext * 100) + '%';
+      
       document.getElementById('adena').textContent = pet.adena;
       document.getElementById('crystals').textContent = pet.crystals;
       document.getElementById('mats').textContent = pet.mats;
-      if (pet.adena >= CONFIG.GOAL_ADENA) { log('ТЫ — МАСТЕР СПОЙЛА!', '#ffd700'); }
+      
+      document.getElementById('allySpoilBonus').textContent = (pet.spoilBonusLevel * CONFIG.CHANCE_PER_SPOIL_LEVEL * 100) + '%';
+      document.getElementById('hpReg').textContent = pet.hpRegenRate;
+      document.getElementById('crystalChance').textContent = (CONFIG.CRYSTAL_CHANCE_BASE * 100 + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL * 100) + '%';
+      
+      // Обновление HP-бара и цен
+      const hpWidth = (player.hp / player.maxHp * 100);
+      canvas.style.boxShadow = `0 0 30px ${hpWidth < 20 ? '#ff0000' : '#330000'} inset`;
+      
+      document.getElementById('buyWeapon').textContent = `Оружие +${pet.weaponLevel+1} [${SHOP_COST.WEAPON_BASE_A * (pet.weaponLevel + 1)} A]`;
+      document.getElementById('buyArmor').textContent = `Броня +${pet.armorLevel+1} [${SHOP_COST.ARMOR_BASE_A * (pet.armorLevel + 1)} A]`;
+      document.getElementById('upgradeSpd').textContent = `FARM SPD (+${pet.farmSpeedLevel+1}%) [${SHOP_COST.FARM_SPEED_C * (pet.farmSpeedLevel + 1)} C]`;
+      document.getElementById('buyHpReg').textContent = `HP REG (+1/s) [${SHOP_COST.HP_REGEN_M * (pet.hpRegenRate + 1)} M]`;
     }
     
     function checkSpoil() { checkLevel(); } 
+    function reset() { /* ... */ init(); }
 
-    function reset() { init(); }
+    // === ИНИТ & СПАВН ===
+    function init() {
+      entities = [];
+      player = new Player();
+      
+      // Начинаем в центре первой комнаты
+      const c = player.getRoomCenter(0);
+      player.x = c.x;
+      player.y = c.y;
+      
+      for (let i = 0; i < 4; i++) {
+        const mobLvl = 10 + i * 5; 
+        for (let j = 0; j < 5; j++) spawnMob(i, mobLvl); // Больше мобов
+      }
+      
+      if (mobSpawnInterval) clearInterval(mobSpawnInterval);
+      mobSpawnInterval = setInterval(spawnMob, CONFIG.MOB_RESPAWN_TIME);
+      
+      checkLevel();
+    }
 
-    // === РЕНДЕР ===
+    function spawnMob(room = Math.floor(Math.random()*4), mobLvl = 10 + room * 5) {
+      const mobsInRoom = entities.filter(e => e.type === 'mob' && e.getRoom() === room).length;
+      if (mobsInRoom >= 7) return; 
+
+      const c = player.getRoomCenter(room);
+      new Unit(
+        c.x + Math.random()*150-75, // Больший разброс мобов
+        c.y + Math.random()*150-75, 
+        'mob', 
+        Math.random() > 0.5 ? '💀' : '👹', 
+        '#ff4444', 
+        90 + mobLvl*5, 
+        9 + Math.floor(mobLvl/5), 
+        5 + Math.floor(mobLvl/10), 
+        mobLvl
+      );
+    }
+
+    // === ЛОГИКА МАГАЗИНА ===
+    document.getElementById('buyWeapon').addEventListener('click', () => {
+        const cost = SHOP_COST.WEAPON_BASE_A * (pet.weaponLevel + 1);
+        if (pet.adena >= cost) {
+            pet.adena -= cost;
+            pet.weaponLevel++;
+            log(`Куплено: Оружие +${pet.weaponLevel}. STR: +1`, '#ff6b6b');
+            checkLevel();
+        } else { log(`Недостаточно адены (нужно ${cost} A)!`, '#ff0000'); }
+    });
+
+    document.getElementById('buyArmor').addEventListener('click', () => {
+        const cost = SHOP_COST.ARMOR_BASE_A * (pet.armorLevel + 1);
+        if (pet.adena >= cost) {
+            pet.adena -= cost;
+            pet.armorLevel++;
+            log(`Куплено: Броня +${pet.armorLevel}. DEF: +1`, '#00ff88');
+            checkLevel();
+        } else { log(`Недостаточно адены (нужно ${cost} A)!`, '#ff0000'); }
+    });
+    
+    // Улучшение скорости фарма (Attack Speed)
+    document.getElementById('upgradeSpd').addEventListener('click', () => {
+        const cost = SHOP_COST.FARM_SPEED_C * (pet.farmSpeedLevel + 1);
+        if (pet.crystals >= cost) {
+            pet.crystals -= cost;
+            pet.farmSpeedLevel++;
+            log(`Скорость фарма +${pet.farmSpeedLevel}!`, '#00ff88');
+            checkLevel();
+        } else { log(`Недостаточно пудр (нужно ${cost} C)!`, '#ff0000'); }
+    });
+
+    // Улучшение регенерации HP
+    document.getElementById('buyHpReg').addEventListener('click', () => {
+        const cost = SHOP_COST.HP_REGEN_M * (pet.hpRegenRate + 1);
+        if (pet.mats >= cost) {
+            pet.mats -= cost;
+            pet.hpRegenRate++;
+            log(`Реген HP +1/s!`, '#ff0000');
+            checkLevel();
+        } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
+    });
+    
+    // Улучшение шанса кристаллизации
+    document.getElementById('upgradeCrystal').addEventListener('click', () => {
+        const cost = SHOP_COST.CRYSTAL_CHANCE_M;
+        if (pet.mats >= cost) {
+            pet.mats -= cost;
+            pet.crystalChanceLevel++; 
+            log(`Шанс кристаллизации увеличен!`, '#00ffff');
+            checkLevel();
+        } else { log(`Недостаточно материалов (нужно ${cost} M)!`, '#ff0000'); }
+    });
+
+    // Улучшение шанса Spoil
+    document.getElementById('upgradeSpoil').addEventListener('click', () => {
+        const cost = SHOP_COST.SPOIL_CHANCE_C * (pet.spoilBonusLevel + 1);
+        if (pet.crystals >= cost) {
+            pet.crystals -= cost;
+            pet.spoilBonusLevel++; 
+            log(`Шанс Spoil увеличен!`, '#ffd700');
+            checkLevel();
+        } else { log(`Недостаточно пудр (нужно ${cost} C)!`, '#ff0000'); }
+    });
+    
+    // === РЕНДЕР & ЛУП ===
     function render() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.save();
       
-      // Применяем камеру
+      // Камера центрируется на игроке (который не двигается)
       ctx.translate(-camera.x * CONFIG.ZOOM, -camera.y * CONFIG.ZOOM);
       ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
 
@@ -545,24 +630,13 @@
 
       // Юниты
       entities.forEach(e => {
-        if (e.hp <= 0) return;
-        
+        if (e.hp <= 0) return; 
+
         // 1. Выделение цели
         if (e === selectedTarget) {
           ctx.strokeStyle = '#ffff00';
           ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(e.x, e.y, 25, 0, Math.PI*2); ctx.stroke();
-          
-           // Индикатор дальности атаки игрока
-           if (e.type === 'mob') {
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.arc(player.x, player.y, CONFIG.ATTACK_RANGE, 0, Math.PI*2); ctx.stroke();
-                
-                ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.arc(player.x, player.y, CONFIG.SPOIL_RANGE, 0, Math.PI*2); ctx.stroke();
-           }
         }
         
         // 2. Символ
@@ -570,10 +644,12 @@
         ctx.fillText(e.symbol, e.x, e.y + 2);
         
         // 3. Полоса HP
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(e.x-22, e.y-35, 44, 6);
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(e.x-22, e.y-35, 44*(e.hp/e.maxHp), 6);
+        if (e.hp > 0) {
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(e.x-22, e.y-35, 44, 6);
+            ctx.fillStyle = '#44ff44';
+            ctx.fillRect(e.x-22, e.y-35, 44*(e.hp/e.maxHp), 6);
+        }
         
         // 4. Метка Spoiled
         if (e.spoiled) {
@@ -581,21 +657,25 @@
            ctx.font = '10px Arial';
            ctx.fillText('SPOIL', e.x, e.y - 40);
         }
+        
+        // 5. Текущие статы
+        ctx.fillStyle = '#fff';
+        ctx.font = '8px Arial';
+        const statText = `L${e.mobLvl || e.level} STR:${e.str} DEF:${e.def}`;
+        ctx.fillText(statText, e.x, e.y - 45);
       });
 
       ctx.restore();
     }
 
     function updateCamera() {
-      // 1. Определяем, куда должна смотреть камера
+      // Камера всегда центрируется на игроке
       camera.targetX = player.x - canvas.width/(2*CONFIG.ZOOM);
       camera.targetY = player.y - canvas.height/(2*CONFIG.ZOOM);
       
-      // 2. Сглаживание движения камеры
       camera.x += (camera.targetX - camera.x) * CONFIG.CAMERA_SMOOTHING;
       camera.y += (camera.targetY - camera.y) * CONFIG.CAMERA_SMOOTHING;
       
-      // 3. Ограничение камеры
       const maxCamX = CONFIG.ROOM_SIZE*2 - canvas.width/CONFIG.ZOOM;
       const maxCamY = CONFIG.ROOM_SIZE*2 - canvas.height/CONFIG.ZOOM;
       
@@ -603,23 +683,22 @@
       camera.y = Math.max(0, Math.min(camera.y, maxCamY));
     }
 
-    // === ЛУП ===
     function loop() {
       player.update();
-      entities.forEach(e => { if (e !== player && e.hp > 0) e.aiTick(); });
+      entities.forEach(e => { if (e !== player) e.aiTick(); });
       updateCamera();
       render();
       requestAnimationFrame(loop);
     }
-
-    // === КЛИК ПО МОБУ ===
+    
+    // === ОБРАБОТКА КЛИКА (Только для смены цели) ===
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const tx = (e.touches[0].clientX - rect.left) / CONFIG.ZOOM + camera.x;
       const ty = (e.touches[0].clientY - rect.top) / CONFIG.ZOOM + camera.y;
       
-      // Ищем ближайшую цель в радиусе 40 (учитывая смещение текста/символа)
+      // Клик сменяет цель
       selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40);
     });
 
