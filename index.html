@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>L2 C4: Спойлер Катакомб</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
@@ -13,6 +13,8 @@
       --gold: #ffd700;
       --red: #ff4444;
       --green: #44ff44;
+      /* Добавлена переменная для высоты UI для корректного позиционирования джойстика */
+      --ui-height: 180px; 
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -23,18 +25,33 @@
       user-select: none;
       touch-action: none;
     }
-    #game { display: flex; flex-direction: column; height: 100vh; }
+    #game { 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      /* Добавлено для лучшего поведения на iOS */
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
     canvas {
       image-rendering: pixelated;
       background: var(--floor);
       box-shadow: 0 0 30px #330000 inset;
-      flex: 1;
+      /* Flexbox теперь управляет высотой, исправляя тёмный экран */
+      flex-grow: 1;
     }
     #ui {
       padding: 15px;
       background: #111;
       border-top: 3px solid #444;
       font-size: 12px;
+      /* Фиксируем высоту UI для расчета позиционирования джойстика */
+      height: var(--ui-height);
+      overflow-y: auto; /* Для предотвращения выхода контента за рамки */
     }
     .bar {
       height: 20px;
@@ -75,10 +92,11 @@
       text-shadow: 0 0 10px #ff0000;
     }
 
-    /* ДЖОЙСТИК */
+    /* ДЖОЙСТИК - Поднят, чтобы не перекрывать UI */
     #joystick {
       position: absolute;
-      left: 20px; bottom: 20px;
+      left: 20px; 
+      bottom: calc(20px + var(--ui-height)); /* Поднят над UI */
       width: 130px; height: 130px;
       background: rgba(100,100,100,0.3);
       border: 4px solid #666;
@@ -96,10 +114,11 @@
       transition: all 0.05s;
     }
 
-    /* СПОЙЛ */
+    /* СПОЙЛ - Поднят, чтобы не перекрывать UI */
     #spoilBtn {
       position: absolute;
-      right: 20px; bottom: 20px;
+      right: 20px; 
+      bottom: calc(20px + var(--ui-height)); /* Поднят над UI */
       width: 100px; height: 100px;
       background: radial-gradient(circle, #ffd700, #cc9900);
       border-radius: 50%;
@@ -149,8 +168,8 @@
 
       <div class="label">Аден: <span id="adena">0</span> | Мат-лы: <span id="mats">0</span></div>
 
-      <div id="log"></div>
-    </div>
+      </div>
+    <div id="log"></div>
   </div>
 
   <script>
@@ -178,7 +197,8 @@
     // === РЕСАЙЗ ===
     function resize() {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - 180;
+      // ИСПРАВЛЕНИЕ: Используем clientHeight для получения фактической высоты, заданной Flexbox в CSS
+      canvas.height = canvas.clientHeight; 
     }
     window.addEventListener('resize', resize);
     resize();
@@ -204,6 +224,7 @@
 
     function updateJoy(t) {
       if (!joystick.active) return;
+      // Корректировка для абсолютного позиционирования
       const dx = t.clientX - joyCenter.x;
       const dy = t.clientY - joyCenter.y;
       const dist = Math.min(60, Math.hypot(dx, dy));
@@ -216,8 +237,11 @@
     // === СПОЙЛ ===
     document.getElementById('spoilBtn').addEventListener('touchstart', e => {
       e.preventDefault();
+      // Выбираем ближайшую цель, если нет выбранной или она мертва
       if (!selectedTarget || selectedTarget.hp <= 0) {
-        selectedTarget = entities.filter(e => e.type === 'mob' && e.hp > 0).sort((a,b) => dist(player,a) - dist(player,b))[0];
+        selectedTarget = entities
+          .filter(e => e.type === 'mob' && e.hp > 0 && dist(player, e) < 400) // Ограничиваем поиск
+          .sort((a,b) => dist(player,a) - dist(player,b))[0];
       }
       if (selectedTarget && !selectedTarget.spoiled) {
         player.spoil(selectedTarget);
@@ -238,7 +262,7 @@
       moveTo(tx, ty, s) {
         const dx = tx - this.x, dy = ty - this.y;
         const d = Math.hypot(dx, dy);
-        if (d < 10) return;
+        if (d < s) { this.x = tx; this.y = ty; return; }
         this.x += (dx/d) * s;
         this.y += (dy/d) * s;
       }
@@ -250,7 +274,7 @@
         if (t.hp <= 0) { this.onKill(t); t.die(); }
       }
       spoil(t) {
-        if (t.spoiled || t.type !== 'mob') return;
+        if (t.spoiled || t.type !== 'mob' || this.distTo(t) > CONFIG.ATTACK_RANGE * 1.5) return; // Проверка дистанции
         const chance = CONFIG.SPOIL_CHANCE + (pet.spoilLevel-1)*CONFIG.SPOIL_BONUS;
         if (Math.random() < chance) {
           t.spoiled = true;
@@ -278,8 +302,13 @@
           log('ТЫ УМЕР!', '#ff0000');
           pet.adena = Math.floor(pet.adena * 0.5);
           setTimeout(reset, 2000);
+          return;
         }
+        // Убираем моба из целей
+        if (selectedTarget === this) selectedTarget = null;
         entities = entities.filter(e => e !== this);
+        // Запускаем респаун моба через 8 секунд
+        if (this.type === 'mob') setTimeout(spawnMob, CONFIG.MOB_RESPAWN);
       }
       getRoom() {
         return Math.floor(this.x / CONFIG.ROOM_SIZE) + Math.floor(this.y / CONFIG.ROOM_SIZE) * 2;
@@ -293,7 +322,7 @@
         const room = this.getRoom();
         const inRoom = entities.filter(e => e.getRoom() === room && e.hp > 0);
 
-        // Контратака
+        // Контратака: если атакован, выбираем обидчика
         if (this.target && this.target.hp > 0) {
           this.moveTo(this.target.x, this.target.y, 2);
           this.attack(this.target);
@@ -301,33 +330,24 @@
         }
 
         if (this.type === 'gnome') {
-          const gnomes = inRoom.filter(e => e.type === 'player' || e.type === 'gnome').length;
-          const mobs = inRoom.filter(e => e.type === 'mob').length;
-          if (gnomes > 2 && mobs < gnomes && Math.random() < 0.3) {
-            this.die();
-            log(`${this.symbol} очкует!`, '#ffcc80');
-            return;
-          }
+          // Ищем моба для спойла
           const freeMob = inRoom.find(e => e.type === 'mob' && !e.spoiled);
           if (freeMob) { this.target = freeMob; this.spoil(freeMob); }
         } else if (this.type === 'sk') {
-          const fighting = inRoom.filter(e => e.target && (e.target.type === 'player' || e.target.type === 'gnome'));
-          if (fighting.length >= 2) {
-            const ally = fighting[0];
-            this.target = ally.target;
-          } else {
-            const freeMob = inRoom.find(e => e.type === 'mob');
-            if (freeMob) this.target = freeMob;
-          }
+          // Ищем моба для атаки
+          const freeMob = inRoom.find(e => e.type === 'mob');
+          if (freeMob) this.target = freeMob;
         } else if (this.type === 'mob') {
-          const nearest = inRoom.find(e => (e.type === 'player' || e.type === 'gnome' || e.type === 'sk'));
+          // Ищем ближайшего игрока/гнома/рыцаря
+          const nearest = inRoom.find(e => (e.type === 'player' || e.type === 'gnome' || e.type === 'sk') && e.distTo(this) < 150);
           if (nearest) this.target = nearest;
         }
 
-        if (this.target) {
+        if (this.target && this.target.hp > 0) {
           this.moveTo(this.target.x, this.target.y, 1.8);
           this.attack(this.target);
         } else {
+          // Идём в центр комнаты
           const center = this.getRoomCenter(this.getRoom());
           this.moveTo(center.x, center.y, 1.5);
         }
@@ -341,13 +361,23 @@
           this.x += joystick.dx * CONFIG.MOVE_SPEED;
           this.y += joystick.dy * CONFIG.MOVE_SPEED;
         }
+        // Ограничение движения по карте
         this.x = Math.max(30, Math.min(this.x, CONFIG.ROOM_SIZE*2 - 30));
         this.y = Math.max(30, Math.min(this.y, CONFIG.ROOM_SIZE*2 - 30));
 
         if (selectedTarget && selectedTarget.hp > 0) {
-          this.moveTo(selectedTarget.x, selectedTarget.y, CONFIG.MOVE_SPEED * 0.8);
-          this.attack(selectedTarget);
+          // Если цель слишком далеко, игрок просто двигается к ней, а не атакует
+          if (this.distTo(selectedTarget) < CONFIG.ATTACK_RANGE * 1.2) {
+            this.attack(selectedTarget);
+          } else {
+            this.moveTo(selectedTarget.x, selectedTarget.y, CONFIG.MOVE_SPEED * 0.8);
+          }
         }
+      }
+      spoil(t) {
+        // Переопределение для игрока: игрок может спойлить, только если цель выделена
+        if (selectedTarget !== t) return;
+        super.spoil(t);
       }
     }
 
@@ -356,8 +386,9 @@
       const el = document.createElement('div');
       el.className = 'spoil-effect';
       el.textContent = text;
-      el.style.left = x * CONFIG.ZOOM - camera.x + 'px';
-      el.style.top = y * CONFIG.ZOOM - camera.y + 'px';
+      // Корректное позиционирование относительно окна
+      el.style.left = (x * CONFIG.ZOOM - camera.x) + 'px';
+      el.style.top = (y * CONFIG.ZOOM - camera.y) + 'px';
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 1000);
     }
@@ -368,17 +399,23 @@
       player = new Player();
       for (let i = 0; i < 4; i++) {
         const c = player.getRoomCenter(i);
+        // Добавляем NPC
         new Unit(c.x-40, c.y, 'gnome', '🧙', '#ffd700', 160, 13, 7);
         new Unit(c.x+40, c.y, 'gnome', '🧙', '#ffd700', 160, 13, 7);
         new Unit(c.x, c.y+50, 'sk', '🛡️', '#00ff88', 280, 19, 11);
-        for (let j = 0; j < 3; j++) spawnMob();
+        // Генерируем мобов
+        for (let j = 0; j < 3; j++) spawnMob(i);
       }
-      setInterval(spawnMob, CONFIG.MOB_RESPAWN);
+      // Перезапускаем спавн мобов
+      // setInterval(spawnMob, CONFIG.MOB_RESPAWN);
     }
 
-    function spawnMob() {
-      const r = Math.floor(Math.random()*4);
-      const c = player.getRoomCenter(r);
+    function spawnMob(room = Math.floor(Math.random()*4)) {
+      // Проверяем, есть ли уже мобы в комнате (чтобы не переполнять)
+      const mobsInRoom = entities.filter(e => e.type === 'mob' && e.getRoom() === room).length;
+      if (mobsInRoom >= 4) return; 
+
+      const c = player.getRoomCenter(room);
       new Unit(c.x + Math.random()*80-40, c.y + Math.random()*80-40, 'mob', Math.random() > 0.5 ? '💀' : '👹', '#ff4444', 90, 9, 5);
     }
 
@@ -393,8 +430,19 @@
     }
 
     function checkLevel() {
-      if (pet.exp >= pet.expToNext) { pet.level++; pet.exp = 0; pet.expToNext *= 1.5; log('УРОВЕНЬ UP!', '#00ff00'); }
-      if (pet.spoilExp >= pet.spoilToNext) { pet.spoilLevel++; pet.spoilExp = 0; pet.spoilToNext *= 1.5; log('СПОЙЛ UP!', '#ffd700'); }
+      // Логика повышения уровней
+      if (pet.exp >= pet.expToNext) { 
+        pet.level++; 
+        pet.exp = pet.exp - pet.expToNext; // Корректное вычитание остатка
+        pet.expToNext = pet.expToNext * 1.5; 
+        log('УРОВЕНЬ UP!', '#00ff00'); 
+      }
+      if (pet.spoilExp >= pet.spoilToNext) { 
+        pet.spoilLevel++; 
+        pet.spoilExp = pet.spoilExp - pet.spoilToNext; // Корректное вычитание остатка
+        pet.spoilToNext = pet.spoilToNext * 1.5; 
+        log('СПОЙЛ UP!', '#ffd700'); 
+      }
       document.getElementById('level').textContent = pet.level;
       document.getElementById('expBar').style.width = (pet.exp / pet.expToNext * 100) + '%';
       document.getElementById('spoilLevel').textContent = pet.spoilLevel;
@@ -404,6 +452,9 @@
       document.getElementById('mats').textContent = pet.mats;
       if (pet.adena >= CONFIG.GOAL_ADENA) { log('ТЫ — МАСТЕР СПОЙЛА!', '#ffd700'); }
     }
+    
+    // Введена пустая функция для совместимости с кодом Unit
+    function checkSpoil() { checkLevel(); } 
 
     function reset() { init(); }
 
@@ -411,8 +462,9 @@
     function render() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.save();
+      // Корректируем смещение камеры для центровки
+      ctx.translate(-camera.x * CONFIG.ZOOM, -camera.y * CONFIG.ZOOM);
       ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
-      ctx.translate(-camera.x, -camera.y);
 
       // Карта
       ctx.fillStyle = '#222';
@@ -435,10 +487,21 @@
         if (e.hp <= 0) return;
         ctx.font = '36px Arial';
         ctx.fillText(e.symbol, e.x-18, e.y+12);
+        
+        // Полоса HP
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(e.x-22, e.y-25, 44, 6);
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(e.x-22, e.y-25, 44*(e.hp/e.maxHp), 6);
+        
+        // Метка "Spoiled"
+        if (e.spoiled) {
+           ctx.fillStyle = '#ffd700';
+           ctx.font = '10px Arial';
+           ctx.fillText('SPOIL', e.x-15, e.y-30);
+        }
+
+        // Выделение цели
         if (e === selectedTarget) {
           ctx.strokeStyle = '#ffff00';
           ctx.lineWidth = 3;
@@ -450,10 +513,16 @@
     }
 
     function updateCamera() {
+      // Центрация камеры на игроке
       camera.x = player.x - canvas.width/(2*CONFIG.ZOOM);
       camera.y = player.y - canvas.height/(2*CONFIG.ZOOM);
-      camera.x = Math.max(0, Math.min(camera.x, CONFIG.ROOM_SIZE*2 - canvas.width/CONFIG.ZOOM));
-      camera.y = Math.max(0, Math.min(camera.y, CONFIG.ROOM_SIZE*2 - canvas.height/CONFIG.ZOOM));
+      
+      // Ограничение камеры
+      const maxCamX = CONFIG.ROOM_SIZE*2 - canvas.width/CONFIG.ZOOM;
+      const maxCamY = CONFIG.ROOM_SIZE*2 - canvas.height/CONFIG.ZOOM;
+      
+      camera.x = Math.max(0, Math.min(camera.x, maxCamX));
+      camera.y = Math.max(0, Math.min(camera.y, maxCamY));
     }
 
     // === ЛУП ===
@@ -469,9 +538,17 @@
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
+      // Учитываем ZOOM при расчете координат клика относительно игрового мира
       const tx = (e.touches[0].clientX - rect.left) / CONFIG.ZOOM + camera.x;
       const ty = (e.touches[0].clientY - rect.top) / CONFIG.ZOOM + camera.y;
-      selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 60);
+      
+      // Ищем ближайшую цель
+      selectedTarget = entities.find(ent => ent !== player && ent.type === 'mob' && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40);
+      
+      // Если клик на мобе не сработал, ищем другого NPC/юнита
+      if (!selectedTarget) {
+        selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40);
+      }
     });
 
     init();
