@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Pocket RPG: Micro-Sim</title>
+  <title>Pocket RPG: Pixel Grind</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0a0a;
       --wall: #111;
-      --floor: #000; /* Фон полностью черный */
+      --floor: #000;
       --red: #ff4444;
       --green: #44ff44;
-      --player-color: #ffffff; /* Белый пиксель */
-      --gnome-color: #ffd700;   /* Желтый пиксель NPC */
+      --player-color: #ffffff;
+      --gnome-color: #ffd700;
+      --orc-color: #008000;
+      --mob-color: #ff4444;
       --ui-height: 240px; 
     }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -230,24 +232,15 @@
     const classSelectScreen = document.getElementById('classSelect');
     
     let entities = [];
-    let player, pet = { 
-        level:1, exp:0, expToNext:100, 
-        spoilLevel:1, spoilExp:0, spoilToNext:100, 
-        adena:0, crystals:0, mats:0,
-        weaponLevel: 0, armorLevel: 0,
-        crystalChanceLevel: 0,
-        spoilBonusLevel: 0, 
-        farmSpeedLevel: 0, 
-        hpRegenRate: 0, 
-    };
+    let player, pet = {}; // Инициализируется в selectClass
     let camera = { x:0, y:0 }; 
     let selectedTarget = null;
     let mobSpawnInterval;
     
     const CLASS_STATS = {
-        fighter: { baseStr: 18, baseDef: 7, baseHp: 230, spoilLvl: 1, initialRegen: 0, symbol: '⚪' },
-        spoiler: { baseStr: 16, baseDef: 8, baseHp: 250, spoilLvl: 3, initialRegen: 0, symbol: '⚪' },
-        crafter: { baseStr: 15, baseDef: 10, baseHp: 210, spoilLvl: 1, initialRegen: 1, symbol: '⚪' }
+        fighter: { baseStr: 18, baseDef: 7, baseHp: 230, spoilLvl: 1, initialRegen: 0 },
+        spoiler: { baseStr: 16, baseDef: 8, baseHp: 250, spoilLvl: 3, initialRegen: 0 },
+        crafter: { baseStr: 15, baseDef: 10, baseHp: 210, spoilLvl: 1, initialRegen: 1 }
     };
 
     const CONFIG = {
@@ -277,28 +270,25 @@
     window.selectClass = function(className) {
         const stats = CLASS_STATS[className];
         
-        // Сброс pet для новой игры
         pet = { 
             level:1, exp:0, expToNext:100, spoilLevel: stats.spoilLvl, spoilExp:0, spoilToNext:100, 
             adena:0, crystals:0, mats:0, weaponLevel: 0, armorLevel: 0,
             crystalChanceLevel: 0, spoilBonusLevel: 0, farmSpeedLevel: 0, 
-            hpRegenRate: stats.initialRegen, // Устанавливаем начальный реген
+            hpRegenRate: stats.initialRegen,
         };
 
-        // Инициализация игрока с выбранными статами
         player = new Player(stats.baseStr, stats.baseDef, stats.baseHp);
         
-        // Скрываем экран выбора класса и запускаем игру
         classSelectScreen.style.display = 'none';
         
-        // Инициализация игрового цикла
         resize();
         init();
-        // ВАЖНО: Рестарт интервала регенерации только после выбора класса
-        if (typeof regInterval !== 'undefined') clearInterval(regInterval);
+        if (typeof window.regInterval !== 'undefined') clearInterval(window.regInterval);
         window.regInterval = setInterval(regenerationTick, 1000); 
 
-        loop();
+        // Запускаем loop (он должен был ждать инициализации player)
+        // Если loop еще не запущен, он запустится сам в конце файла.
+        
         log(`Класс "${className.toUpperCase()}" выбран! Вперед, в Катакомбы.`, '#ffd700');
     }
 
@@ -319,7 +309,7 @@
     }
     window.addEventListener('resize', resize);
     
-    // === АВТОКРИСТАЛЛИЗАЦИЯ/РЕГЕНЕРАЦИЯ (без изменений) ===
+    // === АВТОКРИСТАЛЛИЗАЦИЯ/РЕГЕНЕРАЦИЯ ===
     function autoCrystallize() {
         if (pet.mats <= 0) return;
         const chance = CONFIG.CRYSTAL_CHANCE_BASE + pet.crystalChanceLevel * CONFIG.CRYSTAL_CHANCE_PER_LEVEL;
@@ -403,7 +393,7 @@
         if (Math.random() < chance) {
           t.spoiled = true;
           log(`[SPOIL] УСПЕХ`, '#ffd700');
-          addEffect(t.x, t.y, `SPOIL!`);
+          // Используем отдельный эффект, т.к. символы убраны
         }
       }
       
@@ -424,7 +414,6 @@
                   pet.mats += amount;
               }
               log(`[SWEEP] +${dropType} x${amount}`, '#00ff00');
-              addEffect(t.x, t.y, `+${dropType}`);
               pet.spoilExp += 20 * amount; 
               checkLevel();
           } else {
@@ -446,7 +435,6 @@
         if (this.type === 'player') { 
             log('ТЫ ПАЛ В БОЮ. ⚔️', '#ff0000');
             pet.adena = Math.floor(pet.adena * 0.5);
-            // Возвращаем на экран выбора класса для "респауна"
             classSelectScreen.style.display = 'flex';
             clearInterval(mobSpawnInterval);
             clearInterval(window.regInterval);
@@ -481,7 +469,7 @@
 
     class Player extends Unit {
       constructor(baseStr, baseDef, baseHp) { 
-          // Используем белый пиксель как символ
+          // Игрок всегда белый
           super(160, 160, 'player', '⚪', 'var(--player-color)', baseHp, baseStr, baseDef, 0); 
           this.maxHp = baseHp;
       }
@@ -584,8 +572,6 @@
       player.x = c.x;
       player.y = c.y;
       
-      // ИНИЦИАЛИЗАЦИЯ КАМЕРЫ
-      resize(); 
       camera.x = player.x - canvas.width / (2 * CONFIG.ZOOM);
       camera.y = player.y - canvas.height / (2 * CONFIG.ZOOM);
 
@@ -607,12 +593,11 @@
       const c = player.getRoomCenter(room);
       let symbol, color;
       
-      // Мобы Catacomb: Орки (темно-зеленый) и Скелеты (красный)
       if (Math.random() < 0.5) {
-          symbol = '🔴'; // Скелет/Моб
+          symbol = '🔴'; // Скелет/Моб (Красный)
           color = 'var(--mob-color)'; 
       } else {
-          symbol = '🟢'; // Орк/Гуль
+          symbol = '🟢'; // Орк/Гуль (Темно-зеленый)
           color = 'var(--orc-color)';
       }
 
@@ -695,15 +680,14 @@
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.save();
       
-      // Применяем камеру
       ctx.translate(-camera.x * CONFIG.ZOOM, -camera.y * CONFIG.ZOOM);
       ctx.scale(CONFIG.ZOOM, CONFIG.ZOOM);
 
-      // Карта: имитация пиксельного мира
-      ctx.fillStyle = '#111';
+      // 1. Карта: имитация пиксельного мира
+      ctx.fillStyle = 'var(--floor)';
       ctx.fillRect(0,0,CONFIG.ROOM_SIZE*2,CONFIG.ROOM_SIZE*2);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2; // Более тонкие линии для "клеток"
+      ctx.strokeStyle = 'var(--wall)';
+      ctx.lineWidth = 2; 
       for (let i=0; i<=2; i++) {
         ctx.beginPath();
         ctx.moveTo(i*CONFIG.ROOM_SIZE, 0);
@@ -715,27 +699,25 @@
         ctx.stroke();
       }
 
-      // Юниты (Рендеринг как пиксели)
+      // 2. Юниты (Рендеринг как пиксели)
       entities.forEach(e => {
         if (e.hp <= 0) return; 
         
         const pixelSize = CONFIG.PIXEL_SIZE;
         const halfPixel = pixelSize / 2;
-
-        // 1. Рендеринг Пикселя Юнита
-        // Мобы: 1x1 пиксель
-        // Игрок: 2x2 пикселя
+        
+        // Рендеринг Пикселя Юнита
         ctx.fillStyle = e.type === 'player' ? 'var(--player-color)' : e.color;
         
         if (e.type === 'player') {
-            // Игрок как 2x2 пикселя для лучшей видимости
+            // Игрок как 2x2 пикселя
             ctx.fillRect(e.x - pixelSize, e.y - pixelSize, pixelSize * 2, pixelSize * 2);
         } else {
             // Мобы как 1x1 пиксель
             ctx.fillRect(e.x - halfPixel, e.y - halfPixel, pixelSize, pixelSize);
         }
         
-        // 2. Выделение цели/Спойла
+        // 3. Выделение цели/Спойла
         if (e === selectedTarget) {
           ctx.strokeStyle = '#ffff00';
           ctx.lineWidth = 1;
@@ -760,6 +742,7 @@
 
     function loop() {
       if (!player) {
+          // Если игрок еще не выбран (ждем на экране выбора класса)
           requestAnimationFrame(loop);
           return;
       }
@@ -779,10 +762,11 @@
       const tx = (e.touches[0].clientX - rect.left) / CONFIG.ZOOM + camera.x;
       const ty = (e.touches[0].clientY - rect.top) / CONFIG.ZOOM + camera.y;
       
-      selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 20); // Уменьшенный радиус клика
+      // Радиус клика увеличен для попадания по маленьким пикселям
+      selectedTarget = entities.find(ent => ent !== player && ent.hp > 0 && dist(ent, {x:tx, y:ty}) < 40); 
     });
 
-    // Инициализация
+    // Инициализация при старте (показываем экран выбора класса)
     resize();
     loop();
   </script>
