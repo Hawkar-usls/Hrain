@@ -2,1374 +2,381 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pocket L2 Idle — MMO Edition (Firestore)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pocket L2 Idle — MMO Edition</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- D3.js (оставляем для зоны фарма) -->
-<script src="https://d3js.org/d3.v7.min.js"></script> 
-<!-- Firebase SDK -->
-<script type="module">
-    // Импорты Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-        getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, 
-        onSnapshot, collection, query, where, setLogLevel,
-        addDoc, serverTimestamp, orderBy, limit, runTransaction 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ FIREBASE ---
-    let db, auth, app;
-    let userId; // Уникальный ID игрока
-    
-    // Глобальные переменные из Canvas (НЕ ТРОГАТЬ)
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-    // --- ИНИЦИАЛИЗАЦИЯ ИГРЫ (ТЕПЕРЬ ЗАПУСКАЕТСЯ ЧЕРЕЗ FIREBASE) ---
-    
-    // 1. Инициализация Firebase
-    try {
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-        setLogLevel('Debug'); 
-        console.log("Firebase Initialized. App ID:", appId);
-        
-        // --- ПРИВЯЗКА К ГЛОБАЛЬНОМУ ОБЪЕКТУ WINDOW ---
-        window.db = db;
-        window.auth = auth;
-        window.appId = appId;
-        window.firebaseFirestore = {
-            doc, getDoc, setDoc, updateDoc, deleteDoc, 
-            onSnapshot, collection, query, where, 
-            addDoc, serverTimestamp, orderBy, limit, runTransaction
-        };
-        
-        // Функции игры
-        window.start = start;
-        window.toggleInventory = toggleInventory;
-        window.buySS = buySS;
-        window.toggleSS = toggleSS;
-        window.toggleFarm = toggleFarm;
-        window.useSkill = useSkill;
-        window.showSkillInfo = showSkillInfo;
-        window.hideSkillInfo = hideSkillInfo;
-        window.enterZone = enterZone;
-        window.handleMapClick = handleMapClick; 
-        
-        window.toggleChat = toggleChat; 
-        window.sendChatMessage = sendChatMessage;
-        
-        window.toggleQuestLog = toggleQuestLog;
-        window.acceptQuest = acceptQuest;
-        window.turnInQuest = turnInQuest;
-        
-        window.toggleAuctionHouse = toggleAuctionHouse;
-        window.renderAuctionSellTab = renderAuctionSellTab;
-        window.listItemForSale = listItemForSale;
-        window.buyAuctionItem = buyAuctionItem;
-        
-        window.toggleMailbox = toggleMailbox;
-        window.claimMailItem = claimMailItem;
-        window.deleteMailItem = deleteMailItem;
-        
-        // --- НОВЫЕ ФУНКЦИИ КРАФТА ---
-        window.toggleCrafting = toggleCrafting;
-        window.craftItem = craftItem;
-
-    } catch (e) {
-        console.error("Firebase Init Error:", e);
-    }
-
-    // 2. Аутентификация
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log("Auth state changed, user ID:", user.uid);
-            userId = user.uid;
-            // 3. Загружаем или создаем профиль игрока
-            await loadOrCreatePlayerProfile(userId);
-            // 4. Только теперь запускаем игру
-            document.getElementById('menu').style.display='flex';
-            // 5. Запускаем слушатель почты
-            initMailListener(); 
-        } else {
-            console.log("No user signed in. Attempting sign in...");
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Sign-in error:", error);
-            }
-        }
-    });
-
-    // 3. Загрузка/Создание профиля
-    async function loadOrCreatePlayerProfile(uid) {
-        const playerProfileRef = doc(db, `artifacts/${appId}/users/${uid}/profile/data`);
-        
-        try {
-            const docSnap = await getDoc(playerProfileRef);
-            if (docSnap.exists()) {
-                console.log("Loading existing profile...", docSnap.data());
-                const loadedData = docSnap.data();
-                // Загружаем сохраненные данные в 'p'
-                p = { ...p, ...loadedData, userId: uid }; 
-                // Убедимся, что квестовые поля существуют
-                p.activeQuests = loadedData.activeQuests || {};
-                p.completedQuests = loadedData.completedQuests || [];
-            } else {
-                console.log("No profile found, creating new one...");
-                // Профиль не найден, создаем новый (данные из 'p' будут использованы при старте)
-                p.userId = uid;
-            }
-        } catch (e) {
-            console.error("Error loading/creating profile:", e);
-        }
-    }
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap');
     
-    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a001f;color:#fff;font-family:'Roboto', system-ui, sans-serif}
-    #menu,#game{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;background:radial-gradient(circle at center,#2a0066,#0a001f)}
-    h1{font-size:3.5rem;text-shadow:0 0 30px #ff00ff; font-family: 'Cinzel', serif;}
-    button, .skill-btn { cursor: pointer; transition: all 0.3s; }
+    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Roboto', sans-serif; -webkit-user-select: none; user-select: none;}
     
-    /* --- ИЗМЕНЕНИЯ В UI --- */
-    #game {
-        background: #0a001f; /* Убираем градиент из игры, он будет на карте */
-        justify-content: flex-start;
-    }
+    #menu { position: absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: radial-gradient(circle, #2a0066 0%, #0a001f 100%); z-index: 2000; }
+    #game { display: none; width: 100%; height: 100%; position: relative; }
+    #phaser-game { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
     
-    #stats{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.75);padding:12px 16px;border-radius:12px;z-index:100; /* Выше карты */ font-size:14px; border: 1px solid #4a0072; max-width: 250px;}
-    .bar{width:180px;height:14px;background:#222;border:1px solid #555;border-radius:7px;overflow:hidden;margin:4px 0}
-    .fill{height:100%;transition:width .3s}
-    
-    #ss-toggle {
-        width: 40px; height: 40px; border-radius: 8px; border: 2px solid #aaa;
-        font-size: 16px; font-weight: bold; background: #333; color: #777;
-        display: flex; align-items: center; justify-content: center; margin-top: 5px;
+    /* UI */
+    #stats {
+        position: absolute; top: 10px; left: 10px;
+        background: rgba(0, 0, 0, 0.6); /* Более прозрачный фон */
+        backdrop-filter: blur(4px); /* Размытие фона */
+        border: 1px solid rgba(74, 0, 114, 0.5);
+        border-radius: 12px;
+        padding: 10px; z-index: 100; width: 220px; font-size: 11px;
+        max-height: 60vh; overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    #ss-toggle.active { background: #ffc800; color: #000; border-color: #fff; box-shadow: 0 0 20px #ffc800; }
-    
-    #farm-toggle {
-        width: 100%; height: 30px; border-radius: 8px; border: 2px solid #555;
-        font-size: 14px; font-weight: bold; background: #333; color: #888;
-        display: flex; align-items: center; justify-content: center; margin-top: 5px;
-    }
-    #farm-toggle.active { background: #16a34a; color: #fff; border-color: #22c55e; }
-
-    .zone-btn {
-        width: 100%; height: 30px; border-radius: 8px; border: 2px solid #555;
-        font-size: 14px; font-weight: bold; background: #4a5568; color: #fff;
-        display: flex; align-items: center; justify-content: center; margin-top: 5px;
-    }
+    .bar-container { width: 100%; height: 6px; background: #222; margin: 2px 0; border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; transition: width 0.3s; }
     
     .ui-btn {
-        width: 100%; height: 30px; border-radius: 8px; border: 2px solid #555;
-        font-size: 13px; font-weight: bold; background: #334155; color: #cbd5e1;
-        display: flex; align-items: center; justify-content: center; margin-top: 5px;
-        transition: background-color 0.2s;
+        width: 100%; padding: 8px 0; margin-top: 4px;
+        background: rgba(55, 65, 81, 0.8); border: 1px solid #4b5563; border-radius: 6px;
+        color: #e5e7eb; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; display: block;
+        transition: all 0.2s;
     }
-    .ui-btn:hover { background: #475569; }
+    .ui-btn:active { background: #4b5563; transform: scale(0.98); }
     
-    /* Иконка почты с уведомлением */
-    #mail-btn-container {
-        position: relative;
+    #skills {
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 12px; z-index: 100;
+        background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+        padding: 10px; border-radius: 16px; border: 1px solid #555;
     }
-    #mail-notification {
-        position: absolute;
-        top: 0px;
-        right: 0px;
-        width: 18px;
-        height: 18px;
-        background: #ef4444;
-        border-radius: 50%;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        display: none; /* Скрыто по умолчанию */
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #fff;
+    .skill-btn {
+        width: 56px; height: 56px; border-radius: 12px; border: 2px solid #777;
+        font-size: 24px; display: flex; align-items: center; justify-content: center;
+        background: rgba(34, 34, 34, 0.8); position: relative; cursor: pointer; transition: transform 0.1s;
     }
-
-    #skills{
-        position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
-        display:flex; gap: 4px; z-index:100; /* Выше карты */
-        background: rgba(0,0,0,0.6); padding: 8px; border-radius: 12px; border: 1px solid #555;
-    }
-    /* ... (остальные стили UI без изменений) ... */
+    .skill-btn:active { transform: scale(0.95); }
     
-    /* --- СТИЛИ КАРТЫ ГИРАНА --- */
-    #giran-map {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        background: radial-gradient(circle at center, #2a0066, #0a001f);
-        overflow: hidden;
-        display: none; /* Скрыт по умолчанию */
-    }
-    .map-element {
-        position: absolute;
-        border-radius: 8px;
-        box-sizing: border-box;
-    }
-    #giran-square {
-        width: 400px;
-        height: 400px;
-        background: #3a1a66;
-        border: 4px solid #5a3a86;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-    #giran-statue {
-        width: 60px;
-        height: 60px;
-        background: #9ca3af;
-        border: 4px solid #e5e7eb;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 10px;
-        color: #1f2937;
-        text-align: center;
-        padding-top: 18px;
-        font-weight: bold;
-    }
-    .giran-house {
-        width: 150px;
-        height: 100px;
-        background: #4a2a77;
-        border: 4px solid #6a4a97;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        font-weight: bold;
-    }
-    #trader-house {
-        left: calc(50% + 250px);
-        top: 50%;
-        transform: translateY(-110%);
-    }
-    #quest-house {
-        left: calc(50% + 250px);
-        top: 50%;
-        transform: translateY(10%);
-    }
-    /* Новые дома */
-    #auction-house {
-        left: calc(50% - 250px);
-        top: 50%;
-        transform: translate(-100%, -110%);
-    }
-    #mail-house {
-        left: calc(50% - 250px);
-        top: 50%;
-        transform: translate(-100%, 10%);
-    }
-    /* Дом кузнеца */
-    #crafting-house {
-        left: 50%;
-        top: calc(50% - 200px); /* Над площадью */
-        transform: translate(-50%, -100%);
-    }
+    /* Модалки */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .modal-content { width: 90%; max-width: 400px; background: #1f2937; border: 1px solid #6d28d9; border-radius: 12px; padding: 15px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
     
-    .npc-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        margin-bottom: 5px;
-    }
+    .floating-text { position: absolute; font-weight: bold; pointer-events: none; text-shadow: 1px 1px 0 #000; animation: floatUp 1.5s forwards; z-index: 1000; }
+    @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
     
-    /* ... (стили игрока) ... */
-    
-    /* Скрыть D3 холст по умолчанию */
-    #c { display: none; }
-    
-    /* ... (стили модалок, чата, квестов) ... */
-    
-    /* --- СТИЛИ АУКЦИОНА И ПОЧТЫ --- */
-    .modal {
-        position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:20;
-        display:none; flex-direction:column; align-items:center; padding-top:50px;
-    }
-    .modal-content {
-        width: 90%;
-        max-width: 600px; 
-        background: #1f2937;
-        border: 1px solid #4a0072;
-        border-radius: 12px;
-        padding: 20px;
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-    }
-    .modal-tabs {
-        display: flex;
-        border-bottom: 2px solid #374151;
-        margin-bottom: 15px;
-    }
-    .tab-btn {
-        padding: 10px 20px;
-        background: #374151;
-        color: #9ca3af;
-        font-weight: bold;
-        border-radius: 6px 6px 0 0;
-    }
-    .tab-btn.active {
-        background: #4f46e5;
-        color: #fff;
-    }
-    .tab-panel {
-        display: none;
-        flex-grow: 1;
-        overflow-y: auto;
-    }
-    .tab-panel.active {
-        display: block;
-    }
-    
-    /* ... (стили аукциона и почты) ... */
-    
-    /* --- СТИЛИ КРАФТА --- */
-    #crafting-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
-        flex-grow: 1;
-        overflow-y: auto;
-    }
-    .craft-item {
-        background: #374151;
-        border-radius: 8px;
-        padding: 15px;
-    }
-    .craft-name {
-        font-size: 1.25rem;
-        font-weight: bold;
-        font-family: 'Cinzel', serif;
-        color: #e5e7eb;
-    }
-    .craft-requires {
-        font-size: 0.9rem;
-        color: #d1d5db;
-        margin: 8px 0;
-        border-top: 1px solid #4b5563;
-        padding-top: 8px;
-    }
-    .craft-requires-item {
-        display: flex;
-        justify-content: space-between;
-    }
-    .craft-requires-item.missing {
-        color: #f87171; /* Красный, если не хватает */
-    }
-    .craft-chance {
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: #f59e0b; /* Оранжевый */
-        text-align: center;
-        margin: 10px 0;
-    }
-    .craft-btn {
-        width: 100%;
-        padding: 10px;
-        border-radius: 6px;
-        font-weight: bold;
-        color: #fff;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        background-color: #db2777; /* Розовый */
-        font-size: 1rem;
-    }
-    .craft-btn:hover { background-color: #ec4899; }
-    .craft-btn:disabled {
-        background-color: #4b5563;
-        color: #9ca3af;
-        cursor: not-allowed;
-    }
-    
-    #inventory-modal, #quest-modal, #gameOverScreen, #auction-modal, #mail-modal, #crafting-modal { z-index: 200; }
-    #chat-window { z-index: 150; }
-    
+    .item-slot, .craft-item, .auction-item, .mail-item, .quest-item { background: #374151; border-radius: 6px; padding: 8px; margin-bottom: 6px; }
 </style>
 </head>
 <body>
 
-<div id="menu" class="flex">
-    <!-- ... (меню без изменений) ... -->
+<div id="menu">
+    <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; color: #a78bfa; text-shadow: 0 0 20px #7c3aed; margin-bottom: 20px;">Pocket L2</h1>
+    <div class="flex flex-col gap-4 w-64">
+        <input id="name" placeholder="Имя героя" class="p-3 rounded bg-gray-800 text-white border border-gray-600 text-center">
+        <select id="cls" class="p-3 rounded bg-gray-800 text-white border border-gray-600">
+            <option value="gladiator">Gladiator (Воин)</option>
+            <option value="sorcerer">Sorcerer (Маг)</option>
+            <option value="hawkeye">Hawkeye (Лук)</option>
+        </select>
+        <button onclick="window.startGameWrapper()" class="p-4 rounded bg-purple-600 font-bold text-white hover:bg-purple-500 transition shadow-[0_0_15px_rgba(124,58,237,0.5)]">НАЧАТЬ</button>
+    </div>
 </div>
 
-<div id="game" class="relative">
+<div id="game">
+    <div id="phaser-game"></div>
+
+    <!-- Интерфейс -->
     <div id="stats">
-        <!-- ... (статы) ... -->
-        <div class="flex gap-2 w-full">
-            <button onclick="toggleInventory()" class="ui-btn flex-1">Инвентарь</button>
-            <button onclick="toggleChat()" class="ui-btn flex-1">Чат</button>
-        </div>
-        <div class="flex gap-2 w-full">
-            <button onclick="toggleQuestLog()" class="ui-btn flex-1">Квесты</button>
-            <div id="mail-btn-container" class="flex-1">
-                <button onclick="toggleMailbox()" class="ui-btn w-full">Почта</button>
-                <div id="mail-notification">!</div> <!-- Уведомление о почте -->
-            </div>
-        </div>
-        <button onclick="toggleAuctionHouse()" class="ui-btn w-full">Аукцион</button>
-        <button onclick="toggleCrafting()" class="ui-btn w-full bg-pink-700 hover:bg-pink-600">Крафт</button> <!-- <-- КНОПКА КРАФТА -->
+        <div id="pname" class="text-yellow-400 font-bold mb-1 text-sm">...</div>
+        <div class="bar-container"><div id="hp" class="bar-fill bg-red-600" style="width: 100%"></div></div>
+        <div class="bar-container"><div id="mp" class="bar-fill bg-blue-600" style="width: 100%"></div></div>
+        <div class="flex justify-between text-[10px] text-gray-400"><span>LVL <span id="lvl">1</span></span><span><span id="adena" class="text-yellow-300">0</span> A</span></div>
 
-        <button onclick="buySS(100)" class="mt-1 px-3 py-1 bg-yellow-600 rounded text-xs text-black w-full">Купить SS (100А)</button>
-        <div id="farm-toggle" onclick="toggleFarm()">Фарм: OFF</div>
+        <hr class="border-gray-600 my-2">
         
-        <div class="mt-2 space-y-1">
-            <div>Локация: <span id="zone-name" class="font-bold text-green-400"></span></div>
-            <button id="go-to-city" class="zone-btn bg-blue-600 hover:bg-blue-500">В Гиран (Безоп.)</button>
-            <button id="go-to-farm" class="zone-btn bg-red-600 hover:bg-red-500">На Поля (Фарм)</button>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="mainScript.toggleSS()" id="ss-btn" class="ui-btn border-yellow-600 text-yellow-500">SS</button>
+            <button onclick="mainScript.toggleFarm()" id="farm-btn" class="ui-btn border-green-600 text-green-500">Фарм</button>
         </div>
+        <button onclick="mainScript.toggleEquipment()" class="ui-btn bg-cyan-900 border-cyan-700">🛡️ Экипировка</button>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="mainScript.toggleInventory()" class="ui-btn">🎒 Сумка</button>
+            <button onclick="mainScript.toggleQuestLog()" class="ui-btn">📜 Квесты</button>
+        </div>
+        <button onclick="mainScript.toggleAuctionHouse()" class="ui-btn">⚖️ Аукцион</button>
+        <button onclick="mainScript.toggleCrafting()" class="ui-btn text-pink-400 border-pink-900">⚒️ Крафт</button>
     </div>
-    
-    <!-- D3 ХОЛСТ (ТОЛЬКО ДЛЯ ФАРМ-ЗОНЫ) -->
-    <svg id="c"></svg>
-    
-    <!-- НОВАЯ HTML КАРТА ГИРАНА -->
-    <div id="giran-map" onclick="handleMapClick(event)">
-        <div id="giran-square" class="map-element"></div>
-        <div id="giran-statue" class="map-element">СТАТУЯ</div>
-        
-        <div id="trader-house" class="map-element giran-house">
-            <div class="npc-icon" style="background-color: #00e6e6;"></div>
-            Торговец
-        </div>
-        
-        <div id="quest-house" class="map-element giran-house">
-            <div class="npc-icon" style="background-color: #f59e0b;"></div>
-            Мастер Квестов
-        </div>
-        
-        <div id="auction-house" class="map-element giran-house">
-            <div class="npc-icon" style="background-color: #16a34a;"></div>
-            Аукционист
-        </div>
-        
-        <div id="mail-house" class="map-element giran-house">
-            <div class="npc-icon" style="background-color: #4f46e5;"></div>
-            Почтальон
-        </div>
-        
-        <div id="crafting-house" class="map-element giran-house">
-            <div class="npc-icon" style="background-color: #db2777;"></div>
-            Кузнец
-        </div>
-        
-        <!-- Игрок и другие игроки будут добавлены сюда через JS -->
+
+    <div id="skills">
+        <div class="skill-btn" id="skill1" onclick="mainScript.useSkill(1)">1</div>
+        <div class="skill-btn" id="skill2" onclick="mainScript.useSkill(2)">2</div>
+        <div class="skill-btn" id="skill3" onclick="mainScript.useSkill(3)">3</div>
     </div>
-    
-    
+
     <div id="particles"></div>
-    <!-- ... (остальные UI элементы: скиллы, инфо, модалки) ... -->
-    
-    <!-- --- ОКНО КРАФТА --- -->
-    <div id="crafting-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-3xl mb-4 font-cinzel text-center">Кузница</h2>
-            
-            <div id="crafting-list" class="flex-grow overflow-y-auto">
-                <!-- Рецепты крафта будут здесь -->
-            </div>
-            
-            <div id="crafting-npc-message" class="text-center text-gray-400 mt-4" style="display: none;">
-                Подойдите к Кузнецу в Гиране.
-            </div>
-        </div>
-        <button onclick="toggleCrafting()" class="mt-8 px-8 py-4 bg-red-600 rounded text-xl">Закрыть</button>
-    </div>
 
-    <!-- ... (остальные модалки) ... -->
+    <div id="generic-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-center font-bold text-xl mb-4 text-purple-300"></h3>
+            <div id="modal-body" class="flex-grow overflow-y-auto bg-gray-900 p-2 rounded mb-4 text-sm"></div>
+            <button onclick="document.getElementById('generic-modal').style.display='none'" class="bg-red-600 p-3 rounded w-full font-bold">Закрыть</button>
+        </div>
+    </div>
 </div>
 
-<audio id="sfx-adena" src="https://cdn.freesound.org/previews/657/657370_5674468-lq.mp3" preload="auto"></audio>
-<audio id="sfx-hit" src="https://cdn.freesound.org/previews/612/612552_5674468-lq.mp3" preload="auto"></audio>
-<audio id="sfx-buff" src="https://cdn.freesound.org/previews/276/276792_5123851-lq.mp3" preload="auto"></audio>
-<audio id="sfx-lvl" src="https://cdn.freesound.org/previews/276/276285_5123851-lq.mp3" preload="auto"></audio>
-<audio id="sfx-chat" src="https://cdn.freesound.org/previews/41/41108_5123851-lq.mp3" preload="auto"></audio> 
-<audio id="sfx-quest" src="https://cdn.freesound.org/previews/270/270382_5123851-lq.mp3" preload="auto"></audio> 
-<audio id="sfx-craft-fail" src="https://cdn.freesound.org/previews/258/258142_4100212-lq.mp3" preload="auto"></audio> <!-- <-- Крафт НЕУДАЧА -->
-<audio id="sfx-craft-success" src="https://cdn.freesound.org/previews/403/403017_5123851-lq.mp3" preload="auto"></audio> <!-- <-- Крафт УСПЕХ -->
-
-
+<!-- Логика -->
 <script type="module">
-// === КОНФИГУРАЦИЯ ИГРЫ ===
-const AGGRO_RANGE = 150; 
-const PULL_RANGE = 300; 
-const MELEE_RANGE = 40;  
-const NPC_INTERACT_RANGE = 120; 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, addDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- НОВЫЕ ПОЗИЦИИ NPC ---
-let GiranTrader = { x: 0, y: 0, name: 'Торговец' }; 
-let QuestMaster = { x: 0, y: 0, name: 'Мастер Квестов' }; 
-let Auctioneer = { x: 0, y: 0, name: 'Аукционист' }; 
-let Mailbox = { x: 0, y: 0, name: 'Почтальон' }; 
-let Blacksmith = { x: 0, y: 0, name: 'Кузнец' }; // <-- НОВЫЙ NPC
-
-const CLASS_STATS = { /* ... (без изменений) ... */ };
-const CLASS_SKILLS = { /* ... (без изменений) ... */ };
-const QUESTS_DB = { /* ... (без изменений) ... */ };
-
-// --- БАЗА ДАННЫХ РЕЦЕПТОВ ---
-const RECIPES_DB = {
-    'd_sword': {
-        id: 'd_sword',
-        name: 'Меч Рыцаря (D-Grade)',
-        requires: {
-            'Обломок Кости': 20,
-            'Нить': 10
-        }
-    },
-    'c_bow': {
-        id: 'c_bow',
-        name: 'Эльфийский Лук (C-Grade)',
-        requires: {
-            'Обломок Кости': 50,
-            'Нить': 25,
-            'Меч Рыцаря (D-Grade)': 1 // Пример крафта из другого крафта
-        }
-    },
-    'b_robe': {
-        id: 'b_robe',
-        name: 'Мантия Мага (B-Grade)',
-        requires: {
-            'Нить': 100
-        }
-    }
-};
-
-// === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ===
-let p = {}; // Объект игрока
-let svg, w, h, mobs = [], pool = [], cooldowns = {}, currentSkills = [];
-let isGameOver = false;
-let isActivelyFarming = false; 
-let otherPlayers = new Map(); 
-let playerUpdateInterval; 
-let multiplayerUnsubscribe; 
-let chatUnsubscribe; 
-let mailUnsubscribe; 
-let auctionUnsubscribe; 
-let isChatOpen = false;
-let isCrafting = false; // Защита от двойного клика по крафту
-
-// --- НОВЫЕ ГЛОБАЛЬНЫЕ ДЛЯ HTML КАРТЫ ---
-let playerElement; 
-let giranMapElement; 
-let otherPlayerElements = new Map(); 
-
-
-// === ГЛОБАЛЬНЫЕ FIREBASE (ИЗ <head>/window) ===
-const db = window.db;
-const auth = window.auth;
-const appId = window.appId;
-const { 
-    doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
-    collection, query, where, addDoc, serverTimestamp, orderBy, limit, runTransaction
-} = window.firebaseFirestore;
-
-// === УТИЛИТЫ ===
-function play(soundId) { /* ... (без изменений) ... */ }
-function getDistance(n1, n2) { /* ... (без изменений) ... */ }
-
-// === ЗАПУСК ИГРЫ (Вызывается из HTML) ===
-window.start = async function() {
-    const cls = document.getElementById('cls').value;
-    const stats = CLASS_STATS[cls];
-    w = innerWidth; h = innerHeight;
-    
-    // Заполняем 'p' данными, если это новый игрок
-    p = {
-        name: document.getElementById('name').value || 'Герой',
-        cls, 
-        color: stats.color,
-        x: w/2, y: h/2, // Стартовая позиция
-        maxHp: stats.hp, hp: stats.hp,
-        maxMp: stats.mp, mp: stats.mp,
-        baseAtk: stats.atk, atk: stats.atk,
-        speed: stats.speed,
-        level: 1, exp: 0, adena: 0,
-        inventory: {'Обломок Кости': 50, 'Нить': 30}, // <-- Больше ресурсов для теста
-        buffs: {},
-        soulshots: 0, ssActive: false,
+    const game = {
+        p: {}, phaser: null, scene: null,
+        ITEMS: {
+            'D_Sword': { name: 'Меч Рыцаря (D)', type: 'Wpn', slot: 'weapon', stats: {atk:15} },
+            'C_Bow': { name: 'Эльф. Лук (C)', type: 'Wpn', slot: 'weapon', stats: {atk:35} },
+            'B_Robe': { name: 'Роба Мага (B)', type: 'Arm', slot: 'armor', stats: {hp:100} },
+            'Bone': { name: 'Кость', type: 'Res' }, 'Thread': { name: 'Нить', type: 'Res' }
+        },
+        sprites: { player: null, mobs: [], npcs: [] },
         target: null,
-        currentZone: 'farm',
-        activeQuests: {}, 
-        completedQuests: [],
-        ...p 
-    };
-    
-    // Сохраняем профиль (на случай, если это первый вход)
-    await savePlayerProfile();
-    
-    currentSkills = CLASS_SKILLS[cls];
-    
-    document.getElementById('pname').textContent = p.name + ' [' + cls.toUpperCase() + ']';
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-    
-    initVisuals(); 
-    initChatListener();
-    initAuctionListener(); 
-}
 
-// === ИНИЦИАЛИЗАЦИЯ (ИЗМЕНЕНО) ===
-function initVisuals() { 
-    // --- Настройка D3 (Фарм-зона) ---
-    svg = d3.select('#c').attr('width', w).attr('height', h);
-    svg.append('rect').attr('width', w).attr('height', h).attr('fill', '#0f001f');
-
-    // --- Настройка HTML Карты (Гиран) ---
-    giranMapElement = document.getElementById('giran-map');
-    
-    // Создаем HTML-элемент для игрока
-    playerElement = document.createElement('div');
-    playerElement.className = 'player-entity';
-    playerElement.innerHTML = `
-        <div class="player-icon-circle" style="background-color: ${p.color};"></div>
-        <div class="player-icon-name">${p.name}</div>
-    `;
-    giranMapElement.appendChild(playerElement);
-    
-    // Устанавливаем позиции NPC (центры зданий)
-    const traderHouse = document.getElementById('trader-house');
-    const questHouse = document.getElementById('quest-house');
-    const auctionHouse = document.getElementById('auction-house');
-    const mailHouse = document.getElementById('mail-house');
-    const craftingHouse = document.getElementById('crafting-house'); // <-- Кузнец
-    
-    GiranTrader.x = traderHouse.offsetLeft + traderHouse.offsetWidth / 2;
-    GiranTrader.y = traderHouse.offsetTop + traderHouse.offsetHeight / 2;
-    QuestMaster.x = questHouse.offsetLeft + questHouse.offsetWidth / 2;
-    QuestMaster.y = questHouse.offsetTop + questHouse.offsetHeight / 2;
-    Auctioneer.x = auctionHouse.offsetLeft + auctionHouse.offsetWidth / 2;
-    Auctioneer.y = auctionHouse.offsetTop + auctionHouse.offsetHeight / 2;
-    Mailbox.x = mailHouse.offsetLeft + mailHouse.offsetWidth / 2;
-    Mailbox.y = mailHouse.offsetTop + mailHouse.offsetHeight / 2;
-    Blacksmith.x = craftingHouse.offsetLeft + craftingHouse.offsetWidth / 2;
-    Blacksmith.y = craftingHouse.offsetTop + craftingHouse.offsetHeight / 2;
-    
-    // Скиллы
-    document.querySelectorAll('.skill-btn').forEach((btn, i) => {
-        const skill = currentSkills[i];
-        btn.textContent = skill.icon;
-        btn.style.background = skill.color;
-    });
-    
-    // Кнопки зон
-    document.getElementById('go-to-city').onclick = () => enterZone('city');
-    document.getElementById('go-to-farm').onclick = () => enterZone('farm');
-
-    // Запуск
-    enterZone('farm'); // Начинаем на фарме
-    updateUI();
-    requestAnimationFrame(loop);
-}
-
-// --- НОВАЯ ФУНКЦИЯ КЛИКА ПО КАРТЕ ---
-window.handleMapClick = function(event) {
-    if (isGameOver || p.currentZone !== 'city') return;
-    
-    // Игнорируем клики по UI поверх карты
-    const modalOpen = document.querySelector('.modal[style*="display: flex"]');
-    if (modalOpen || event.target.closest('.map-element') && event.target.id !== 'giran-map' && event.target.id !== 'giran-square') {
-        return;
-    }
-    if (event.target.closest('.player-entity')) return;
-
-    // Получаем координаты клика относительно карты
-    const rect = giranMapElement.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    p.x = x;
-    p.y = y;
-    
-    // Двигаем HTML-элемент игрока
-    playerElement.style.transform = `translate(${p.x - playerElement.offsetWidth/2}px, ${p.y - playerElement.offsetHeight/2}px)`;
-}
-
-// === ЛОГИКА ЗОН (СИЛЬНО ИЗМЕНЕНО) ===
-window.enterZone = async function(zoneName) {
-    if (!p || !p.userId) return; 
-    
-    p.currentZone = zoneName;
-    const cityBtn = document.getElementById('go-to-city');
-    const farmBtn = document.getElementById('go-to-farm');
-    const farmToggle = document.getElementById('farm-toggle');
-    
-    // Элементы D3 и HTML
-    const d3Canvas = document.getElementById('c');
-    const htmlMap = document.getElementById('giran-map');
-    
-    const playerPublicRef = doc(db, `artifacts/${appId}/public/data/players/${p.userId}`);
-
-    if (zoneName === 'city') {
-        document.getElementById('zone-name').textContent = 'Гиран';
-        cityBtn.style.display = 'none';
-        farmBtn.style.display = 'block';
-        farmToggle.style.display = 'none'; 
-        
-        d3Canvas.style.display = 'none'; // Скрываем D3
-        htmlMap.style.display = 'block'; // Показываем HTML карту
-        
-        if (isActivelyFarming) toggleFarm(); 
-        
-        // Убираем D3-мобов
-        svg.selectAll('.mob-node').remove(); 
-        mobs = []; pool = [];
-        
-        // Позиционируем игрока на карте
-        p.x = w / 2; p.y = h / 2 + 150; // Точка входа в город
-        playerElement.style.transform = `translate(${p.x - playerElement.offsetWidth/2}px, ${p.y - playerElement.offsetHeight/2}px)`;
-
-        // --- МУЛЬТИПЛЕЕР: Вход в город ---
-        try {
-            await setDoc(playerPublicRef, {
-                x: p.x, y: p.y, name: p.name, color: p.color, userId: p.userId
-            });
-        } catch(e) { console.error("Failed to publish player location:", e); }
-        
-        if (playerUpdateInterval) clearInterval(playerUpdateInterval);
-        playerUpdateInterval = setInterval(updatePlayerPosition, 200);
-        
-        setupMultiplayerListeners(); // Подписываемся на других
-
-    } else { // 'farm'
-        document.getElementById('zone-name').textContent = 'Поля';
-        cityBtn.style.display = 'block';
-        farmBtn.style.display = 'none';
-        farmToggle.style.display = 'block'; 
-        
-        d3Canvas.style.display = 'block'; // Показываем D3
-        htmlMap.style.display = 'none'; // Скрываем HTML карту
-        
-        // --- МУЛЬТИПЛЕЕР: Выход из города ---
-        try {
-            await deleteDoc(playerPublicRef);
-        } catch(e) { console.error("Failed to delete player location:", e); }
-        
-        clearInterval(playerUpdateInterval);
-        
-        if (multiplayerUnsubscribe) multiplayerUnsubscribe();
-        
-        // Очищаем HTML-карту от других игроков
-        otherPlayers.clear();
-        otherPlayerElements.forEach(el => el.remove());
-        otherPlayerElements.clear();
-        
-        // Спавним D3-мобов
-        p.x = w / 2; p.y = h / 2; // Центрируем для D3
-        for(let i=0;i<10;i++) spawnMob();
-    }
-}
-
-// === МУЛЬТИПЛЕЕР (ИЗМЕНЕНО ДЛЯ HTML) ===
-function setupMultiplayerListeners() {
-    if (multiplayerUnsubscribe) multiplayerUnsubscribe();
-    const playersQuery = query(collection(db, `artifacts/${appId}/public/data/players`));
-    multiplayerUnsubscribe = onSnapshot(playersQuery, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            const data = change.doc.data();
-            if (data.userId === p.userId) return; 
-            if (change.type === "added" || change.type === "modified") {
-                otherPlayers.set(data.userId, data);
-                renderOtherPlayer(data);
-            }
-            if (change.type === "removed") {
-                otherPlayers.delete(data.userId);
-                if (otherPlayerElements.has(data.userId)) {
-                    otherPlayerElements.get(data.userId).remove();
-                    otherPlayerElements.delete(data.userId);
-                }
-            }
-        });
-    });
-}
-function renderOtherPlayer(data) {
-    let el;
-    if (otherPlayerElements.has(data.userId)) {
-        el = otherPlayerElements.get(data.userId);
-    } else {
-        el = document.createElement('div');
-        el.className = 'player-entity other-player-icon';
-        el.innerHTML = `
-            <div class="player-icon-circle" style="background-color: ${data.color || '#ccc'};"></div>
-            <div class="player-icon-name">${data.name}</div>
-        `;
-        giranMapElement.appendChild(el);
-        otherPlayerElements.set(data.userId, el);
-    }
-    el.style.transform = `translate(${data.x - el.offsetWidth/2}px, ${data.y - el.offsetHeight/2}px)`;
-}
-async function updatePlayerPosition() {
-    if (p.currentZone !== 'city' || !p.userId) return;
-    const playerPublicRef = doc(db, `artifacts/${appId}/public/data/players/${p.userId}`);
-    try {
-        await setDoc(playerPublicRef, { x: p.x, y: p.y }, { merge: true });
-    } catch (e) {
-        console.error("Position update failed:", e);
-    }
-}
-
-// === СОХРАНЕНИЕ ПРОФИЛЯ (FIRESTORE) ===
-async function savePlayerProfile() {
-    if (!p.userId) {
-        console.warn("Attempted to save profile, but userId is missing.");
-        return;
-    }
-    const playerProfileRef = doc(db, `artifacts/${appId}/users/${p.userId}/profile/data`);
-    
-    const dataToSave = {
-        name: p.name,
-        cls: p.cls,
-        color: p.color,
-        maxHp: p.maxHp, hp: p.hp,
-        maxMp: p.maxMp, mp: p.mp,
-        baseAtk: p.baseAtk,
-        speed: p.speed,
-        level: p.level, 
-        exp: p.exp, 
-        adena: p.adena,
-        inventory: p.inventory,
-        soulshots: p.soulshots,
-        activeQuests: p.activeQuests, 
-        completedQuests: p.completedQuests
-    };
-
-    try {
-        await setDoc(playerProfileRef, dataToSave, { merge: true });
-        console.log("Profile saved.");
-    } catch (e) {
-        console.error("Error saving profile:", e);
-    }
-}
-
-
-// === ИНВЕНТАРЬ И МАГАЗИН (С ПРОВЕРКОЙ NPC) ===
-window.toggleInventory = function() {
-    if (p.currentZone !== 'city' || getDistance(p, GiranTrader) > NPC_INTERACT_RANGE) {
-        showFloatingMessage('Подойдите к Торговцу!', p.x, p.y - 50, '#ff4444');
-        return;
-    }
-    const modal = document.getElementById('inventory-modal');
-    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-    if (modal.style.display === 'flex') renderInventory();
-}
-function renderInventory() { /* ... (без изменений) ... */ }
-window.buySS = async function(cost) { /* ... (без изменений) ... */ }
-
-// === ЛОГИКА ЧАТА ===
-window.toggleChat = function() { /* ... (без изменений) ... */ }
-window.sendChatMessage = async function() { /* ... (без изменений) ... */ }
-function initChatListener() { /* ... (без изменений) ... */ }
-// === КОНЕЦ ЛОГИКИ ЧАТА ===
-
-// === ЛОГИКА КВЕСТОВ ===
-window.toggleQuestLog = function() {
-    const modal = document.getElementById('quest-modal');
-    const msg = document.getElementById('quest-npc-message');
-    const isNearQuestMaster = p.currentZone === 'city' && getDistance(p, QuestMaster) <= NPC_INTERACT_RANGE;
-    
-    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-    msg.style.display = isNearQuestMaster ? 'none' : 'block';
-    
-    if (modal.style.display === 'flex') {
-        renderQuestLog(isNearQuestMaster);
-    }
-}
-function renderQuestLog(isNearNPC) { /* ... (без изменений) ... */ }
-window.acceptQuest = async function(questId) { /* ... (без изменений) ... */ }
-window.turnInQuest = async function(questId) { /* ... (без изменений) ... */ }
-// --- КОНЕЦ ЛОГИКИ КВЕСТОВ ---
-
-// === ЛОГИКА АУКЦИОНА ===
-window.toggleAuctionHouse = function() {
-    const modal = document.getElementById('auction-modal');
-    const msg = document.getElementById('auction-npc-message');
-    const isNear = p.currentZone === 'city' && getDistance(p, Auctioneer) <= NPC_INTERACT_RANGE;
-    
-    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-    msg.style.display = isNear ? 'none' : 'block';
-    
-    document.getElementById('auction-buy-panel').style.display = isNear ? 'block' : 'none';
-    document.getElementById('auction-sell-panel').style.display = 'none';
-    document.querySelector('#auction-modal .modal-tabs').style.display = isNear ? 'flex' : 'none';
-    document.getElementById('auction-buy-tab-btn').click();
-}
-function initAuctionListener() {
-    if (auctionUnsubscribe) auctionUnsubscribe(); 
-    const ahColRef = collection(db, `artifacts/${appId}/public/data/auction_house`);
-    const q = query(ahColRef, orderBy('listedAt', 'desc')); 
-    
-    auctionUnsubscribe = onSnapshot(q, (snapshot) => {
-        const buyList = document.getElementById('auction-buy-list');
-        buyList.innerHTML = '';
-        if (snapshot.empty) {
-            buyList.innerHTML = '<div class="text-sm text-gray-400 p-4 text-center">На рынке пусто.</div>';
-            return;
-        }
-        snapshot.forEach(doc => {
-            const item = doc.data();
-            const docId = doc.id;
-            const isMine = item.sellerId === p.userId;
-            buyList.innerHTML += `
-                <div class="auction-item">
-                    <div class="item-name">${item.itemName} x${item.count}</div>
-                    <div class="item-price">${item.price} Аден</div>
-                    <div class="item-seller">Продавец: ${item.sellerName}</div>
-                    <button class="item-buy-btn" onclick="buyAuctionItem('${docId}')" ${isMine ? 'disabled' : ''}>
-                        ${isMine ? 'Ваш лот' : 'Купить'}
-                    </button>
-                </div>
-            `;
-        });
-    }, (error) => {
-        console.error("Auction listener error:", error);
-        document.getElementById('auction-buy-list').innerHTML = '<div class="text-red-500 p-4 text-center">Ошибка загрузки аукциона.</div>';
-    });
-}
-window.renderAuctionSellTab = function() {
-    const sellList = document.getElementById('auction-sell-list');
-    sellList.innerHTML = '';
-    if (Object.keys(p.inventory).length === 0) {
-        sellList.innerHTML = '<div class="text-sm text-gray-400 p-4 text-center">Ваш инвентарь пуст.</div>';
-        return;
-    }
-    for (const [itemName, count] of Object.entries(p.inventory)) {
-        sellList.innerHTML += `
-            <div class="sell-item">
-                <div class="sell-item-name">${itemName}</div>
-                <div class="sell-item-count">В наличии: ${count}</div>
-                <input type="number" id="price-${itemName.replace(/\s/g, '')}" class="sell-item-input" placeholder="Цена за 1 шт.">
-                <input type="number" id="count-${itemName.replace(/\s/g, '')}" class="sell-item-input" placeholder="Кол-во (макс. ${count})" value="${count}" max="${count}">
-                <button class="sell-item-btn" onclick="listItemForSale('${itemName}')">Выставить</button>
-            </div>
-        `;
-    }
-}
-window.listItemForSale = async function(itemName) {
-    const priceInput = document.getElementById(`price-${itemName.replace(/\s/g, '')}`);
-    const countInput = document.getElementById(`count-${itemName.replace(/\s/g, '')}`);
-    const pricePerItem = parseInt(priceInput.value, 10);
-    const countToList = parseInt(countInput.value, 10);
-    if (!pricePerItem || pricePerItem <= 0 || !countToList || countToList <= 0) {
-        showFloatingMessage('Неверная цена или кол-во', p.x, p.y, '#ff4444');
-        return;
-    }
-    if (countToList > p.inventory[itemName]) {
-        showFloatingMessage('Недостаточно предметов', p.x, p.y, '#ff4444');
-        return;
-    }
-    try {
-        p.inventory[itemName] -= countToList;
-        if (p.inventory[itemName] <= 0) {
-            delete p.inventory[itemName];
-        }
-        const ahColRef = collection(db, `artifacts/${appId}/public/data/auction_house`);
-        await addDoc(ahColRef, {
-            itemName: itemName,
-            count: countToList,
-            price: pricePerItem * countToList,
-            sellerId: p.userId,
-            sellerName: p.name,
-            listedAt: serverTimestamp()
-        });
-        await savePlayerProfile();
-        play('sfx-quest');
-        showFloatingMessage('Лот выставлен!', p.x, p.y, '#a5f3fc');
-        renderAuctionSellTab();
-    } catch (e) {
-        console.error("Error listing item:", e);
-        showFloatingMessage('Ошибка. Попробуйте снова.', p.x, p.y, '#ff4444');
-    }
-}
-window.buyAuctionItem = async function(docId) {
-    if (!docId) return;
-    const itemRef = doc(db, `artifacts/${appId}/public/data/auction_house/${docId}`);
-    try {
-        await runTransaction(db, async (transaction) => {
-            const itemDoc = await transaction.get(itemRef);
-            if (!itemDoc.exists()) throw new Error("Лот уже продан!");
-            const item = itemDoc.data();
-            if (item.sellerId === p.userId) throw new Error("Нельзя купить свой лот.");
-            if (p.adena < item.price) throw new Error("Недостаточно Адены!");
-            p.adena -= item.price;
-            p.inventory[item.itemName] = (p.inventory[item.itemName] || 0) + item.count;
-            transaction.delete(itemRef);
-            const mailColRef = collection(db, `artifacts/${appId}/public/data/mail`);
-            const mailMessage = {
-                recipientId: item.sellerId,
-                senderName: "Аукцион",
-                text: `Ваш лот продан: ${item.itemName} x${item.count}`,
-                reward: { adena: item.price },
-                sentAt: serverTimestamp()
+        init: async function(uid) {
+            const ref = doc(db, `artifacts/${appId}/users/${uid}/profile/data`);
+            const snap = await getDoc(ref);
+            const d = snap.exists() ? snap.data() : {};
+            this.p = {
+                name: document.getElementById('name').value || 'Герой', cls: document.getElementById('cls').value, uid: uid,
+                x: 1600, y: 1600, hp: 100, maxHp: 100, level: 1, adena: 0,
+                inv: {'Bone': 5}, equip: {weapon: null}, autoFarm: false,
+                ...d
             };
-            const newMailRef = doc(collection(db, `artifacts/${appId}/public/data/mail`));
-            transaction.set(newMailRef, mailMessage);
-        });
-        await savePlayerProfile();
-        play('sfx-adena');
-        showFloatingMessage('Предмет куплен!', p.x, p.y, '#fcd34d');
-    } catch (e) {
-        console.error("Buy transaction failed: ", e);
-        showFloatingMessage(e.message, p.x, p.y, '#ff4444');
-    }
-}
-// === КОНЕЦ ЛОГИКИ АУКЦИОНА ===
+            this.calcStats();
+            this.launchPhaser();
+            this.startLoop();
+        },
 
-// === ЛОГИКА ПОЧТЫ ===
-window.toggleMailbox = function() {
-    const modal = document.getElementById('mail-modal');
-    const msg = document.getElementById('mail-npc-message');
-    const isNear = p.currentZone === 'city' && getDistance(p, Mailbox) <= NPC_INTERACT_RANGE;
-    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-    msg.style.display = isNear ? 'none' : 'block';
-    document.getElementById('mail-list').style.display = isNear ? 'block' : 'none';
-    if (isNear) {
-        document.getElementById('mail-notification').style.display = 'none';
-    }
-}
-function initMailListener() {
-    if (mailUnsubscribe) mailUnsubscribe(); 
-    const mailColRef = collection(db, `artifacts/${appId}/public/data/mail`);
-    const q = query(mailColRef, where("recipientId", "==", p.userId), orderBy('sentAt', 'desc'));
-    const mailList = document.getElementById('mail-list');
-    const notification = document.getElementById('mail-notification');
-    mailUnsubscribe = onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-            mailList.innerHTML = '<div class="text-sm text-gray-400 p-4 text-center">Почтовый ящик пуст.</div>';
-            notification.style.display = 'none';
-            return;
-        }
-        notification.style.display = 'flex';
-        mailList.innerHTML = '';
-        snapshot.forEach(doc => {
-            const mail = doc.data();
-            const docId = doc.id;
-            const hasReward = mail.reward && mail.reward.adena > 0;
-            mailList.innerHTML += `
-                <div class="mail-item">
-                    <div class="mail-text">
-                        <span class="font-bold">От: ${mail.senderName}</span>
-                        <p>${mail.text}</p>
-                    </div>
-                    <div class="mail-reward">
-                        ${hasReward ? `${mail.reward.adena} Аден` : 'Нет вложений'}
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        ${hasReward ? `
-                            <button class="mail-action-btn" onclick="claimMailItem('${docId}')">Забрать</button>
-                        ` : `
-                            <button class="mail-action-btn mail-delete-btn" onclick="deleteMailItem('${docId}')">Удалить</button>
-                        `}
-                    </div>
-                </div>
-            `;
-        });
-    }, (error) => {
-        console.error("Mail listener error:", error);
-        mailList.innerHTML = '<div class="text-red-500 p-4 text-center">Ошибка загрузки почты.</div>';
-    });
-}
-window.claimMailItem = async function(docId) {
-    const mailRef = doc(db, `artifacts/${appId}/public/data/mail/${docId}`);
-    try {
-        const mailDoc = await getDoc(mailRef);
-        if (!mailDoc.exists()) throw new Error("Письмо уже удалено.");
-        const mail = mailDoc.data();
-        if (mail.recipientId !== p.userId) throw new Error("Это не ваше письмо.");
-        if (mail.reward && mail.reward.adena) {
-            p.adena += mail.reward.adena;
-        }
-        await deleteDoc(mailRef);
-        await savePlayerProfile();
-        play('sfx-adena');
-        updateUI();
-    } catch (e) {
-        console.error("Error claiming mail:", e);
-        showFloatingMessage(e.message, p.x, p.y, '#ff4444');
-    }
-}
-window.deleteMailItem = async function(docId) {
-    await deleteDoc(doc(db, `artifacts/${appId}/public/data/mail/${docId}`));
-}
-// === КОНЕЦ ЛОГИКИ ПОЧТЫ ===
+        calcStats: function() {
+            this.p.maxHp = 100 + (this.p.level * 20);
+            document.getElementById('pname').innerText = this.p.name;
+            document.getElementById('lvl').innerText = this.p.level;
+            document.getElementById('adena').innerText = this.p.adena;
+        },
 
-// === НОВАЯ ЛОГИКА: КРАФТ ===
-window.toggleCrafting = function() {
-    const modal = document.getElementById('crafting-modal');
-    const msg = document.getElementById('crafting-npc-message');
-    const isNear = p.currentZone === 'city' && getDistance(p, Blacksmith) <= NPC_INTERACT_RANGE;
-    
-    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-    msg.style.display = isNear ? 'none' : 'block';
-    
-    document.getElementById('crafting-list').style.display = isNear ? 'grid' : 'none';
-    
-    if (isNear) {
-        renderCraftingRecipes();
-    }
-}
-
-function renderCraftingRecipes() {
-    const list = document.getElementById('crafting-list');
-    list.innerHTML = '';
-    
-    for (const recipeId in RECIPES_DB) {
-        const recipe = RECIPES_DB[recipeId];
-        let requirementsHTML = '';
-        let canCraft = true;
-        
-        for (const [itemName, requiredCount] of Object.entries(recipe.requires)) {
-            const hasCount = p.inventory[itemName] || 0;
-            const hasEnough = hasCount >= requiredCount;
-            if (!hasEnough) canCraft = false;
+        launchPhaser: function() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            const config = {
+                type: Phaser.AUTO, parent: 'phaser-game', width: window.innerWidth, height: window.innerHeight,
+                pixelArt: true, backgroundColor: '#000', physics: { default: 'arcade', arcade: { debug: false } },
+                scene: [MainScene]
+            };
+            if(this.phaser) this.phaser.destroy(true);
+            this.phaser = new Phaser.Game(config);
             
-            requirementsHTML += `
-                <div class="craft-requires-item ${!hasEnough ? 'missing' : ''}">
-                    <span>${itemName}</span>
-                    <span>${hasCount} / ${requiredCount}</span>
-                </div>
-            `;
+            window.addEventListener('resize', () => {
+                if(this.phaser) this.phaser.scale.resize(window.innerWidth, window.innerHeight);
+            });
+        },
+
+        startLoop: function() {
+            setInterval(() => {
+                if (!this.p.uid) return;
+                if(this.p.hp < this.p.maxHp) this.p.hp += 0.5;
+                document.getElementById('hp').style.width = (this.p.hp / this.p.maxHp * 100) + '%';
+                if(Date.now() % 5000 < 1000) this.save();
+            }, 1000);
+        },
+
+        save: async function() {
+            if(!this.p.uid) return;
+            try { await setDoc(doc(db, `artifacts/${appId}/users/${this.p.uid}/profile/data`), this.p, {merge: true}); } catch(e){}
+        },
+        
+        toggleInventory: () => openModal('Инвентарь', Object.entries(game.p.inv).map(([k,v]) => `<div class="item-slot flex justify-between"><span>${game.ITEMS[k]?game.ITEMS[k].name:k}</span><span>x${v}</span></div>`).join('')),
+        toggleEquipment: () => openModal('Экипировка', `Weapon: ${game.p.equip.weapon || 'Нет'}<br>Armor: ${game.p.equip.armor || 'Нет'}`),
+        toggleChat: () => alert('Чат в разработке'),
+        toggleQuestLog: () => openModal('Квесты', 'Нет активных квестов'),
+        toggleMailbox: () => openModal('Почта', 'Пусто'),
+        toggleAuctionHouse: () => openModal('Аукцион', 'Рынок пуст'),
+        toggleCrafting: () => openModal('Крафт', 'Кузнец отдыхает'),
+        toggleSS: () => { const b = document.getElementById('ss-btn'); b.classList.toggle('text-yellow-500'); b.innerText = b.innerText==='SS' ? 'SS: ON' : 'SS'; },
+        toggleFarm: () => { game.p.autoFarm = !game.p.autoFarm; const b=document.getElementById('farm-btn'); b.classList.toggle('text-green-500'); b.innerText = game.p.autoFarm ? 'Фарм: ON' : 'Фарм'; },
+        useSkill: (id) => { 
+            if(!game.sprites.player) return;
+            const circle = game.scene.add.circle(game.sprites.player.x, game.sprites.player.y, 60, 0xff00ff, 0.4);
+            game.scene.tweens.add({targets:circle, scale:2, alpha:0, duration:400, onComplete:()=>circle.destroy()});
+        }
+    };
+
+    function openModal(title, html) {
+        const m = document.getElementById('generic-modal');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = html || 'Пусто';
+        m.style.display = 'flex';
+    }
+
+    window.mainScript = game;
+    window.startGameWrapper = () => {
+        const app = initializeApp(JSON.parse(window.firebaseConfig));
+        window.db = getFirestore(app);
+        const auth = getAuth(app);
+        onAuthStateChanged(auth, (u) => { if (u) game.init(u.uid); else signInAnonymously(auth); });
+    };
+    window.firebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+    window.appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
+
+    // === PHASER SCENE (С ПРОЦЕДУРНОЙ ГРАФИКОЙ) ===
+    class MainScene extends Phaser.Scene {
+        preload() {
+            // Мы НЕ загружаем внешние картинки, чтобы избежать черных квадратов.
+            // Мы создадим текстуры прямо здесь.
         }
         
-        list.innerHTML += `
-            <div class="craft-item">
-                <div class="craft-name">${recipe.name}</div>
-                <div class="craft-requires">${requirementsHTML}</div>
-                <div class="craft-chance">Шанс успеха: 50%</div>
-                <button class="craft-btn" 
-                        onclick="craftItem('${recipeId}')" 
-                        ${!canCraft ? 'disabled' : ''}>
-                    ${canCraft ? 'Создать' : 'Недостаточно ресурсов'}
-                </button>
-            </div>
-        `;
-    }
-}
+        create() {
+            game.scene = this;
+            
+            // 1. ГЕНЕРАЦИЯ ТЕКСТУР "НА ЛЕТУ" (Failsafe метод)
+            // Игрок (Белый)
+            let g = this.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0xffffff); g.fillRect(0,0,32,32); // Тело
+            g.fillStyle(0x000000); g.fillRect(8,8,4,4); g.fillRect(20,8,4,4); // Глаза
+            g.fillStyle(0xcccccc); g.fillRect(4,20,24,4); // Рот/Защита
+            g.generateTexture('player', 32, 32);
 
-window.craftItem = async function(recipeId) {
-    if (isCrafting) return; // Защита от двойного клика
-    isCrafting = true;
-    
-    const recipe = RECIPES_DB[recipeId];
-    if (!recipe) {
-        isCrafting = false;
-        return;
-    }
-    
-    // 1. Проверяем ресурсы (еще раз, на всякий случай)
-    let canCraft = true;
-    for (const [itemName, requiredCount] of Object.entries(recipe.requires)) {
-        if ((p.inventory[itemName] || 0) < requiredCount) {
-            canCraft = false;
-            break;
+            // Моб (Красный паук)
+            g.clear();
+            g.fillStyle(0xcc0000); g.fillCircle(16,16,14); // Тело
+            g.fillStyle(0xffff00); g.fillCircle(12,12,4); g.fillCircle(20,12,4); // Глаза
+            g.lineStyle(2, 0xcc0000); 
+            g.beginPath(); g.moveTo(0,0); g.lineTo(10,10); g.strokePath(); // Ноги (условно)
+            g.generateTexture('mob', 32, 32);
+
+            // NPC (Зеленый)
+            g.clear();
+            g.fillStyle(0x00ff00); g.fillRect(4,4,24,24);
+            g.fillStyle(0xffffff); g.fillRect(10,8,12,4); // Очки
+            g.generateTexture('npc', 32, 32);
+
+            // Трава и Камень (Тайлы)
+            g.clear();
+            g.fillStyle(0x2d6e32); g.fillRect(0,0,32,32); // Трава база
+            g.fillStyle(0x3e8e41); g.fillRect(4,4,4,4); g.fillRect(20,20,4,4); // Травинки
+            g.generateTexture('tile_grass', 32, 32);
+
+            g.clear();
+            g.fillStyle(0x555555); g.fillRect(0,0,32,32); // Камень база
+            g.fillStyle(0x666666); g.fillRect(2,2,28,28); // Плитка
+            g.generateTexture('tile_stone', 32, 32);
+            
+            g.clear();
+            g.fillStyle(0x222222); g.fillRect(0,0,32,32); // Стена
+            g.lineStyle(2, 0x444444); g.strokeRect(0,0,32,32);
+            g.generateTexture('tile_wall', 32, 32);
+            
+            // Дерево
+            g.clear();
+            g.fillStyle(0x5d4037); g.fillRect(12,20,8,12); // Ствол
+            g.fillStyle(0x2e7d32); g.fillCircle(16,14,14); // Листва
+            g.fillStyle(0x388e3c); g.fillCircle(12,10,6); // Деталь листвы
+            g.generateTexture('tree', 32, 32);
+
+            // 2. ГЕНЕРАЦИЯ МИРА (Без Tilemap, просто спрайты для надежности)
+            // Рисуем землю
+            const bg = this.add.group();
+            for(let y=0; y<40; y++) {
+                for(let x=0; x<40; x++) {
+                    let tex = 'tile_grass';
+                    // Город в центре (15-25)
+                    if(x>15 && x<25 && y>15 && y<25) tex = 'tile_stone';
+                    // Стена вокруг города
+                    if((x===15 || x===25) && y>=15 && y<=25) tex = 'tile_wall';
+                    if((y===15 || y===25) && x>=15 && x<=25) tex = 'tile_wall';
+                    // Ворота
+                    if((x===20 && y===25) || (x===20 && y===15)) tex = 'tile_stone';
+
+                    const tile = this.add.image(x*64, y*64, tex).setScale(2).setOrigin(0);
+                    bg.add(tile);
+                    
+                    // Физика стен (простая)
+                    if(tex === 'tile_wall') {
+                        const wall = this.physics.add.staticImage(x*64 + 32, y*64 + 32, 'tile_wall').setScale(2).setVisible(false);
+                        this.physics.add.collider(game.sprites.player, wall); // Добавим позже, т.к. игрока еще нет
+                        wall.setBodySize(64, 64);
+                        // Добавляем во временную группу, чтобы потом добавить коллизию
+                        if(!this.walls) this.walls = this.physics.add.staticGroup();
+                        this.walls.add(wall);
+                    }
+                }
+            }
+
+            this.physics.world.setBounds(0,0, 40*64, 40*64); // 2560x2560
+
+            // 3. ИГРОК И ОБЪЕКТЫ
+            game.sprites.player = this.physics.add.sprite(1600, 1600, 'player').setScale(2);
+            game.sprites.player.setCollideWorldBounds(true);
+            if(this.walls) this.physics.add.collider(game.sprites.player, this.walls);
+            
+            this.cameras.main.startFollow(game.sprites.player);
+            this.cameras.main.setZoom(1.2); // Чуть меньше зум, чтобы видеть больше
+
+            // NPC
+            const npcs = [
+                {x: 1600, y: 1400, color: 0x00ffff}, 
+                {x: 1700, y: 1500, color: 0xff00ff}
+            ];
+            npcs.forEach(n => {
+                const s = this.physics.add.sprite(n.x, n.y, 'npc').setScale(2).setTint(n.color).setImmovable(true);
+                this.physics.add.collider(game.sprites.player, s);
+            });
+
+            // Мобы
+            for(let i=0; i<15; i++) {
+                const x = Phaser.Math.Between(200, 2400);
+                const y = Phaser.Math.Between(200, 2400);
+                if(Phaser.Math.Distance.Between(x,y,1600,1600) > 400) { // Не в городе
+                    const m = this.physics.add.sprite(x, y, 'mob').setScale(2);
+                    game.sprites.mobs.push(m);
+                }
+            }
+            
+            // Деревья
+            const trees = this.physics.add.staticGroup();
+            for(let i=0; i<40; i++) {
+                const x = Phaser.Math.Between(100, 2500);
+                const y = Phaser.Math.Between(100, 2500);
+                if(Phaser.Math.Distance.Between(x,y,1600,1600) > 400) {
+                    const t = trees.create(x, y, 'tree').setScale(3);
+                    t.setDepth(y); // Y-Sort
+                    t.setSize(20, 20);
+                    t.setOffset(6, 20);
+                }
+            }
+            this.physics.add.collider(game.sprites.player, trees);
+
+            // Управление
+            this.input.on('pointerdown', (p) => {
+                const wp = this.cameras.main.getWorldPoint(p.x, p.y);
+                this.physics.moveTo(game.sprites.player, wp.x, wp.y, 220);
+                game.target = wp;
+            });
         }
-    }
-    
-    if (!canCraft) {
-        showFloatingMessage('Недостаточно ресурсов', p.x, p.y, '#ff4444');
-        isCrafting = false;
-        return;
-    }
-    
-    // 2. Забираем ресурсы
-    for (const [itemName, requiredCount] of Object.entries(recipe.requires)) {
-        p.inventory[itemName] -= requiredCount;
-        if (p.inventory[itemName] <= 0) {
-            delete p.inventory[itemName];
-        }
-    }
-    
-    // 3. Бросаем кубик (50% шанс)
-    const success = Math.random() < 0.5;
-    
-    if (success) {
-        // --- УСПЕХ ---
-        play('sfx-craft-success');
-        showFloatingMessage(`УСПЕХ! Создан: ${recipe.name}`, p.x, p.y, '#fcd34d');
         
-        // Добавляем предмет в инвентарь
-        p.inventory[recipe.name] = (p.inventory[recipe.name] || 0) + 1;
-        
-    } else {
-        // --- НЕУДАЧА ---
-        play('sfx-craft-fail');
-        showFloatingMessage('НЕУДАЧА! Ресурсы потеряны.', p.x, p.y, '#ff4444');
-        // Ресурсы уже забрали, предмет не даем.
-    }
-    
-    // 4. Сохраняем и обновляем UI
-    await savePlayerProfile();
-    renderCraftingRecipes(); // Обновляем список (кнопки могут стать disabled)
-    
-    // Снимаем блокировку
-    setTimeout(() => { isCrafting = false; }, 1000); // 1 сек кулдаун на крафт
-}
-// === КОНЕЦ ЛОГИКИ КРАФТА ===
-
-
-// === ОСТАЛЬНАЯ ЛОГИКА ИГРЫ ===
-/* ... (toggleSS, toggleFarm, useSkill, spawnMob, loop, checkLevel, updateUI и т.д. ... ) */
-/* ... (без изменений) ... */
-window.toggleSS = function() { /* ... (без изменений) ... */ }
-window.toggleFarm = function() { /* ... (без изменений) ... */ }
-window.showSkillInfo = function(id) { /* ... (без изменений) ... */ }
-window.hideSkillInfo = function() { /* ... (без изменений) ... */ }
-window.useSkill = function(id) { /* ... (без изменений) ... */ }
-function applyBuff(buff) { /* ... (без изменений) ... */ }
-function recalculateStats() { /* ... (без изменений) ... */ }
-function spawnMob() {
-    if (p.currentZone === 'city') return;
-    let g = pool.length ? pool.pop() : svg.append('g').attr('class', 'mob-node');
-    const a = Math.random()*Math.PI*2;
-    const d = 300 + Math.random()*400;
-    const x = p.x + Math.cos(a)*d;
-    const y = p.y + Math.sin(a)*d;
-    g.attr('transform', `translate(${x},${y})`).style('display', '');
-    if (!g.select('circle').node()) {
-        g.append('circle').attr('class', 'mob-body').attr('r', 16).attr('fill', '#555').attr('stroke', '#888').attr('stroke-width', 3);
-        g.append('rect').attr('class', 'hp-bg').attr('width', 30).attr('height', 4).attr('x', -15).attr('y', -25).attr('fill', '#333');
-        g.append('rect').attr('class', 'hp-fill').attr('width', 30).attr('height', 4).attr('x', -15).attr('y', -25).attr('fill', '#ef4444');
-    }
-    const mobData = { g, x, y, maxHp: 60 + p.level*18, hp: 60 + p.level*18, atk: 5 + p.level * 2, speed: 1.5 + p.level * 0.05, lastAttackTime: 0, aggro: false };
-    g.datum(mobData); 
-    mobs.push(mobData);
-}
-function createEffect(x, y, type) { /* ... (без изменений) ... */ }
-const particlePool = [];
-function createParticles(x, y, color = "#fff", count = 12) { /* ... (без изменений) ... */ }
-function showFloatingMessage(text, x, y, color = '#ff4444') { /* ... (без изменений) ... */ }
-function gameOver() {
-    if (isGameOver) return;
-    isGameOver = true;
-    document.getElementById('gameOverScreen').style.display = 'flex';
-    play('sfx-lvl'); 
-    clearInterval(playerUpdateInterval);
-    if (chatUnsubscribe) chatUnsubscribe();
-    if (mailUnsubscribe) mailUnsubscribe();
-    if (auctionUnsubscribe) auctionUnsubscribe();
-}
-function findNewTarget() { /* ... (без изменений) ... */ }
-function activeFarmLogic(delta) {
-    if (p.currentZone !== 'farm') return;
-    if (!p.target) {
-        findNewTarget();
-        if (!p.target) return; 
-    }
-}
-
-// === ГЛАВНЫЙ ЦИКЛ ===
-let last = 0;
-let lastSave = 0; 
-function loop(t) {
-    if (isGameOver || !p.userId) { 
-        requestAnimationFrame(loop);
-        return;
-    }
-    const delta = (t - last) || 16.67;
-    last = t;
-    if (t - lastSave > 10000) { 
-        savePlayerProfile();
-        lastSave = t;
-    }
-    p.mp = Math.min(p.maxMp, p.mp + (p.maxMp * 0.002 * (delta/16.67)));
-    p.hp = Math.min(p.maxHp, p.hp + (p.maxHp * 0.001 * (delta/16.67)));
-    if (p.hp <= 0) { gameOver(); return; }
-    if (p.currentZone === 'farm') {
-        if (isActivelyFarming) {
-            activeFarmLogic(delta);
-        }
-        for(let i=mobs.length-1;i>=0;i--) {
-            const m = mobs[i];
-            if (m.hp <= 0) continue; 
-            const dist = getDistance(m, p);
-            if (!m.aggro && !isActivelyFarming && dist < AGGRO_RANGE) m.aggro = true;
-            if (!m.aggro) {
-                 m.g.select('.mob-body').attr('fill', '#555'); 
-                 continue;
+        update() {
+            const p = game.sprites.player;
+            if(!p) return;
+            p.setDepth(p.y); // Y-Sort
+            
+            if(game.target && Phaser.Math.Distance.Between(p.x, p.y, game.target.x, game.target.y) < 10) {
+                p.body.setVelocity(0); game.target = null;
             }
-            m.g.select('.mob-body').attr('fill', '#7f1d1d'); 
-            if (dist > MELEE_RANGE) { 
-                const dx = p.x - m.x;
-                const dy = p.y - m.y;
-                m.x += (dx / dist) * m.speed * (delta/16.67);
-                m.y += (dy / dist) * m.speed * (delta/16.67);
-                m.g.attr('transform', `translate(${m.x},${m.y})`);
-            } else { 
-                if (t - m.lastAttackTime > 2000) { 
-                    p.hp -= m.atk;
-                    m.lastAttackTime = t;
-                    play('sfx-hit');
-                    document.body.style.animation = 'shake 0.3s';
-                    setTimeout(()=>document.body.style.animation='', 300);
-                }
-            }
-            if (dist < PULL_RANGE) { 
-                let damage = p.atk * 0.005 * delta; 
-                if (p.ssActive && p.soulshots > 0 && t % 1000 < delta) { 
-                    damage *= 2.0; p.soulshots--; updateUI();
-                }
-                m.hp -= damage; 
-                if (t % 500 < delta) createParticles(m.x, m.Y, p.color, 4);
-                m.g.select('.hp-fill').attr('width', Math.max(0, (m.hp / m.maxHp) * 30));
-                if (m.hp <= 0) {
-                    p.adena += 9 + Math.floor(Math.random()*13);
-                    p.exp += 13 + p.level * 2;
-                    if (p.target === m) p.target = null; 
-                    let droppedItem = null;
-                    if (Math.random() < 0.3) { 
-                        droppedItem = 'Обломок Кости';
-                    } else if (Math.random() < 0.1) {
-                        droppedItem = 'Нить';
-                    }
-                    if (droppedItem) {
-                         p.inventory[droppedItem] = (p.inventory[droppedItem] || 0) + 1;
-                    }
-                    for (const questId in p.activeQuests) {
-                        const quest = QUESTS_DB[questId];
-                        const activeQuest = p.activeQuests[questId];
-                        if (quest.type === 'kill' && activeQuest.progress < quest.targetCount) {
-                            activeQuest.progress++;
-                        }
-                    }
-                    createParticles(m.x, m.y, '#ffd700', 16);
-                    play('sfx-adena');
-                    m.g.style('display', 'none');
-                    pool.push(m.g);
-                    mobs.splice(i,1);
-                    checkLevel();
-                    if (mobs.length < 9) spawnMob(); 
-                }
+            
+            // Авто-фарм
+            if(game.p.autoFarm && !game.target) {
+                let t=null, min=400;
+                game.sprites.mobs.forEach(m=>{ 
+                    const d=Phaser.Math.Distance.Between(p.x,p.y,m.x,m.y); 
+                    if(d<min){min=d; t=m;} 
+                });
+                if(t) this.physics.moveTo(p, t.x, t.y, 220);
             }
         }
-    } 
-    updateUI();
-    Object.keys(cooldowns).forEach(k => cooldowns[k] > delta && (cooldowns[k] -= delta));
-    requestAnimationFrame(loop);
-}
-
-// === ЛВЛ-АП ===
-function checkLevel() { /* ... (без изменений) ... */ }
-function updateUI() { /* ... (без изменений) ... */ }
-
+    }
 </script>
 </body>
 </html>
-
 
