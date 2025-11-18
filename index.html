@@ -1,224 +1,605 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket L2 • Telegram Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body { margin:0; padding:0; background:#000; font-family:'Courier New',monospace; color:#0f0; overflow:hidden; image-rendering:pixelated; }
-    #gameContainer { position:relative; width:100vw; height:100vh; }
-    #ui { position:absolute; top:5px; right:5px; width:150px; background:rgba(0,20,0,0.9); border:2px solid #0f0; padding:8px; border-radius:5px; z-index:100; font-size:9px; }
-    button { width:100%; margin:3px 0; padding:6px; background:#4a4; color:#000; border:1px solid #0f0; font:inherit; font-weight:bold; }
-    #log { height:70px; overflow-y:auto; background:rgba(0,0,0,0.6); padding:3px; font-size:8px; }
-    #chatInput { position:absolute; bottom:10px; left:10px; right:10px; background:#000; color:#0f0; border:2px solid #0f0; padding:8px; font:inherit; display:none; z-index:200; }
-    #minimap { position:absolute; bottom:10px; right:10px; width:70px; height:70px; border:1px solid #0f0; z-index:50; image-rendering:pixelated; }
-    #joystick { position:absolute; bottom:20px; left:20px; width:100px; height:100px; background:rgba(0,255,0,0.2); border-radius:50%; z-index:99; }
-    #joystick-knob { position:absolute; width:40px; height:40px; background:#0f0; border-radius:50%; top:30px; left:30px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pocket L2 Idle — L2 Core Edition</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap');
+    
+    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a001f;color:#fff;font-family:'Roboto', system-ui, sans-serif}
+    #menu,#game{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;background:radial-gradient(circle at center,#2a0066,#0a001f)}
+    h1{font-size:3.5rem;text-shadow:0 0 30px #ff00ff; font-family: 'Cinzel', serif;}
+    button, .skill-btn { cursor: pointer; transition: all 0.3s; }
+    
+    /* UI & Stats */
+    #stats{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.75);padding:12px 16px;border-radius:12px;z-index:10;font-size:14px; border: 1px solid #4a0072;}
+    .bar{width:180px;height:14px;background:#222;border:1px solid #555;border-radius:7px;overflow:hidden;margin:4px 0}
+    .fill{height:100%;transition:width .3s}
+    
+    /* Soulshot Toggle */
+    #ss-toggle {
+        width: 40px; height: 40px; border-radius: 8px; border: 2px solid #aaa;
+        font-size: 16px; font-weight: bold; background: #333; color: #777;
+        display: flex; align-items: center; justify-content: center; margin-top: 5px;
+    }
+    #ss-toggle.active { background: #ffc800; color: #000; border-color: #fff; box-shadow: 0 0 20px #ffc800; }
+
+    /* Skill Bar (L2 Style) */
+    #skills{
+        position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+        display:flex; gap: 4px; z-index:10;
+        background: rgba(0,0,0,0.6); padding: 8px; border-radius: 12px; border: 1px solid #555;
+    }
+    .skill-btn{
+        width:52px; height:52px; border-radius: 8px; border: 2px solid #777;
+        font-size:24px; display:flex; align-items:center; justify-content:center;
+        position:relative; background: #111;
+    }
+    .skill-btn.cd{opacity:0.4;pointer-events:none; filter: grayscale(100%);}
+    .skill-btn:hover{transform:scale(1.05); border-color: #fff;}
+    
+    /* Skill Tooltip */
+    #skill-info{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);padding:12px;border-radius:8px;width:280px;font-size:13px;display:none;z-index:20;border:1px solid #fff}
+    #skill-info.show{display:block;animation:fadeIn 0.2s}
+    
+    /* Inventory Modal */
+    #inventory-modal {
+        position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:20;
+        display:none; flex-direction:column; align-items:center; padding-top:50px;
+    }
+    .item-slot{
+        width:70px; height:70px; background:#1a1a1a; border:2px solid #555;
+        border-radius:8px; margin:5px; display:inline-flex; flex-direction: column;
+        align-items:center; justify-content:center; font-size:12px;
+    }
+    .item-slot .icon { font-size: 24px; }
+    .item-slot .count { margin-top: 5px; font-size: 14px; color: #ffd700; }
+
+    /* Particles & Effects */
+    #particles{position:absolute;inset:0;pointer-events:none}
+    
+    /* Game Over */
+    #gameOverScreen {
+        position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.95);
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+        z-index: 1000;
+    }
+    
+    /* Animations */
+    @keyframes fadeIn{from{opacity:0;transform:translate(-50%, 10px)}to{opacity:1;transform:translate(-50%, 0)}}
+    @keyframes p{to{transform:translate(-50%,-50%) translateY(-120px);opacity:0}}
+    @keyframes lvl{0%,100%{transform:scale(1)}50%{transform:scale(2.2);text-shadow:0 0 60px gold}}
+    @keyframes heal{0%{transform:scale(1);background:#00ff88}50%{transform:scale(1.5)}100%{transform:scale(1);opacity:0}}
+    @keyframes aoe{0%{transform:scale(0);opacity:1}100%{transform:scale(3);opacity:0}}
+    @keyframes buff{0%,100%{opacity:1} 50%{opacity:0.5}}
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        10% { transform: translate(-1px, -2px) rotate(-1deg); }
+        20% { transform: translate(-3px, 0px) rotate(1deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
+        100% { transform: translate(1px, -1px) rotate(0deg); }
+    }
+</style>
 </head>
 <body>
-<div id="gameContainer">
-  <canvas id="minimap"></canvas>
-  <div id="ui">
-    <div id="name">Герой</div>
-    Ур:<span id="level">1</span> HP:<span id="hp">100</span>/<span id="maxhp">100</span><br>
-    Зол:<span id="gold">0</span>
-    <button id="autofarm">Фарм</button>
-    <button id="pvpBtn">PvP</button>
-    <button id="chatBtn">Чат</button>
-    <div id="log"></div>
-  </div>
-  <input type="text" id="chatInput" placeholder="Сообщение..." maxlength="60">
-  <div id="joystick"><div id="joystick-knob"></div></div>
+
+<div id="menu" class="flex">
+    <div class="text-center">
+        <h1 class="animate-pulse">Pocket L2</h1>
+        <input id="name" placeholder="Имя" class="p-3 mt-4 text-black rounded text-lg">
+        <select id="cls" class="p-3 mt-3 text-black rounded text-lg">
+            <option value="gladiator">Gladiator ⚔️</option>
+            <option value="sorcerer">Sorcerer 🔮</option>
+            <option value="hawkeye">Hawkeye 🏹</option>
+        </select>
+        <button onclick="start()" class="mt-6 px-12 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-2xl hover:scale-105 transition">Играть</button>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<div id="game" class="relative">
+    <div id="stats">
+        <div id="pname" class="font-bold text-yellow-300"></div>
+        <div class="bar"><div id="hp" class="fill bg-red-600 w-full"></div></div>
+        <div class="bar"><div id="mp" class="fill bg-blue-600 w-full"></div></div>
+        <div class="bar"><div id="xp" class="fill bg-green-500" style="width:0%"></div></div>
+        <div>Ур <span id="lvl">1</span> • EXP <span id="exp">0</span>/<span id="need">100</span></div>
+        <div>Адена <span id="adena" class="text-yellow-400 font-bold">0</span></div>
+        <div class="flex gap-2 items-center">
+            <div id="ss-toggle" onclick="toggleSS()">SS</div>
+            <div class="text-sm">Заряды: <span id="ss-count">0</span></div>
+        </div>
+        <button onclick="toggleInventory()" class="mt-2 px-3 py-1 bg-gray-600 rounded text-xs">Инвентарь</button>
+        <button onclick="buySS(100)" class="mt-1 px-3 py-1 bg-yellow-600 rounded text-xs text-black">Купить SS (100А)</button>
+    </div>
+    <svg id="c"></svg>
+    <div id="particles"></div>
+    <div id="skills">
+        <div class="skill-btn" id="skill1" data-skill="1"></div>
+        <div class="skill-btn" id="skill2" data-skill="2"></div>
+        <div class="skill-btn" id="skill3" data-skill="3"></div>
+    </div>
+    <div id="skill-info">
+        <div id="skill-name" class="font-bold text-lg mb-1"></div>
+        <div id="skill-desc" class="text-sm opacity-90"></div>
+        <div id="skill-stats" class="text-xs mt-1 opacity-75"></div>
+    </div>
+    
+    <div id="inventory-modal">
+        <h2 class="text-3xl mb-6 font-cinzel">Инвентарь</h2>
+        <div id="inventory-grid" class="w-full max-w-lg p-4 grid grid-cols-5 gap-2">
+            </div>
+        <button onclick="toggleInventory()" class="mt-8 px-8 py-4 bg-red-600 rounded text-xl">Закрыть</button>
+    </div>
+    
+    <div id="gameOverScreen" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-content: center flex-col text-white hidden z-50">
+        <h1 class="text-6xl font-bold mb-8 text-red-500 animate-pulse font-cinzel">ПОРАЖЕНИЕ</h1>
+        <button onclick="location.reload()" class="px-10 py-5 bg-red-600 hover:bg-red-700 text-3xl rounded-xl shadow-2xl transform hover:scale-105 transition">
+            Заново
+        </button>
+    </div>
+</div>
+
+<audio id="sfx-adena" src="https://cdn.freesound.org/previews/657/657370_5674468-lq.mp3" preload="auto"></audio>
+<audio id="sfx-hit" src="https://cdn.freesound.org/previews/612/612552_5674468-lq.mp3" preload="auto"></audio>
+<audio id="sfx-buff" src="https://cdn.freesound.org/previews/276/276792_5123851-lq.mp3" preload="auto"></audio>
+<audio id="sfx-lvl" src="https://cdn.freesound.org/previews/276/276285_5123851-lq.mp3" preload="auto"></audio>
+
 <script>
-  // ==================== TELEGRAM WEB APP ====================
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
-  const user = tg.initDataUnsafe.user;
-  const userId = user?.id || 'guest_' + Date.now();
-  const username = user?.username || user?.first_name || 'Герой';
+// === L2-STYLE CLASS CONFIG ===
 
-  // ==================== МУЛЬТИПЛЕЕР ====================
-  const WS_URL = 'wss://pocket-l2-multiplayer.glitch.me';
-  let socket, myId, players = {}, inPvp = false, pvpTargetId = null;
+const AGGRO_RANGE = 150; // Distance for mobs to aggro
+const PULL_RANGE = 300; // Distance for player to auto-attack
 
-  function log(msg) {
-    const el = document.getElementById('log');
-    el.innerHTML += `<div>${msg}</div>`;
-    el.scrollTop = el.scrollHeight;
-    if (el.children.length > 12) el.removeChild(el.children[0]);
-  }
+const CLASS_STATS = {
+    gladiator: { hp: 180, mp: 60, atk: 14, speed: 2.8, color: '#ef4444' },
+    sorcerer:  { hp: 90,  mp: 120, atk: 10, speed: 3.2, color: '#8b5cf6' },
+    hawkeye:   { hp: 130, mp: 80, atk: 12, speed: 3.5, color: '#10b981' }
+};
 
-  function initMultiplayer() {
-    socket = new WebSocket(WS_URL);
-    socket.onopen = () => log('Онлайн в мире!');
-    socket.onmessage = e => {
-      const d = JSON.parse(e.data);
-      if (d.type === 'init') { myId = d.yourId; Object.keys(d.players).forEach(id => addPlayer(id, d.players[id])); }
-      if (d.type === 'join') { addPlayer(d.id, d.player); log(`${d.player.name} появился`); }
-      if (d.type === 'leave') { removePlayer(d.id); }
-      if (d.type === 'move') updateRemotePlayer(d);
-      if (d.type === 'chat') log(`[${d.name}]: ${d.msg}`);
-      if (d.type === 'pvp_challenge' && d.targetId === myId) {
-        if (confirm(`${d.challengerName} вызывает тебя на дуэль!`)) acceptPvp(d.challengerId);
-      }
-      if (d.type === 'pvp_attack' && d.targetId === myId) {
-        gameData.hp = Math.max(0, gameData.hp - d.dmg);
-        log(`Удар от ${d.attackerName}: -${d.dmg} HP`);
+const CLASS_SKILLS = {
+    gladiator: [
+        {name: 'Triple Slash', icon: '⚔️', desc: 'Быстрая тройная атака по одной цели.', dmg: 3.0, mp: 15, cd: 3000, aoe: false, color: '#ff4444'},
+        {name: 'Sonic Blaster', icon: '🔥', desc: 'Дальнобойный звуковой удар по области.', dmg: 2.5, mp: 25, cd: 5000, aoe: true, color: '#ff8800'},
+        {name: 'Lionheart', icon: '🛡', desc: 'Увеличивает Макс. HP и защиту на 15 секунд.', buff: {stat: 'hp', mult: 1.3, duration: 15000}, mp: 20, cd: 30000, color: '#44ff44'}
+    ],
+    sorcerer: [
+        {name: 'Prominence', icon: '🔥', desc: 'Мощный огненный удар по цели.', dmg: 4.0, mp: 20, cd: 3500, aoe: false, color: '#ff4444'},
+        {name: 'Tempest', icon: '❄️', desc: 'AOE-вихрь, наносящий урон всем вокруг.', dmg: 3.0, mp: 30, cd: 6000, aoe: true, color: '#4444ff'},
+        {name: 'Empower', icon: '⭐', desc: 'Увеличивает магическую атаку на 15 секунд.', buff: {stat: 'atk', mult: 1.5, duration: 15000}, mp: 25, cd: 30000, color: '#ffee44'}
+    ],
+    hawkeye: [
+        {name: 'Double Shot', icon: '🏹', desc: 'Двойной выстрел с высоким шансом крита.', dmg: 3.5, mp: 12, cd: 2500, aoe: false, color: '#ff4444'},
+        {name: 'Arrow Rain', icon: '💥', desc: 'Залп стрел по указанной области.', dmg: 2.8, mp: 22, cd: 5000, aoe: true, color: '#ff8800'},
+        {name: 'Snipe', icon: '👁️', desc: 'Увеличивает физ. атаку и дальность на 15 секунд.', buff: {stat: 'atk', mult: 1.4, duration: 15000}, mp: 18, cd: 30000, color: '#44ff44'}
+    ]
+};
+
+// === GLOBALS ===
+let p, svg, w, h, mobs = [], pool = [], cooldowns = {}, currentSkills = [];
+let isGameOver = false;
+
+// === UTILS ===
+function play(soundId) { 
+    const sound = document.getElementById(soundId);
+    if (sound) {
+        sound.currentTime = 0; 
+        sound.play().catch(() => {}); 
+    }
+}
+function getDistance(n1, n2) {
+    return Math.hypot(n1.x - n2.x, n1.y - n2.y);
+}
+
+// === GAME START ===
+function start() {
+    const cls = document.getElementById('cls').value;
+    const stats = CLASS_STATS[cls];
+    
+    p = {
+        name: document.getElementById('name').value || 'Герой',
+        cls, 
+        color: stats.color,
+        x: innerWidth/2, y: innerHeight/2,
+        maxHp: stats.hp, hp: stats.hp,
+        maxMp: stats.mp, mp: stats.mp,
+        baseAtk: stats.atk, atk: stats.atk, // Base and current attack
+        speed: stats.speed,
+        level: 1, exp: 0, adena: 0,
+        inventory: {'Обломок Кости': 5}, // Starting inventory
+        buffs: {}, // {stat: 'hp', mult: 1.3, duration: 15000}
+        soulshots: 0, ssActive: false,
+    };
+    
+    currentSkills = CLASS_SKILLS[cls];
+    
+    document.getElementById('pname').textContent = p.name + ' [' + cls.toUpperCase() + ']';
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    
+    init();
+}
+
+// === INITIALIZATION ===
+function init() {
+    w = innerWidth; h = innerHeight;
+    svg = d3.select('#c').attr('width', w).attr('height', h);
+    svg.append('rect').attr('width', w).attr('height', h).attr('fill', '#0f001f');
+
+    // Player
+    const pg = svg.append('g').attr('class', 'player');
+    pg.append('circle').attr('r', 20).attr('fill', p.color).attr('stroke', '#fff').attr('stroke-width', 4);
+    pg.append('text').attr('y', 45).attr('text-anchor', 'middle').attr('fill', '#fff').text(p.name);
+    pg.attr('transform', `translate(${p.x},${p.y})`);
+
+    // Click to move
+    svg.on('click', e => {
+        if (isGameOver) return;
+        const [x,y] = d3.pointer(e);
+        p.x = x; p.y = y;
+        d3.select('.player').transition().duration(400).attr('transform', `translate(${x},${y})`);
+    });
+
+    // Skills + Tooltips
+    document.querySelectorAll('.skill-btn').forEach((btn, i) => {
+        const skill = currentSkills[i];
+        btn.textContent = skill.icon;
+        btn.style.background = skill.color;
+        btn.onclick = () => useSkill(i+1);
+        btn.onmouseenter = () => showSkillInfo(i+1);
+        btn.onmouseleave = () => hideSkillInfo();
+    });
+
+    for(let i=0;i<10;i++) spawnMob(); // More mobs
+    updateUI();
+    requestAnimationFrame(loop);
+}
+
+// === SKILL TOOLTIPS ===
+function showSkillInfo(id) {
+    const skill = currentSkills[id-1];
+    document.getElementById('skill-name').textContent = skill.name;
+    document.getElementById('skill-desc').textContent = skill.desc;
+    let stats = `Мана: ${skill.mp} | КД: ${skill.cd/1000}s`;
+    if (skill.dmg) stats += ` | Урон: ${skill.dmg}x`;
+    if (skill.buff) stats += ` | Длит: ${skill.buff.duration/1000}s`;
+    document.getElementById('skill-stats').innerHTML = stats;
+    document.getElementById('skill-info').classList.add('show');
+}
+function hideSkillInfo() { document.getElementById('skill-info').classList.remove('show'); }
+
+// === SOULSHOTS (SS) ===
+function toggleSS() {
+    p.ssActive = !p.ssActive;
+    document.getElementById('ss-toggle').classList.toggle('active', p.ssActive);
+    if (p.ssActive && p.soulshots <= 0) {
+        p.ssActive = false;
+        document.getElementById('ss-toggle').classList.remove('active');
+    }
+}
+function buySS(cost) {
+    if (p.adena >= cost) {
+        p.adena -= cost;
+        p.soulshots += 200;
         updateUI();
-        if (gameData.hp <= 0) endPvp(false);
-      }
-    };
-  }
-
-  function addPlayer(id, p) {
-    if (players[id]) return;
-    const color = Phaser.Math.RND.pick([0x00ffff,0xff00ff,0xffff00,0xff8800,0x88ff88]);
-    const s = scene.add.rectangle(p.x||200, p.y||200, 12,12, color).setDepth(10);
-    const t = scene.add.text(p.x, p.y-12, p.name||'?', {fontSize:'8px', color:'#fff'}).setOrigin(0.5).setDepth(11);
-    players[id] = {sprite:s, text:t, name:p.name||'?', level:p.level||1};
-  }
-  function removePlayer(id) { if (players[id]) { players[id].sprite.destroy(); players[id].text.destroy(); delete players[id]; } }
-  function updateRemotePlayer(d) {
-    if (!players[d.id] || d.id === myId) return;
-    players[d.id].sprite.x = d.x; players[d.id].sprite.y = d.y;
-    players[d.id].text.x = d.x; players[d.id].text.y = d.y-12;
-    players[d.id].text.setText(`${d.name} [${d.level}]`);
-  }
-  function sendPos() {
-    if (socket?.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({type:'move', x:player.x, y:player.y, name:gameData.name, level:gameData.level}));
     }
-  }
-  function sendChat(msg) {
-    if (socket && msg.trim()) socket.send(JSON.stringify({type:'chat', msg:msg.trim(), name:gameData.name}));
-    document.getElementById('chatInput').value = '';
-  }
-  function challengePvp(id) { socket.send(JSON.stringify({type:'pvp_challenge', targetId:id, challengerName:gameData.name, challengerId:myId})); }
-  function acceptPvp(id) { socket.send(JSON.stringify({type:'pvp_accept', challengerId:id})); startPvp(id); }
-  function startPvp(target) {
-    inPvp = true; pvpTargetId = target;
-    pvpInterval = setInterval(() => {
-      const dmg = 10 + gameData.level * 3 + Math.floor(Math.random()*15);
-      socket.send(JSON.stringify({type:'pvp_attack', targetId:target, dmg, attackerName:gameData.name}));
-    }, 1800);
-  }
-  function endPvp(won) {
-    clearInterval(pvpInterval); inPvp = false;
-    if (won) { gameData.gold += 100; log('Победа в PvP! +100 золота'); }
-    else { gameData.hp = gameData.maxhp; log('Поражение в PvP'); }
-    updateUI();
-  }
+}
 
-  // ==================== ИГРА ====================
-  let game, scene, player, gameData = {name:username, level:1, xp:0, hp:200, maxhp:200, gold:0};
-  let farming = false, farmInterval;
-
-  const saved = localStorage.getItem('pocketl2_' + userId);
-  if (saved) gameData = JSON.parse(saved);
-
-  function updateUI() {
-    document.getElementById('name').innerText = gameData.name.slice(0,10);
-    document.getElementById('level').innerText = gameData.level;
-    document.getElementById('hp').innerText = gameData.hp;
-    document.getElementById('maxhp').innerText = gameData.maxhp;
-    document.getElementById('gold').innerText = gameData.gold;
-    localStorage.setItem('pocketl2_' + userId, JSON.stringify(gameData));
-  }
-
-  function startGame() {
-    initMultiplayer();
-    const config = {
-      type: Phaser.AUTO,
-      parent: 'gameContainer',
-      width: window.innerWidth,
-      height: window.innerHeight,
-      scale: {mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH},
-      pixelArt: true,
-      physics: {default:'arcade'},
-      scene: {preload:function(){}, create, update}
-    };
-    game = new Phaser.Game(config);
-    updateUI();
-  }
-
-  function create() {
-    scene = this;
-    // Мир
-    const g = this.add.graphics();
-    for(let y=0;y<60;y++) for(let x=0;x<60;x++) {
-      g.fillStyle((x+y)%7===0?0x006600:0x00aa00);
-      g.fillRect(x*16,y*16,16,16);
+// === INVENTORY ===
+function toggleInventory() {
+    const modal = document.getElementById('inventory-modal');
+    if (modal.style.display === 'flex') {
+        modal.style.display = 'none';
+    } else {
+        modal.style.display = 'flex';
+        renderInventory();
     }
+}
+function renderInventory() {
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = '';
+    for (const [itemName, count] of Object.entries(p.inventory)) {
+        let icon = '❓';
+        if (itemName.includes('Кости')) icon = '🦴';
+        if (itemName.includes('Нить')) icon = '🧵';
+        
+        grid.innerHTML += `
+            <div class="item-slot">
+                <div class="icon">${icon}</div>
+                <div>${itemName}</div>
+                <div class="count">${count}</div>
+            </div>
+        `;
+    }
+}
 
-    player = this.add.rectangle(300,300,12,12,0xff0000).setDepth(20);
-    this.physics.add.existing(player);
-    this.cameras.main.startFollow(player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2.2);
+// === SKILL USAGE ===
+function useSkill(id) {
+    if (isGameOver) return;
+    const skill = currentSkills[id-1];
+    if (p.mp < skill.mp || cooldowns[id]) return;
+    
+    p.mp -= skill.mp;
+    cooldowns[id] = skill.cd;
+    document.getElementById('skill'+id).classList.add('cd');
+    
+    // Effects
+    if (skill.buff) { // Buff
+        play('sfx-buff');
+        applyBuff(skill.buff);
+        createEffect(p.x, p.y, 'heal'); // Visual effect for buff
+    } else {
+        // Attack
+        play('sfx-hit');
+        let baseDmg = (p.atk + p.level * 2) * skill.dmg;
+        
+        // L2: Soulshots are consumed by skills!
+        if (p.ssActive && p.soulshots > 0) {
+            baseDmg *= (p.cls === 'sorcerer' ? 2.5 : 2.0); // Mages get bigger bonus
+            p.soulshots--;
+            updateUI(); // Update SS count immediately
+        }
+        
+        mobs.forEach(m => {
+            const dist = getDistance(m, p);
+            if (dist < (skill.aoe ? 280 : 200)) {
+                m.hp -= baseDmg;
+                m.aggro = true; // Attacking aggros the mob
+                createParticles(m.x, m.y, skill.color || p.color);
+                if (skill.aoe) createEffect(m.x, m.y, 'aoe');
+            }
+        });
+    }
+    
+    setTimeout(() => {
+        cooldowns[id] = 0;
+        document.getElementById('skill'+id).classList.remove('cd');
+    }, skill.cd);
+}
 
-    this.time.addEvent({delay:100, loop:true, callback:sendPos});
+// === BUFF SYSTEM ===
+function applyBuff(buff) {
+    // Clear old buff timer if it exists
+    if (p.buffs[buff.stat]) {
+        clearTimeout(p.buffs[buff.stat].timer);
+    }
+    
+    p.buffs[buff.stat] = {
+        mult: buff.mult,
+        timer: setTimeout(() => {
+            delete p.buffs[buff.stat];
+            recalculateStats();
+        }, buff.duration)
+    };
+    recalculateStats();
+}
+
+function recalculateStats() {
+    // Reset to base
+    p.atk = p.baseAtk;
+    p.maxHp = CLASS_STATS[p.cls].hp + (p.level * 35); // Apply level bonus
+    
+    // Apply buffs
+    if (p.buffs['atk']) p.atk *= p.buffs['atk'].mult;
+    if (p.buffs['hp']) p.maxHp *= p.buffs['hp'].mult;
+    
+    p.atk = Math.round(p.atk);
+    p.maxHp = Math.round(p.maxHp);
+    if (p.hp > p.maxHp) p.hp = p.maxHp; // Clamp HP, don't heal
+}
+
+
+// === MOB SPAWNING ===
+function spawnMob() {
+    let g = pool.length ? pool.pop() : svg.append('g').attr('class', 'mob-node');
+    const a = Math.random()*Math.PI*2;
+    const d = 300 + Math.random()*400;
+    const x = p.x + Math.cos(a)*d; // Spawn around player
+    const y = p.y + Math.sin(a)*d;
+    
+    g.attr('transform', `translate(${x},${y})`).style('display', '');
+    
+    if (!g.select('circle').node()) {
+        g.append('circle').attr('class', 'mob-body').attr('r', 16).attr('fill', '#555') // Passive color
+            .attr('stroke', '#888').attr('stroke-width', 3);
+        // HP Bar
+        g.append('rect').attr('class', 'hp-bg').attr('width', 30).attr('height', 4).attr('x', -15).attr('y', -25).attr('fill', '#333');
+        g.append('rect').attr('class', 'hp-fill').attr('width', 30).attr('height', 4).attr('x', -15).attr('y', -25).attr('fill', '#ef4444');
+    }
+    
+    const mobData = {
+        g, x, y, 
+        maxHp: 60 + p.level*18, hp: 60 + p.level*18,
+        atk: 5 + p.level * 2,
+        speed: 1.5 + p.level * 0.05,
+        lastAttackTime: 0,
+        aggro: false // L2: Mob is passive
+    };
+    g.datum(mobData); // Bind data to D3 node
+    mobs.push(mobData);
+}
+
+// === EFFECTS ===
+function createEffect(x, y, type) {
+    const div = document.createElement('div');
+    div.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:50px;height:50px;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%);`;
+    if (type == 'heal') {
+        div.style.background = '#00ff88';
+        div.style.animation = 'heal 1.2s forwards';
+    } else {
+        div.style.background = 'radial-gradient(circle, #ff00ff, transparent)';
+        div.style.animation = 'aoe 0.9s forwards';
+    }
+    document.getElementById('particles').appendChild(div);
+    setTimeout(() => div.remove(), 1200);
+}
+
+// === PARTICLES ===
+const particlePool = [];
+function createParticles(x, y, color = "#fff", count = 12) {
+    for(let i = 0; i < count; i++) {
+        let el = particlePool.length ? particlePool.pop() : document.createElement('div');
+        el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:5px;height:5px;background:${color};border-radius:50%;transform:translate(-50%,-50%);animation:p 0.7s forwards`;
+        document.getElementById('particles').appendChild(el);
+        setTimeout(() => { el.remove(); particlePool.push(el); }, 700);
+    }
+}
+
+// === Game Over ===
+function gameOver() {
+    if (isGameOver) return;
+    isGameOver = true;
+    document.getElementById('gameOverScreen').style.display = 'flex';
+    play('sfx-lvl'); // Death sound
+}
+
+// === MAIN LOOP ===
+let last = 0;
+function loop(t) {
+    if (isGameOver) return;
+    
+    const delta = (t - last) || 16.67;
+    last = t;
+
+    // Regen
+    p.mp = Math.min(p.maxMp, p.mp + (p.maxMp * 0.002 * (delta/16.67)));
+    p.hp = Math.min(p.maxHp, p.hp + (p.maxHp * 0.001 * (delta/16.67)));
+    if (p.hp <= 0) { gameOver(); return; }
+
+    // Mob Logic (Movement, Aggro, Attack)
+    for(let i=mobs.length-1;i>=0;i--) {
+        const m = mobs[i];
+        const dist = getDistance(m, p);
+        
+        // 1. Check Aggro
+        if (!m.aggro && dist < AGGRO_RANGE) {
+            m.aggro = true;
+        }
+        
+        // If mob is not aggroed, do nothing
+        if (!m.aggro) {
+             m.g.select('.mob-body').attr('fill', '#555'); // Passive color
+             continue;
+        }
+        
+        m.g.select('.mob-body').attr('fill', '#7f1d1d'); // Active color
+
+        // 2. Movement (if aggroed)
+        if (dist > 40) { 
+            const dx = p.x - m.x;
+            const dy = p.y - m.y;
+            m.x += (dx / dist) * m.speed * (delta/16.67);
+            m.y += (dy / dist) * m.speed * (delta/16.67);
+            m.g.attr('transform', `translate(${m.x},${m.y})`);
+        } else { 
+        // 3. Attack (if in melee range)
+            if (t - m.lastAttackTime > 2000) { // 2 sec attack CD
+                p.hp -= m.atk;
+                m.lastAttackTime = t;
+                play('sfx-hit');
+                document.body.style.animation = 'shake 0.3s';
+                setTimeout(()=>document.body.style.animation='', 300);
+            }
+        }
+        
+        // 4. Auto-farm (Player attacking mob)
+        if (dist < PULL_RANGE) { // Attack aggroed mobs within PULL_RANGE
+            let damage = p.atk * 0.005 * delta; // DpS
+            
+            // L2: Auto-attack consumes SS!
+            if (p.ssActive && p.soulshots > 0 && t % 1000 < delta) { // Chance to consume SS once per sec
+                damage *= 2.0; 
+                p.soulshots--;
+                updateUI(); // Update SS count immediately
+            }
+            
+            m.hp -= damage; 
+            if (t % 500 < delta) { 
+                 createParticles(m.x, m.Y, p.color, 4);
+            }
+            
+            // Update mob HP bar
+            m.g.select('.hp-fill').attr('width', Math.max(0, (m.hp / m.maxHp) * 30));
+
+            // 5. Mob Death
+            if (m.hp <= 0) {
+                p.adena += 9 + Math.floor(Math.random()*13);
+                p.exp += 13 + p.level * 2;
+                
+                // L2: Resource Drop
+                if (Math.random() < 0.3) { // 30% drop chance
+                    const res = 'Обломок Кости';
+                    p.inventory[res] = (p.inventory[res] || 0) + 1;
+                }
+                
+                createParticles(m.x, m.y, '#ffd700', 16);
+                play('sfx-adena');
+                
+                m.g.style('display', 'none');
+                pool.push(m.g);
+                mobs.splice(i,1);
+                
+                checkLevel();
+                if (mobs.length < 9) spawnMob(); // Maintain 10 mobs
+            }
+        }
+    }
 
     // UI
-    document.getElementById('autofarm').onclick = () => {
-      farming = !farming;
-      document.getElementById('autofarm').innerText = farming?'Стоп':'Фарм';
-      if(farming) farmInterval = setInterval(()=>{
-        gameData.gold += 3; gameData.xp += 7;
-        if(gameData.xp >= gameData.level*100) { gameData.level++; gameData.maxhp += 40; gameData.hp = gameData.maxhp; log('Уровень повышен!'); }
-        updateUI();
-      },1000); else clearInterval(farmInterval);
-    };
-    document.getElementById('pvpBtn').onclick = () => {
-      const list = Object.keys(players).filter(id=>id!==myId);
-      if(list.length===0) return log('Никого рядом');
-      const target = list[0]; // первый попавшийся
-      challengePvp(target);
-      log('Вызов отправлен!');
-    };
-    document.getElementById('chatBtn').onclick = () => document.getElementById('chatInput').style.display = 
-      document.getElementById('chatInput').style.display==='block'?'none':'block';
-    document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChat(e.target.value); });
+    updateUI();
 
-    // Джойстик
-    const joy = document.getElementById('joystick');
-    const knob = document.getElementById('joystick-knob');
-    let dx=0, dy=0;
-    this.input.on('pointerdown', p => {
-      joy.style.left = (p.x-50)+'px';
-      joy.style.bottom = (window.innerHeight-p.y-50)+'px';
-    });
-    this.input.on('pointermove', p => {
-      dx = p.x - (parseInt(joy.style.left)+50);
-      dy = (window.innerHeight-p.y) - (parseInt(joy.style.bottom)+50);
-      const dist = Math.min(45, Math.hypot(dx,dy));
-      const a = Math.atan2(dy,dx);
-      knob.style.left = 30 + dist*Math.cos(a) + 'px';
-      knob.style.top = 30 + dist*Math.sin(a) + 'px';
-    });
-    this.input.on('pointerup', () => { knob.style.left='30px'; knob.style.top='30px'; });
-  }
+    // Cooldowns
+    Object.keys(cooldowns).forEach(k => cooldowns[k] > delta && (cooldowns[k] -= delta));
 
-  function update() {
-    const speed = 180;
-    const dx = parseInt(document.getElementById('joystick-knob').style.left||30) - 30;
-    const dy = parseInt(document.getElementById('joystick-knob').style.top||30) - 30;
-    const len = Math.hypot(dx,dy);
-    if(len>5) player.body.setVelocity(dx/len*speed, dy/len*speed);
-    else player.body.setVelocity(0,0);
+    requestAnimationFrame(loop);
+}
 
-    // Мини-карта
-    const c = document.getElementById('minimap').getContext('2d');
-    c.clearRect(0,0,70,70);
-    c.fillStyle='#004400'; c.fillRect(0,0,70,70);
-    c.fillStyle='#ff0000'; c.fillRect(player.x/16*1.16-2, player.y/16*1.16-2,4,4);
-  }
+// === LEVEL UP ===
+function checkLevel() {
+    const expNeeded = p.level*100;
+    if (p.exp >= expNeeded) {
+        p.level++;
+        p.exp -= expNeeded; // Carry over remaining exp
+        p.maxHp += 35; p.hp = p.maxHp;
+        p.maxMp += 25; p.mp = p.maxMp;
+        p.baseAtk += 4; // Increase base attack
+        recalculateStats(); // Recalculate stats considering buffs
+        
+        play('sfx-lvl');
+        const msg = document.createElement('div');
+        msg.textContent = `УРОВЕНЬ ${p.level}!`;
+        msg.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:5rem;color:gold;animation:lvl 2.5s forwards;z-index:100;pointer-events:none;font-weight:bold;text-shadow:0 0 20px #ffd700; font-family: "Cinzel", serif;';
+        document.body.appendChild(msg);
+        setTimeout(()=>msg.remove(),2500);
+    }
+}
 
-  startGame();
+function updateUI() {
+    document.getElementById('hp').style.width = (p.hp/p.maxHp*100)+'%';
+    document.getElementById('mp').style.width = (p.mp/p.maxMp*100)+'%';
+    document.getElementById('xp').style.width = (p.exp/(p.level*100)*100)+'%';
+    document.getElementById('lvl').textContent = p.level;
+    document.getElementById('exp').textContent = p.exp;
+    document.getElementById('need').textContent = p.level*100;
+    document.getElementById('adena').textContent = p.adena;
+    document.getElementById('ss-count').textContent = p.soulshots;
+    
+    // Check SS
+    if (p.soulshots <= 0 && p.ssActive) {
+        p.ssActive = false;
+        document.getElementById('ss-toggle').classList.remove('active');
+    }
+}
+
+// === ANIMATIONS ===
+const style = document.createElement("style");
+style.textContent = `@keyframes p{to{transform:translate(-50%,-50%) translateY(-120px);opacity:0}} @keyframes lvl{0%,100%{transform:scale(1)}50%{transform:scale(2.2);text-shadow:0 0 60px gold}} @keyframes heal{0%{transform:scale(1)}50%{transform:scale(1.8);box-shadow:0 0 30px #00ff88}100%{transform:scale(1);opacity:0}} @keyframes aoe{0%{transform:scale(0);opacity:1}100%{transform:scale(3.5);opacity:0}} @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}} @keyframes shake{0%{transform:translate(1px, 1px) rotate(0deg)} 10%{transform:translate(-1px, -2px) rotate(-1deg)} 20%{transform:translate(-3px, 0px) rotate(1deg)} 30%{transform:translate(3px, 2px) rotate(0deg)} 100%{transform:translate(1px, -1px) rotate(0deg)}}`;
+document.head.appendChild(style);
+
+// === START ===
+document.getElementById('menu').style.display='flex';
 </script>
 </body>
 </html>
