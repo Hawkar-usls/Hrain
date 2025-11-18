@@ -1,382 +1,688 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pocket L2 Idle — MMO Edition</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pocket L2: Safe Zone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap');
-    
-    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Roboto', sans-serif; -webkit-user-select: none; user-select: none;}
-    
-    #menu { position: absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background: radial-gradient(circle, #2a0066 0%, #0a001f 100%); z-index: 2000; }
-    #game { display: none; width: 100%; height: 100%; position: relative; }
-    #phaser-game { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-    
-    /* UI */
-    #stats {
-        position: absolute; top: 10px; left: 10px;
-        background: rgba(0, 0, 0, 0.6); /* Более прозрачный фон */
-        backdrop-filter: blur(4px); /* Размытие фона */
-        border: 1px solid rgba(74, 0, 114, 0.5);
-        border-radius: 12px;
-        padding: 10px; z-index: 100; width: 220px; font-size: 11px;
-        max-height: 60vh; overflow-y: auto;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .bar-container { width: 100%; height: 6px; background: #222; margin: 2px 0; border-radius: 3px; overflow: hidden; }
-    .bar-fill { height: 100%; transition: width 0.3s; }
-    
-    .ui-btn {
-        width: 100%; padding: 8px 0; margin-top: 4px;
-        background: rgba(55, 65, 81, 0.8); border: 1px solid #4b5563; border-radius: 6px;
-        color: #e5e7eb; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; display: block;
-        transition: all 0.2s;
-    }
-    .ui-btn:active { background: #4b5563; transform: scale(0.98); }
-    
-    #skills {
-        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-        display: flex; gap: 12px; z-index: 100;
-        background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-        padding: 10px; border-radius: 16px; border: 1px solid #555;
-    }
-    .skill-btn {
-        width: 56px; height: 56px; border-radius: 12px; border: 2px solid #777;
-        font-size: 24px; display: flex; align-items: center; justify-content: center;
-        background: rgba(34, 34, 34, 0.8); position: relative; cursor: pointer; transition: transform 0.1s;
-    }
-    .skill-btn:active { transform: scale(0.95); }
-    
-    /* Модалки */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .modal-content { width: 90%; max-width: 400px; background: #1f2937; border: 1px solid #6d28d9; border-radius: 12px; padding: 15px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-    
-    .floating-text { position: absolute; font-weight: bold; pointer-events: none; text-shadow: 1px 1px 0 #000; animation: floatUp 1.5s forwards; z-index: 1000; }
-    @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
-    
-    .item-slot, .craft-item, .auction-item, .mail-item, .quest-item { background: #374151; border-radius: 6px; padding: 8px; margin-bottom: 6px; }
-</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Press+Start+2P&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: rgba(15, 23, 42, 0.95);
+            --accent: #6366f1;
+            --border: #334155;
+            --grade-d: #60a5fa;
+        }
+
+        body { margin: 0; overflow: hidden; background: #000; color: #f8fafc; font-family: 'Inter', sans-serif; user-select: none; -webkit-user-select: none; }
+
+        /* LAYOUT */
+        #app { position: relative; width: 100vw; height: 100vh; }
+        #phaser-container { position: absolute; inset: 0; z-index: 1; }
+        #ui-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; display: none; }
+        .interactive { pointer-events: auto; }
+
+        /* START SCREEN */
+        #start-screen {
+            position: absolute; inset: 0; z-index: 50;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        
+        /* PIXELATED HUD */
+        .hud-panel {
+            background: var(--bg-panel); border: 2px solid var(--border); border-radius: 4px;
+            padding: 10px; box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+        }
+
+        /* Left Stats */
+        #hud-left { position: absolute; top: 16px; left: 16px; width: 250px; display: flex; flex-direction: column; gap: 8px; }
+        
+        .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .stat-label { width: 24px; font-size: 10px; font-weight: bold; color: #94a3b8; }
+        .stat-bar { flex: 1; height: 12px; background: #1e293b; border: 1px solid #334155; position: relative; }
+        .stat-fill { height: 100%; transition: width 0.2s; }
+        .fill-hp { background: #ef4444; } .fill-mp { background: #3b82f6; } .fill-exp { background: #eab308; }
+        
+        .zone-indicator {
+            font-size: 10px; text-transform: uppercase; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-align: center; margin-top: 4px;
+        }
+        .zone-safe { color: #4ade80; border: 1px solid #4ade80; background: rgba(74, 222, 128, 0.1); }
+        .zone-danger { color: #f87171; border: 1px solid #f87171; background: rgba(248, 113, 113, 0.1); }
+
+        /* Chat */
+        #hud-chat {
+            position: absolute; bottom: 100px; left: 16px; width: 320px; height: 160px;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            mask-image: linear-gradient(to top, black 80%, transparent 100%);
+            text-shadow: 1px 1px 0 #000; pointer-events: none; font-size: 11px; font-family: monospace;
+        }
+        .c-sys { color: #94a3b8; } .c-drop { color: #fbbf24; } .c-dmg { color: #f87171; } .c-gain { color: #4ade80; }
+
+        /* Bottom Actions */
+        #hud-bottom {
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 8px;
+        }
+        .action-btn {
+            width: 60px; height: 60px; background: #1e293b; border: 2px solid var(--border);
+            border-radius: 8px; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; box-shadow: 0 4px 0 #0f172a; transition: 0.1s;
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #0f172a; }
+        .action-btn.active { border-color: var(--accent); color: var(--accent); background: #312e81; }
+        .action-btn span { font-size: 9px; margin-top: 4px; font-weight: 600; text-transform: uppercase; }
+        .badge { position: absolute; top: -6px; right: -6px; background: var(--accent); color: white; font-size: 10px; padding: 2px 5px; border-radius: 4px; border: 1px solid #fff; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100;
+            display: none; align-items: center; justify-content: center; pointer-events: auto;
+        }
+        .modal-window {
+            width: 90%; max-width: 480px; height: 70vh; background: #1e293b; border: 2px solid var(--border);
+            border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .modal-header { padding: 12px; background: #0f172a; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; font-weight: bold; color: #e2e8f0; }
+        .modal-body { padding: 12px; overflow-y: auto; flex: 1; }
+
+        /* Inventory */
+        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; }
+        .slot {
+            aspect-ratio: 1; background: #0f172a; border: 2px solid var(--border); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; position: relative;
+        }
+        .slot:hover { border-color: white; }
+        .slot.g-d { border-color: var(--grade-d); background: rgba(96, 165, 250, 0.1); }
+        .slot .count { position: absolute; bottom: 1px; right: 3px; font-size: 9px; color: white; text-shadow: 1px 1px 0 #000; }
+
+        /* Paperdoll */
+        .paperdoll { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border); }
+        .doll-slot { width: 56px; height: 56px; border: 2px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #475569; cursor: pointer; background: #0f172a; }
+
+        /* Class Select */
+        .class-card {
+            width: 90px; padding: 12px; background: #1e293b; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; transition: 0.2s;
+        }
+        .class-card:hover { border-color: #64748b; transform: translateY(-2px); }
+        .class-card.selected { border-color: var(--accent); background: #312e81; box-shadow: 0 0 15px rgba(99,102,241,0.4); }
+
+        /* Floating Text */
+        .float-txt { 
+            position: absolute; font-family: 'Courier New', monospace; font-weight: 900; font-size: 16px; 
+            pointer-events: none; animation: floatPixel 0.8s steps(10) forwards; 
+            text-shadow: 2px 2px 0 #000; -webkit-text-stroke: 1px black; z-index: 1000; 
+        }
+        @keyframes floatPixel { to { transform: translateY(-40px); opacity: 0; } }
+    </style>
 </head>
 <body>
 
-<div id="menu">
-    <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; color: #a78bfa; text-shadow: 0 0 20px #7c3aed; margin-bottom: 20px;">Pocket L2</h1>
-    <div class="flex flex-col gap-4 w-64">
-        <input id="name" placeholder="Имя героя" class="p-3 rounded bg-gray-800 text-white border border-gray-600 text-center">
-        <select id="cls" class="p-3 rounded bg-gray-800 text-white border border-gray-600">
-            <option value="gladiator">Gladiator (Воин)</option>
-            <option value="sorcerer">Sorcerer (Маг)</option>
-            <option value="hawkeye">Hawkeye (Лук)</option>
-        </select>
-        <button onclick="window.startGameWrapper()" class="p-4 rounded bg-purple-600 font-bold text-white hover:bg-purple-500 transition shadow-[0_0_15px_rgba(124,58,237,0.5)]">НАЧАТЬ</button>
-    </div>
-</div>
-
-<div id="game">
-    <div id="phaser-game"></div>
-
-    <!-- Интерфейс -->
-    <div id="stats">
-        <div id="pname" class="text-yellow-400 font-bold mb-1 text-sm">...</div>
-        <div class="bar-container"><div id="hp" class="bar-fill bg-red-600" style="width: 100%"></div></div>
-        <div class="bar-container"><div id="mp" class="bar-fill bg-blue-600" style="width: 100%"></div></div>
-        <div class="flex justify-between text-[10px] text-gray-400"><span>LVL <span id="lvl">1</span></span><span><span id="adena" class="text-yellow-300">0</span> A</span></div>
-
-        <hr class="border-gray-600 my-2">
+<div id="app">
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <h1 class="text-4xl font-bold text-indigo-400 mb-2" style="font-family: 'Press Start 2P', cursive; text-shadow: 4px 4px 0 #000;">POCKET L2</h1>
+        <p class="text-slate-500 text-xs mb-8 uppercase tracking-widest font-mono">Pixel MMORPG Sim</p>
         
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="mainScript.toggleSS()" id="ss-btn" class="ui-btn border-yellow-600 text-yellow-500">SS</button>
-            <button onclick="mainScript.toggleFarm()" id="farm-btn" class="ui-btn border-green-600 text-green-500">Фарм</button>
-        </div>
-        <button onclick="mainScript.toggleEquipment()" class="ui-btn bg-cyan-900 border-cyan-700">🛡️ Экипировка</button>
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="mainScript.toggleInventory()" class="ui-btn">🎒 Сумка</button>
-            <button onclick="mainScript.toggleQuestLog()" class="ui-btn">📜 Квесты</button>
-        </div>
-        <button onclick="mainScript.toggleAuctionHouse()" class="ui-btn">⚖️ Аукцион</button>
-        <button onclick="mainScript.toggleCrafting()" class="ui-btn text-pink-400 border-pink-900">⚒️ Крафт</button>
-    </div>
-
-    <div id="skills">
-        <div class="skill-btn" id="skill1" onclick="mainScript.useSkill(1)">1</div>
-        <div class="skill-btn" id="skill2" onclick="mainScript.useSkill(2)">2</div>
-        <div class="skill-btn" id="skill3" onclick="mainScript.useSkill(3)">3</div>
-    </div>
-
-    <div id="particles"></div>
-
-    <div id="generic-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-title" class="text-center font-bold text-xl mb-4 text-purple-300"></h3>
-            <div id="modal-body" class="flex-grow overflow-y-auto bg-gray-900 p-2 rounded mb-4 text-sm"></div>
-            <button onclick="document.getElementById('generic-modal').style.display='none'" class="bg-red-600 p-3 rounded w-full font-bold">Закрыть</button>
-        </div>
-    </div>
-</div>
-
-<!-- Логика -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, addDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const game = {
-        p: {}, phaser: null, scene: null,
-        ITEMS: {
-            'D_Sword': { name: 'Меч Рыцаря (D)', type: 'Wpn', slot: 'weapon', stats: {atk:15} },
-            'C_Bow': { name: 'Эльф. Лук (C)', type: 'Wpn', slot: 'weapon', stats: {atk:35} },
-            'B_Robe': { name: 'Роба Мага (B)', type: 'Arm', slot: 'armor', stats: {hp:100} },
-            'Bone': { name: 'Кость', type: 'Res' }, 'Thread': { name: 'Нить', type: 'Res' }
-        },
-        sprites: { player: null, mobs: [], npcs: [] },
-        target: null,
-
-        init: async function(uid) {
-            const ref = doc(db, `artifacts/${appId}/users/${uid}/profile/data`);
-            const snap = await getDoc(ref);
-            const d = snap.exists() ? snap.data() : {};
-            this.p = {
-                name: document.getElementById('name').value || 'Герой', cls: document.getElementById('cls').value, uid: uid,
-                x: 1600, y: 1600, hp: 100, maxHp: 100, level: 1, adena: 0,
-                inv: {'Bone': 5}, equip: {weapon: null}, autoFarm: false,
-                ...d
-            };
-            this.calcStats();
-            this.launchPhaser();
-            this.startLoop();
-        },
-
-        calcStats: function() {
-            this.p.maxHp = 100 + (this.p.level * 20);
-            document.getElementById('pname').innerText = this.p.name;
-            document.getElementById('lvl').innerText = this.p.level;
-            document.getElementById('adena').innerText = this.p.adena;
-        },
-
-        launchPhaser: function() {
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('game').style.display = 'block';
-            const config = {
-                type: Phaser.AUTO, parent: 'phaser-game', width: window.innerWidth, height: window.innerHeight,
-                pixelArt: true, backgroundColor: '#000', physics: { default: 'arcade', arcade: { debug: false } },
-                scene: [MainScene]
-            };
-            if(this.phaser) this.phaser.destroy(true);
-            this.phaser = new Phaser.Game(config);
+        <div class="flex flex-col gap-6 items-center">
+            <input type="text" id="char-name" class="bg-slate-900 border-2 border-slate-700 rounded px-4 py-3 text-center outline-none focus:border-indigo-500 text-white font-mono w-64" placeholder="NICKNAME">
             
-            window.addEventListener('resize', () => {
-                if(this.phaser) this.phaser.scale.resize(window.innerWidth, window.innerHeight);
-            });
-        },
+            <div class="flex gap-4">
+                <div class="class-card selected" onclick="Game.selectClass('fighter', this)">
+                    <div class="text-2xl mb-2">⚔️</div>
+                    <div class="text-[10px] font-bold uppercase">Warrior</div>
+                </div>
+                <div class="class-card" onclick="Game.selectClass('mage', this)">
+                    <div class="text-2xl mb-2">🔮</div>
+                    <div class="text-[10px] font-bold uppercase">Mage</div>
+                </div>
+                <div class="class-card" onclick="Game.selectClass('rogue', this)">
+                    <div class="text-2xl mb-2">🗡️</div>
+                    <div class="text-[10px] font-bold uppercase">Rogue</div>
+                </div>
+            </div>
 
-        startLoop: function() {
-            setInterval(() => {
-                if (!this.p.uid) return;
-                if(this.p.hp < this.p.maxHp) this.p.hp += 0.5;
-                document.getElementById('hp').style.width = (this.p.hp / this.p.maxHp * 100) + '%';
-                if(Date.now() % 5000 < 1000) this.save();
-            }, 1000);
-        },
+            <button onclick="Game.start()" class="mt-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow-[0_4px_0_#312e81] active:shadow-none active:translate-y-1 transition-all font-mono">ENTER WORLD</button>
+        </div>
+    </div>
 
-        save: async function() {
-            if(!this.p.uid) return;
-            try { await setDoc(doc(db, `artifacts/${appId}/users/${this.p.uid}/profile/data`), this.p, {merge: true}); } catch(e){}
-        },
-        
-        toggleInventory: () => openModal('Инвентарь', Object.entries(game.p.inv).map(([k,v]) => `<div class="item-slot flex justify-between"><span>${game.ITEMS[k]?game.ITEMS[k].name:k}</span><span>x${v}</span></div>`).join('')),
-        toggleEquipment: () => openModal('Экипировка', `Weapon: ${game.p.equip.weapon || 'Нет'}<br>Armor: ${game.p.equip.armor || 'Нет'}`),
-        toggleChat: () => alert('Чат в разработке'),
-        toggleQuestLog: () => openModal('Квесты', 'Нет активных квестов'),
-        toggleMailbox: () => openModal('Почта', 'Пусто'),
-        toggleAuctionHouse: () => openModal('Аукцион', 'Рынок пуст'),
-        toggleCrafting: () => openModal('Крафт', 'Кузнец отдыхает'),
-        toggleSS: () => { const b = document.getElementById('ss-btn'); b.classList.toggle('text-yellow-500'); b.innerText = b.innerText==='SS' ? 'SS: ON' : 'SS'; },
-        toggleFarm: () => { game.p.autoFarm = !game.p.autoFarm; const b=document.getElementById('farm-btn'); b.classList.toggle('text-green-500'); b.innerText = game.p.autoFarm ? 'Фарм: ON' : 'Фарм'; },
-        useSkill: (id) => { 
-            if(!game.sprites.player) return;
-            const circle = game.scene.add.circle(game.sprites.player.x, game.sprites.player.y, 60, 0xff00ff, 0.4);
-            game.scene.tweens.add({targets:circle, scale:2, alpha:0, duration:400, onComplete:()=>circle.destroy()});
-        }
-    };
+    <!-- GAME UI -->
+    <div id="ui-layer">
+        <div id="hud-left" class="hud-panel interactive">
+            <div class="flex justify-between items-baseline mb-2">
+                <span class="font-bold text-indigo-300 font-mono" id="ui-name">Unknown</span>
+                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded border border-slate-600" id="ui-lvl">LV.1</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">HP</span>
+                <div class="stat-bar"><div id="bar-hp" class="stat-fill fill-hp" style="width: 100%"></div></div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">MP</span>
+                <div class="stat-bar"><div id="bar-mp" class="stat-fill fill-mp" style="width: 100%"></div></div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">EXP</span>
+                <div class="stat-bar"><div id="bar-exp" class="stat-fill fill-exp" style="width: 0%"></div></div>
+            </div>
 
-    function openModal(title, html) {
-        const m = document.getElementById('generic-modal');
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-body').innerHTML = html || 'Пусто';
-        m.style.display = 'flex';
+            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between text-xs font-mono items-center">
+                <span class="text-yellow-500"><i class="fas fa-coins"></i> <span id="ui-adena">0</span></span>
+                <div id="ui-zone" class="zone-indicator zone-safe">SAFE ZONE</div>
+            </div>
+        </div>
+
+        <div id="hud-chat"></div>
+
+        <div id="hud-bottom" class="interactive">
+            <div class="action-btn" id="btn-auto" onclick="Game.toggleAuto()">
+                <i class="fas fa-crosshairs text-xl"></i>
+                <span>Auto</span>
+            </div>
+            <div class="action-btn" id="btn-ss" onclick="Game.toggleSS()">
+                <i class="fas fa-bolt text-xl text-blue-400"></i>
+                <span>Shots</span>
+                <span class="badge" id="ui-ss-count">0</span>
+            </div>
+            <div style="width: 16px"></div>
+            <div class="action-btn" onclick="Game.ui.toggleModal('inv')">
+                <i class="fas fa-suitcase text-xl"></i>
+                <span>Inv</span>
+            </div>
+            <div class="action-btn" onclick="Game.ui.toggleModal('stats')">
+                <i class="fas fa-user-shield text-xl"></i>
+                <span>Char</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="modal-inv" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span>INVENTORY</span>
+                <button onclick="Game.ui.closeModals()" class="text-red-400"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="paperdoll">
+                    <div class="doll-slot" id="slot-weapon" onclick="Game.logic.unequip('weapon')"><i class="fas fa-fist-raised opacity-20"></i></div>
+                    <div class="doll-slot" id="slot-armor" onclick="Game.logic.unequip('armor')"><i class="fas fa-tshirt opacity-20"></i></div>
+                </div>
+                <div class="inv-grid" id="inv-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="phaser-container"></div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   1. DATA & CONFIG (L2 Style)
+   ---------------------------------------------------------
+*/
+const Config = {
+    CLASSES: {
+        fighter: { base: { pAtk: 14, pDef: 12, atkSpd: 1.1, runSpd: 150 }, hp: 140 },
+        mage:    { base: { pAtk: 6, pDef: 8, atkSpd: 0.9, runSpd: 140 }, hp: 90 },
+        rogue:   { base: { pAtk: 12, pDef: 10, atkSpd: 1.3, runSpd: 170 }, hp: 110 }
+    },
+    ITEMS: {
+        'ssd': { name: 'Soulshot: D', icon: '⚡', type: 'etc', stack: true, grade: 'd' },
+        'potion': { name: 'HP Potion', icon: '🧪', type: 'use', effect: {hp:50}, stack: true },
+        'sword_d': { name: 'Bastard Sword', icon: '🗡️', type: 'gear', slot: 'weapon', pAtk: 45, grade: 'd' },
+        'dagger_d': { name: 'Mithril Dagger', icon: '🔪', type: 'gear', slot: 'weapon', pAtk: 38, grade: 'd' },
+        'staff_d': { name: 'Staff of Life', icon: '🪄', type: 'gear', slot: 'weapon', pAtk: 30, grade: 'd' },
+        'armor_d': { name: 'Brigandine', icon: '🛡️', type: 'gear', slot: 'armor', pDef: 30, grade: 'd' },
+        'adena': { name: 'Adena', icon: '💰', type: 'etc', stack: true }
+    },
+    MOBS: {
+        'gremlin': { name: 'Gremlin', lvl: 1, hp: 40, exp: 10, adena: [2,5], drop: ['ssd'], color: 0x60a5fa }, // Blue
+        'wolf': { name: 'Wolf', lvl: 3, hp: 100, exp: 25, adena: [10,20], drop: ['potion'], color: 0x94a3b8 }, // Grey
+        'orc': { name: 'Orc', lvl: 5, hp: 200, exp: 50, adena: [30,60], drop: ['armor_d'], color: 0x4ade80 }   // Green
+    },
+    WORLD: {
+        SAFE_ZONE_RADIUS: 400 // Radius of Giran Safe Zone
+    }
+};
+
+/* ---------------------------------------------------------
+   2. LOGIC SYSTEM
+   ---------------------------------------------------------
+*/
+class LogicSystem {
+    constructor() {
+        this.player = {
+            name: 'Guest', class: 'fighter',
+            lvl: 1, exp: 0, maxExp: 100,
+            hp: 100, maxHp: 100, mp: 50, maxMp: 50,
+            stats: { pAtk: 0, pDef: 0, atkSpd: 0 },
+            inv: {}, equip: { weapon: null, armor: null },
+            auto: false, ss: false
+        };
     }
 
-    window.mainScript = game;
-    window.startGameWrapper = () => {
-        const app = initializeApp(JSON.parse(window.firebaseConfig));
-        window.db = getFirestore(app);
-        const auth = getAuth(app);
-        onAuthStateChanged(auth, (u) => { if (u) game.init(u.uid); else signInAnonymously(auth); });
-    };
-    window.firebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-    window.appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
-
-    // === PHASER SCENE (С ПРОЦЕДУРНОЙ ГРАФИКОЙ) ===
-    class MainScene extends Phaser.Scene {
-        preload() {
-            // Мы НЕ загружаем внешние картинки, чтобы избежать черных квадратов.
-            // Мы создадим текстуры прямо здесь.
-        }
+    init(name, cls) {
+        this.player.name = name;
+        this.player.class = cls;
+        // Starter items
+        this.addItem('ssd', 500);
+        this.addItem('potion', 5);
+        if (cls === 'mage') this.addItem('staff_d');
+        else if (cls === 'rogue') this.addItem('dagger_d');
+        else this.addItem('sword_d');
         
-        create() {
-            game.scene = this;
-            
-            // 1. ГЕНЕРАЦИЯ ТЕКСТУР "НА ЛЕТУ" (Failsafe метод)
-            // Игрок (Белый)
-            let g = this.make.graphics({x:0, y:0, add:false});
-            g.fillStyle(0xffffff); g.fillRect(0,0,32,32); // Тело
-            g.fillStyle(0x000000); g.fillRect(8,8,4,4); g.fillRect(20,8,4,4); // Глаза
-            g.fillStyle(0xcccccc); g.fillRect(4,20,24,4); // Рот/Защита
-            g.generateTexture('player', 32, 32);
+        this.recalc();
+        this.player.hp = this.player.maxHp;
+    }
 
-            // Моб (Красный паук)
-            g.clear();
-            g.fillStyle(0xcc0000); g.fillCircle(16,16,14); // Тело
-            g.fillStyle(0xffff00); g.fillCircle(12,12,4); g.fillCircle(20,12,4); // Глаза
-            g.lineStyle(2, 0xcc0000); 
-            g.beginPath(); g.moveTo(0,0); g.lineTo(10,10); g.strokePath(); // Ноги (условно)
-            g.generateTexture('mob', 32, 32);
+    recalc() {
+        const base = Config.CLASSES[this.player.class];
+        let pAtk = base.base.pAtk + (this.player.lvl * 2);
+        let pDef = base.base.pDef + this.player.lvl;
+        let maxHp = base.hp + (this.player.lvl * 40);
 
-            // NPC (Зеленый)
-            g.clear();
-            g.fillStyle(0x00ff00); g.fillRect(4,4,24,24);
-            g.fillStyle(0xffffff); g.fillRect(10,8,12,4); // Очки
-            g.generateTexture('npc', 32, 32);
+        if (this.player.equip.weapon) pAtk += Config.ITEMS[this.player.equip.weapon].pAtk;
+        if (this.player.equip.armor) pDef += Config.ITEMS[this.player.equip.armor].pDef;
 
-            // Трава и Камень (Тайлы)
-            g.clear();
-            g.fillStyle(0x2d6e32); g.fillRect(0,0,32,32); // Трава база
-            g.fillStyle(0x3e8e41); g.fillRect(4,4,4,4); g.fillRect(20,20,4,4); // Травинки
-            g.generateTexture('tile_grass', 32, 32);
+        this.player.stats.pAtk = Math.floor(pAtk);
+        this.player.stats.pDef = Math.floor(pDef);
+        this.player.stats.atkSpd = base.base.atkSpd;
+        this.player.maxHp = maxHp;
+        this.player.maxExp = this.player.lvl * 100;
+        
+        if (Game.ui) Game.ui.updateHUD();
+    }
 
-            g.clear();
-            g.fillStyle(0x555555); g.fillRect(0,0,32,32); // Камень база
-            g.fillStyle(0x666666); g.fillRect(2,2,28,28); // Плитка
-            g.generateTexture('tile_stone', 32, 32);
-            
-            g.clear();
-            g.fillStyle(0x222222); g.fillRect(0,0,32,32); // Стена
-            g.lineStyle(2, 0x444444); g.strokeRect(0,0,32,32);
-            g.generateTexture('tile_wall', 32, 32);
-            
-            // Дерево
-            g.clear();
-            g.fillStyle(0x5d4037); g.fillRect(12,20,8,12); // Ствол
-            g.fillStyle(0x2e7d32); g.fillCircle(16,14,14); // Листва
-            g.fillStyle(0x388e3c); g.fillCircle(12,10,6); // Деталь листвы
-            g.generateTexture('tree', 32, 32);
+    addItem(id, qty = 1) {
+        if (Config.ITEMS[id].stack) {
+            this.player.inv[id] = (this.player.inv[id] || 0) + qty;
+        } else {
+            const uid = Date.now() + Math.random();
+            this.player.inv[uid] = { id, qty: 1 };
+        }
+        if (Game.ui) Game.ui.updateInv();
+    }
 
-            // 2. ГЕНЕРАЦИЯ МИРА (Без Tilemap, просто спрайты для надежности)
-            // Рисуем землю
-            const bg = this.add.group();
-            for(let y=0; y<40; y++) {
-                for(let x=0; x<40; x++) {
-                    let tex = 'tile_grass';
-                    // Город в центре (15-25)
-                    if(x>15 && x<25 && y>15 && y<25) tex = 'tile_stone';
-                    // Стена вокруг города
-                    if((x===15 || x===25) && y>=15 && y<=25) tex = 'tile_wall';
-                    if((y===15 || y===25) && x>=15 && x<=25) tex = 'tile_wall';
-                    // Ворота
-                    if((x===20 && y===25) || (x===20 && y===15)) tex = 'tile_stone';
+    equip(key) {
+        const itemDef = this.isStack(key) ? Config.ITEMS[key] : Config.ITEMS[this.player.inv[key].id];
+        const slot = itemDef.slot;
+        if (this.player.equip[slot]) this.unequip(slot);
+        this.player.equip[slot] = this.isStack(key) ? key : this.player.inv[key].id;
+        this.recalc();
+        if (Game.ui) Game.ui.updateInv();
+    }
 
-                    const tile = this.add.image(x*64, y*64, tex).setScale(2).setOrigin(0);
-                    bg.add(tile);
-                    
-                    // Физика стен (простая)
-                    if(tex === 'tile_wall') {
-                        const wall = this.physics.add.staticImage(x*64 + 32, y*64 + 32, 'tile_wall').setScale(2).setVisible(false);
-                        this.physics.add.collider(game.sprites.player, wall); // Добавим позже, т.к. игрока еще нет
-                        wall.setBodySize(64, 64);
-                        // Добавляем во временную группу, чтобы потом добавить коллизию
-                        if(!this.walls) this.walls = this.physics.add.staticGroup();
-                        this.walls.add(wall);
-                    }
-                }
-            }
+    unequip(slot) {
+        const id = this.player.equip[slot];
+        if (!id) return;
+        this.player.equip[slot] = null;
+        this.recalc();
+        if (Game.ui) Game.ui.updateInv();
+    }
 
-            this.physics.world.setBounds(0,0, 40*64, 40*64); // 2560x2560
+    isStack(key) { return Config.ITEMS[key] !== undefined; }
+}
 
-            // 3. ИГРОК И ОБЪЕКТЫ
-            game.sprites.player = this.physics.add.sprite(1600, 1600, 'player').setScale(2);
-            game.sprites.player.setCollideWorldBounds(true);
-            if(this.walls) this.physics.add.collider(game.sprites.player, this.walls);
-            
-            this.cameras.main.startFollow(game.sprites.player);
-            this.cameras.main.setZoom(1.2); // Чуть меньше зум, чтобы видеть больше
+/* ---------------------------------------------------------
+   3. PHASER VISUALS
+   ---------------------------------------------------------
+*/
+class MainScene extends Phaser.Scene {
+    preload() {
+        const g = this.make.graphics();
 
-            // NPC
-            const npcs = [
-                {x: 1600, y: 1400, color: 0x00ffff}, 
-                {x: 1700, y: 1500, color: 0xff00ff}
-            ];
-            npcs.forEach(n => {
-                const s = this.physics.add.sprite(n.x, n.y, 'npc').setScale(2).setTint(n.color).setImmovable(true);
-                this.physics.add.collider(game.sprites.player, s);
-            });
+        // 1. Safe Zone Tile (Stone)
+        g.fillStyle(0x334155); g.fillRect(0,0,64,64); 
+        g.lineStyle(2, 0x475569); g.strokeRect(0,0,64,64);
+        g.fillStyle(0x1e293b); g.fillRect(4,4,26,26); g.fillRect(34,34,26,26);
+        g.generateTexture('tile_stone', 64, 64);
 
-            // Мобы
-            for(let i=0; i<15; i++) {
-                const x = Phaser.Math.Between(200, 2400);
-                const y = Phaser.Math.Between(200, 2400);
-                if(Phaser.Math.Distance.Between(x,y,1600,1600) > 400) { // Не в городе
-                    const m = this.physics.add.sprite(x, y, 'mob').setScale(2);
-                    game.sprites.mobs.push(m);
-                }
-            }
-            
-            // Деревья
-            const trees = this.physics.add.staticGroup();
-            for(let i=0; i<40; i++) {
-                const x = Phaser.Math.Between(100, 2500);
-                const y = Phaser.Math.Between(100, 2500);
-                if(Phaser.Math.Distance.Between(x,y,1600,1600) > 400) {
-                    const t = trees.create(x, y, 'tree').setScale(3);
-                    t.setDepth(y); // Y-Sort
-                    t.setSize(20, 20);
-                    t.setOffset(6, 20);
-                }
-            }
-            this.physics.add.collider(game.sprites.player, trees);
+        // 2. Field Tile (Dirt/Grass)
+        g.fillStyle(0x0f172a); g.fillRect(0,0,64,64);
+        g.fillStyle(0x1e293b); g.fillCircle(10,10,4); g.fillCircle(50,40,6); // dark patches
+        g.generateTexture('tile_field', 64, 64);
 
-            // Управление
-            this.input.on('pointerdown', (p) => {
+        // 3. Player
+        g.clear();
+        g.fillStyle(0xffffff); g.fillRect(8, 8, 16, 24); 
+        g.fillStyle(0xcbd5e1); g.fillRect(8, 0, 16, 16);
+        g.fillStyle(0x1e293b); g.fillRect(10, 4, 12, 4);
+        g.fillStyle(0x94a3b8); g.fillRect(26, 10, 4, 16); g.fillRect(24, 22, 8, 2);
+        g.generateTexture('player', 32, 32);
+
+        // 4. Mob
+        g.clear();
+        g.fillStyle(0xffffff); g.fillRect(4, 8, 24, 16);
+        g.fillRect(4, 24, 4, 8); g.fillRect(24, 24, 4, 8);
+        g.fillStyle(0x000000); g.fillRect(8, 12, 4, 4); g.fillRect(20, 12, 4, 4);
+        g.generateTexture('mob', 32, 32);
+
+        // 5. NPC
+        g.clear();
+        g.fillStyle(0x4ade80); g.fillRect(8, 8, 16, 24);
+        g.fillStyle(0xfcd34d); g.fillRect(8, 0, 16, 8); // Hat
+        g.generateTexture('npc', 32, 32);
+        
+        // 6. FX
+        g.clear(); g.fillStyle(0x60a5fa); g.fillRect(0,0,8,8);
+        g.generateTexture('fx_shot', 8, 8);
+    }
+
+    create() {
+        // World Setup
+        this.physics.world.setBounds(0, 0, 3000, 3000);
+        
+        // Visual Zones: Safe (Center) vs Field (Outer)
+        // Use a big TiledSprite for Field
+        this.add.tileSprite(1500, 1500, 3000, 3000, 'tile_field');
+        
+        // Safe Zone (Center 800x800)
+        const safeZoneSize = Config.WORLD.SAFE_ZONE_RADIUS * 2;
+        this.add.tileSprite(1500, 1500, safeZoneSize, safeZoneSize, 'tile_stone');
+        
+        // Safe Zone Border (Visual)
+        const border = this.add.graphics();
+        border.lineStyle(4, 0x6366f1, 0.5);
+        border.strokeRect(1500 - Config.WORLD.SAFE_ZONE_RADIUS, 1500 - Config.WORLD.SAFE_ZONE_RADIUS, safeZoneSize, safeZoneSize);
+        
+        // NPCs (Inside Safe Zone)
+        this.createNPC(1500, 1450, 'Merchant');
+        this.createNPC(1450, 1550, 'Gatekeeper');
+        this.createNPC(1550, 1550, 'Warehouse');
+
+        // Player
+        this.player = this.physics.add.sprite(1500, 1500, 'player');
+        this.player.setCollideWorldBounds(true);
+        this.player.setScale(1.5);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        this.cameras.main.setZoom(1.2);
+
+        // Groups
+        this.mobs = this.physics.add.group();
+        this.texts = this.add.group();
+
+        // Controls
+        this.input.on('pointerdown', (p) => {
+            if (!Game.logic.player.auto) {
                 const wp = this.cameras.main.getWorldPoint(p.x, p.y);
-                this.physics.moveTo(game.sprites.player, wp.x, wp.y, 220);
-                game.target = wp;
-            });
-        }
-        
-        update() {
-            const p = game.sprites.player;
-            if(!p) return;
-            p.setDepth(p.y); // Y-Sort
-            
-            if(game.target && Phaser.Math.Distance.Between(p.x, p.y, game.target.x, game.target.y) < 10) {
-                p.body.setVelocity(0); game.target = null;
+                this.physics.moveTo(this.player, wp.x, wp.y, 200);
+                this.targetPos = wp;
             }
-            
-            // Авто-фарм
-            if(game.p.autoFarm && !game.target) {
-                let t=null, min=400;
-                game.sprites.mobs.forEach(m=>{ 
-                    const d=Phaser.Math.Distance.Between(p.x,p.y,m.x,m.y); 
-                    if(d<min){min=d; t=m;} 
-                });
-                if(t) this.physics.moveTo(p, t.x, t.y, 220);
+        });
+
+        // Spawner loop
+        this.time.addEvent({ delay: 3000, callback: this.spawnMob, callbackScope: this, loop: true });
+        
+        // Initial mobs
+        for(let i=0; i<15; i++) this.spawnMob();
+    }
+
+    createNPC(x, y, name) {
+        const npc = this.add.sprite(x, y, 'npc').setScale(1.5);
+        this.add.text(x, y-30, name, { 
+            fontSize: 10, fontFamily: 'Inter', color: '#4ade80', backgroundColor: '#020617', padding: {x:4,y:2} 
+        }).setOrigin(0.5);
+    }
+
+    update() {
+        // Move Stop
+        if (this.targetPos && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.targetPos.x, this.targetPos.y) < 10) {
+            this.player.body.stop();
+            this.targetPos = null;
+        }
+
+        // Check Zone
+        const distToCenter = Phaser.Math.Distance.Between(this.player.x, this.player.y, 1500, 1500);
+        const isSafe = distToCenter < Config.WORLD.SAFE_ZONE_RADIUS;
+        Game.ui.updateZone(isSafe);
+
+        // Auto Hunt (Only if outside safe zone)
+        if (Game.logic.player.auto) {
+            if (isSafe) {
+                // If auto is on but we are safe -> Move OUT
+                // Simple AI: Move right until out
+                if (!this.targetPos) {
+                    this.physics.moveTo(this.player, 2000, 1500, 200);
+                    this.targetPos = new Phaser.Math.Vector2(2000, 1500);
+                }
+            } else {
+                this.doAutoHunt();
+            }
+        }
+
+        // Depth sort
+        this.player.setDepth(this.player.y);
+        this.mobs.children.iterate(m => { if(m && m.active) m.setDepth(m.y); });
+    }
+
+    spawnMob() {
+        if (this.mobs.countActive() >= 20) return;
+
+        // SAFE SPAWN LOGIC: Never spawn in Giran
+        let x, y, dist;
+        let attempts = 0;
+        do {
+            x = Phaser.Math.Between(200, 2800);
+            y = Phaser.Math.Between(200, 2800);
+            dist = Phaser.Math.Distance.Between(x, y, 1500, 1500);
+            attempts++;
+        } while (dist < (Config.WORLD.SAFE_ZONE_RADIUS + 100) && attempts < 50); // Buffer zone
+
+        if (attempts >= 50) return; // Failed to find spot
+
+        const mob = this.mobs.create(x, y, 'mob').setScale(1.5);
+        const types = Object.keys(Config.MOBS);
+        const type = types[Math.floor(Math.random() * types.length)];
+        const data = Config.MOBS[type];
+        
+        mob.setTint(data.color);
+        mob.setData('stats', { ...data, curHp: data.hp });
+        
+        const txt = this.add.text(x, y-30, `${data.name} Lv.${data.lvl}`, { 
+            fontSize: 10, fontFamily: 'Inter', color: '#f87171', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5);
+        mob.setData('label', txt);
+    }
+
+    doAutoHunt() {
+        let target = this.currentTarget;
+        if (!target || !target.active) {
+            target = this.physics.closest(this.player, this.mobs.getChildren());
+            this.currentTarget = target;
+        }
+
+        if (target) {
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
+            if (dist > 60) {
+                this.physics.moveToObject(this.player, target, 180);
+            } else {
+                this.player.body.stop();
+                this.attack(target);
             }
         }
     }
+
+    attack(target) {
+        if (this.isAttacking) return;
+        this.isAttacking = true;
+        this.tweens.add({
+            targets: this.player, x: target.x, y: target.y, duration: 80, yoyo: true,
+            onComplete: () => {
+                this.dealDamage(target);
+                setTimeout(() => this.isAttacking = false, 1000 / Game.logic.player.stats.atkSpd);
+            }
+        });
+    }
+
+    dealDamage(target) {
+        if (!target.active) return;
+        let dmg = Game.logic.player.stats.pAtk + Phaser.Math.Between(0, 5);
+        let crit = Math.random() < 0.15;
+        if (crit) dmg *= 2;
+
+        if (Game.logic.player.ss && Game.logic.player.inv['ssd'] > 0) {
+            dmg *= 2;
+            Game.logic.player.inv['ssd']--;
+            this.createFx(target.x, target.y);
+            if(Game.ui) Game.ui.updateHUD();
+        }
+
+        const stats = target.getData('stats');
+        stats.curHp -= dmg;
+        this.showDmg(target.x, target.y, Math.floor(dmg), crit);
+
+        if (stats.curHp <= 0) this.killMob(target, stats);
+    }
+
+    killMob(target, stats) {
+        Game.logic.player.exp += stats.exp;
+        const adena = Phaser.Math.Between(...stats.adena);
+        Game.logic.addItem('adena', adena);
+        Game.ui.log(`XP +${stats.exp} | Adena +${adena}`, 'gain');
+
+        if (Math.random() < 0.4) {
+            const dropId = stats.drop[0];
+            Game.logic.addItem(dropId, 1);
+            Game.ui.log(`Dropped: ${Config.ITEMS[dropId].name}`, 'drop');
+        }
+
+        if (Game.logic.player.exp >= Game.logic.player.maxExp) {
+            Game.logic.player.lvl++;
+            Game.logic.player.exp = 0;
+            Game.logic.recalc();
+            Game.logic.player.hp = Game.logic.player.maxHp;
+            Game.ui.log(`LEVEL UP! Now LV.${Game.logic.player.lvl}`, 'drop');
+        }
+
+        target.getData('label').destroy();
+        target.destroy();
+        this.currentTarget = null;
+        if(Game.ui) Game.ui.updateHUD();
+    }
+
+    showDmg(x, y, dmg, crit) {
+        const color = crit ? '#fbbf24' : '#ffffff';
+        const txt = this.add.text(x, y-20, dmg, { fontSize: crit ? '20px' : '14px', fontFamily: 'Courier New', fontStyle: 'bold', color: color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
+        this.tweens.add({ targets: txt, y: y-80, alpha: 0, duration: 1000, onComplete: () => txt.destroy() });
+    }
+
+    createFx(x, y) {
+        const fx = this.add.sprite(x, y, 'fx_shot');
+        this.tweens.add({ targets: fx, scale: 2.5, alpha: 0, angle: 180, duration: 300, onComplete: () => fx.destroy() });
+    }
+}
+
+/* ---------------------------------------------------------
+   4. MAIN CONTROLLER
+   ---------------------------------------------------------
+*/
+const Game = {
+    logic: null, ui: null, phaser: null, selectedClass: 'fighter',
+
+    selectClass(cls, btn) {
+        this.selectedClass = cls;
+        document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+        btn.classList.add('selected');
+    },
+
+    start() {
+        const name = document.getElementById('char-name').value || 'Stranger';
+        this.logic = new LogicSystem();
+        this.ui = {
+            updateHUD: () => {
+                const p = this.logic.player;
+                document.getElementById('ui-name').innerText = p.name;
+                document.getElementById('ui-lvl').innerText = `LV.${p.lvl}`;
+                document.getElementById('ui-adena').innerText = p.inv['adena'] || 0;
+                document.getElementById('ui-ss-count').innerText = p.inv['ssd'] || 0;
+                document.getElementById('bar-hp').style.width = `${(p.hp/p.maxHp)*100}%`;
+                document.getElementById('bar-exp').style.width = `${(p.exp/p.maxExp)*100}%`;
+            },
+            updateInv: () => {
+                const grid = document.getElementById('inv-grid');
+                grid.innerHTML = '';
+                Object.entries(this.logic.player.inv).forEach(([key, val]) => {
+                    if(key === 'adena') return;
+                    let itemDef, count;
+                    if (val.id) { itemDef = Config.ITEMS[val.id]; count = val.qty; }
+                    else { itemDef = Config.ITEMS[key]; count = val; }
+                    
+                    const el = document.createElement('div');
+                    el.className = `slot g-${itemDef.grade||'no'}`;
+                    el.innerHTML = `${itemDef.icon}<span class="count">${count>1?count:''}</span>`;
+                    el.onclick = () => { if (itemDef.type === 'gear') this.logic.equip(key); };
+                    grid.appendChild(el);
+                });
+                const eq = this.logic.player.equip;
+                document.getElementById('slot-weapon').innerHTML = eq.weapon ? Config.ITEMS[eq.weapon].icon : '<i class="fas fa-fist-raised opacity-20"></i>';
+                document.getElementById('slot-armor').innerHTML = eq.armor ? Config.ITEMS[eq.armor].icon : '<i class="fas fa-tshirt opacity-20"></i>';
+            },
+            updateZone: (safe) => {
+                const el = document.getElementById('ui-zone');
+                if (safe) {
+                    el.innerText = "SAFE ZONE";
+                    el.className = "zone-indicator zone-safe";
+                } else {
+                    el.innerText = "DANGER ZONE";
+                    el.className = "zone-indicator zone-danger";
+                }
+            },
+            log: (msg, type='sys') => {
+                const div = document.createElement('div');
+                div.className = `chat-msg c-${type}`;
+                div.innerText = msg;
+                const box = document.getElementById('hud-chat');
+                box.appendChild(div);
+                if (box.children.length > 8) box.firstChild.remove();
+            },
+            toggleModal: (id) => {
+                const modal = document.getElementById(`modal-${id}`);
+                const isHidden = modal.style.display !== 'flex';
+                document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+                if(isHidden) {
+                    modal.style.display = 'flex';
+                    if(id === 'inv') this.ui.updateInv();
+                }
+            },
+            closeModals: () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+        };
+
+        this.logic.init(name, this.selectedClass);
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('ui-layer').style.display = 'block';
+
+        const config = {
+            type: Phaser.AUTO, parent: 'phaser-container',
+            width: window.innerWidth, height: window.innerHeight,
+            backgroundColor: '#000', pixelArt: true,
+            physics: { default: 'arcade', arcade: { debug: false } },
+            scene: [MainScene]
+        };
+        this.phaser = new Phaser.Game(config);
+        this.ui.log(`Welcome to Giran, ${name}!`, 'sys');
+    },
+
+    toggleAuto() {
+        this.logic.player.auto = !this.logic.player.auto;
+        document.getElementById('btn-auto').classList.toggle('active');
+    },
+    toggleSS() {
+        this.logic.player.ss = !this.logic.player.ss;
+        document.getElementById('btn-ss').classList.toggle('active');
+    }
+};
+
+window.Game = Game;
+window.addEventListener('resize', () => { if(Game.phaser) Game.phaser.scale.resize(window.innerWidth, window.innerHeight); });
 </script>
+
 </body>
 </html>
 
