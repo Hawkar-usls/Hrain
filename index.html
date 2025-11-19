@@ -1,1 +1,224 @@
-Trying to simulate physics on ''/Game/MyTrash/MyMap/UEDPIE_0_HOD_MAP.HOD_MAP:PersistentLevel.BP_Enemy_Ant2_C_UAID_00D861D8414380A302_1673786162.CharacterMesh0'' but it has ComplexAsSimple collision.
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Pocket L2 • Idle Lineage 2 2025</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+    body,html{margin:0;height:100%;overflow:hidden;background:#0a001f;font-family:system-ui;color:#fff}
+    #game{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:radial-gradient(circle at center,#2a0066,#0a001f)}
+    h1{font-size:3.5rem;text-shadow:0 0 30px #ff00ff;margin-bottom:2rem}
+    #stats{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.8);padding:12px 20px;border-radius:12px;z-index:10;font-size:14px;border:1px solid #444}
+    .bar{width:200px;height:16px;background:#111;border:1px solid #555;border-radius:8px;overflow:hidden;margin:6px 0}
+    .fill{height:100%;transition:width .3s}
+    #skills{position:absolute;bottom:20px;left:20px;display:flex;gap:10px;z-index:10}
+    .skill-btn{width:70px;height:70px;border-radius:50%;border:3px solid #fff;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:rgba(0,0,0,0.6)}
+    .skill-btn.cd{opacity:0.4;pointer-events:none}
+    .skill-btn:hover{transform:scale(1.15);box-shadow:0 0 30px #fff}
+    .skill-name{font-size:10px;margin-top:4px}
+    #particles{position:absolute;inset:0;pointer-events:none}
+    #equip-btn{position:absolute;top:80px;left:20px;background:#1e40af;padding:10px 16px;border-radius:8px;cursor:pointer;z-index:10}
+    #equip{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:20;align-items:center;justify-content:center;flex-direction:column}
+    #equip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px}
+    .slot{width:90px;height:90px;border:3px dashed #666;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px;cursor:pointer;transition:all .3s}
+    .slot.filled{border:3px solid #f59e0b;background:#1f2937}
+    @keyframes p{to{transform:translate(-50%,-50%) translateY(-140px);opacity:0}}
+    @keyframes lvl{0%,100%{transform:scale(1)}50%{transform:scale(2.5);text-shadow:0 0 80px gold}}
+    @keyframes heal{0%{transform:scale(1)}50%{transform:scale(2)}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div id="game">
+    <h1 class="animate-pulse">Pocket L2</h1>
+    <div id="stats">
+        <div id="pname" class="font-bold text-yellow-300 text-lg"></div>
+        <div>Ур <span id="lvl">1</span> • EXP <span id="exp">0</span>/<span id="need">100</span></div>
+        <div class="bar"><div id="hp" class="fill bg-red-600 w-full"></div></div>
+        <div class="bar"><div id="mp" class="fill bg-blue-600 w-full"></div></div>
+        <div class="bar"><div id="xp" class="fill bg-green-500" style="width:0%"></div></div>
+        <div>Золото <span id="gold" class="text-yellow-400 font-bold">0</span></div>
+        <div id="gear-bonus" class="text-xs mt-2 text-cyan-300">Экип: +0 всё</div>
+    </div>
+
+    <svg id="c" width="100%" height="100%"></svg>
+    <div id="particles"></div>
+
+    <div id="skills"></div>
+    <div id="equip-btn" onclick="toggleEquip()">Экипировка</div>
+
+    <div id="equip">
+        <h2 class="text-4xl mb-8 text-yellow-400">Экипировка</h2>
+        <div id="equip-grid"></div>
+        <button onclick="toggleEquip()" class="mt-8 px-12 py-4 bg-red-700 rounded-xl text-xl hover:bg-red-600">Закрыть</button>
+    </div>
+</div>
+
+<audio id="hit" src="https://cdn.freesound.org/previews/657/657370_5674468-lq.mp3" preload="auto"></audio>
+
+<script>
+// === КЛАССЫ И СКИЛЛЫ ===
+const CLASSES = {
+    warrior: { name: "Воин", color: "#dc2626", hp: 220, mp: 90, atk: 18,
+        skills: [
+            {name:"Смертельный Удар",dmg:3.2,mp:20,cd:2200,aoe:false,color:"#ff4444"},
+            {name:"Размашистый Удар",dmg:3.8,mp:32,cd:4000,aoe:true,color:"#ff8800"},
+            {name:"Удар Щитом",heal:0.5,mp:25,cd:5000,color:"#44ff44"}
+        ]
+    },
+    mage: { name: "Маг", color: "#8b5cf6", hp: 120, mp: 180, atk: 22,
+        skills: [
+            {name:"Огненный Шар",dmg:3.5,mp:25,cd:2000,aoe:false,color:"#ff4444"},
+            {name:"Ледяное Копьё",dmg:4.2,mp:40,cd:4500,aoe:true,color:"#4444ff"},
+            {name:"Метеорит",heal:0.6,mp:38,cd:7000,color:"#44ff44"}
+        ]
+    },
+    archer: { name: "Лучник", color: "#10b981", hp: 160, mp: 120, atk: 16,
+        skills: [
+            {name:"Пронзающий",dmg:3.0,mp:18,cd:1800,aoe:false,color:"#ff4444"},
+            {name:"Залп",dmg:3.4,mp:28,cd:3500,aoe:true,color:"#ff8800"},
+            {name:"Орлиный Глаз",heal:0.45,mp:22,cd:4500,color:"#44ff44"}
+        ]
+    }
+};
+
+let p = { name: "Герой", cls: "warrior", x: 0, y: 0, level: 1, exp: 0, gold: 0, atk: 18, hp: 220, maxHp: 220, mp: 90, maxMp: 90 };
+let mobs = [], pool = [], cooldowns = {}, equipment = {}, gearBonus = {atk:0,hp:0,mp:0};
+let svg, w, h;
+
+// === СТАРТ ===
+function startGame() {
+    const cls = prompt("Выбери класс:\n1 — Воин ⚔️\n2 — Маг 🔮\n3 — Лучник 🏹", "1");
+    p.cls = ["warrior","mage","archer"][cls-1] || "warrior";
+    p.name = prompt("Введите имя героя:", "Герой") || "Герой";
+    const c = CLASSES[p.cls];
+    Object.assign(p, {color: c.color, hp: c.hp, maxHp: c.hp, mp: c.mp, maxMp: c.mp, atk: c.atk});
+
+    document.getElementById('pname').textContent = `${p.name} [${c.name}]`;
+    init();
+}
+
+function init() {
+    w = innerWidth; h = innerHeight;
+    svg = d3.select('#c').attr('width', w).attr('height', h);
+    svg.append('rect').attr('width', w).attr('height', h).attr('fill', '#0f001f');
+
+    const pg = svg.append('g').attr('class','player')
+        .attr('transform', `translate(${w/2},${h/2})`);
+    pg.append('circle').attr('r',25).attr('fill',p.color).attr('stroke','#fff').attr('stroke-width',5);
+    pg.append('text').attr('y',50).attr('text-anchor','middle').attr('fill','#fff').text(p.name);
+
+    svg.on('click', e => {
+        const [x,y] = d3.pointer(e);
+        p.x = x; p.y = y;
+        d3.select('.player').transition().duration(400).attr('transform',`translate(${x},${y})`);
+    });
+
+    // Скиллбар
+    const skillsDiv = document.getElementById('skills');
+    CLASSES[p.cls].skills.forEach((s,i) => {
+        const btn = document.createElement('div');
+        btn.className = 'skill-btn';
+        btn.innerHTML = `${i===2?'Heart':i===1?'Explosion':'Swords'}<div class="skill-name">${s.name}</div>`;
+        btn.style.background = i<2 ? s.color : '#10b981';
+        btn.onclick = () => useSkill(i);
+        skillsDiv.appendChild(btn);
+    });
+
+    // Экипировка
+    const slots = ['weapon','helmet','armor','gloves','boots','necklace','ring1','ring2'];
+    const grid = document.getElementById('equip-grid');
+    slots.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'slot';
+        div.innerHTML = s.includes('ring')||s==='necklace'?'Ring':s==='weapon'?'Sword':s==='helmet'?'HardHat':'Shield';
+        div.onclick = () => buyGear(s);
+        grid.appendChild(div);
+    });
+
+    for(let i=0;i<10;i++) spawnMob();
+    requestAnimationFrame(loop);
+}
+
+function useSkill(idx) {
+    const skill = CLASSES[p.cls].skills[idx];
+    if (p.mp < skill.mp || cooldowns[idx]) return;
+    p.mp -= skill.mp;
+    cooldowns[idx] = skill.cd || 3000;
+    document.querySelectorAll('.skill-btn')[idx].classList.add('cd');
+
+    if (skill.heal) {
+        p.hp = Math.min(p.maxHp, p.hp + p.maxHp * skill.heal);
+        createEffect(p.x, p.y, 'heal');
+    } else {
+        mobs.forEach(m => {
+            const d = Math.hypot(m.x-p.x, m.y-p.y);
+            if (d < (skill.aoe?300:180)) {
+                m.hp -= p.atk * skill.dmg * (1 + gearBonus.atk/100);
+                createParticles(m.x, m.y, skill.color);
+                if (skill.aoe) createEffect(m.x, m.y, 'aoe');
+            }
+        });
+    }
+
+    setTimeout(() => { cooldowns[idx] = 0; document.querySelectorAll('.skill-btn')[idx].classList.remove('cd'); }, skill.cd || 3000);
+}
+
+function buyGear(slot) {
+    const cost = 150 + Math.random()*600|0;
+    if (p.gold < cost) return alert("Не хватает золота!");
+    p.gold -= cost;
+    const enchant = 1 + Math.floor(Math.random()*5);
+    equipment[slot] = {enchant, bonus: {atk:5,hp:30,mp:20}};
+    updateGear();
+    alert(`+${enchant} ${slot} за ${cost} золота!`);
+}
+
+function updateGear() {
+    gearBonus = {atk:0,hp:0,mp:0};
+    Object.values(equipment).forEach(it => {
+        const mul = 1 + it.enchant*0.25;
+        gearBonus.atk += 5*mul; gearBonus.hp += 30*mul; gearBonus.mp += 20*mul;
+    });
+    p.maxHp = CLASSES[p.cls].hp + gearBonus.hp + p.level*40;
+    p.maxMp = CLASSES[p.cls].mp + gearBonus.mp + p.level*25;
+    p.atk = CLASSES[p.cls].atk + gearBonus.atk + p.level*4;
+    p.hp = p.maxHp; p.mp = p.maxMp;
+    document.getElementById('gear-bonus').textContent = `Экип: +${gearBonus.atk.toFixed(0)} ATK | +${gearBonus.hp.toFixed(0)} HP`;
+    renderEquipSlots();
+}
+
+function renderEquipSlots() {
+    document.querySelectorAll('.slot').forEach((s,i) => {
+        const slot = ['weapon','helmet','armor','gloves','boots','necklace','ring1',' vestibular'][i];
+        if (equipment[slot]) {
+            s.classList.add('filled');
+            s.innerHTML += `<div style="position:absolute;top:4px;right:8px;font-size:14px;color:gold">+${equipment[slot].enchant}</div>`;
+        }
+    });
+}
+
+function toggleEquip() {
+    const e = document.getElementById('equip');
+    e.style.display = e.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function spawnMob() {
+    const g = pool.length ? pool.pop() : svg.append('g');
+    const a = Math.random()*Math.PI*2;
+    const d = 350 + Math.random()*500;
+    const x = innerWidth/2 + Math.cos(a)*d;
+    const y = innerHeight/2 + Math.sin(a)*d;
+    g.attr('transform',`translate(${x},${y})`).style('display','');
+    if (!g.select('circle').node()) {
+        g.append('circle').attr('r',18).attr('fill','#7f1d1d').attr('stroke','#dc2626').attr('stroke-width',4);
+    }
+    mobs.push({g, x, y, hp: 80 + p.level*25});
+}
+
+function createParticles(x,y,color='#fff',c=15) {
+    for(let i=0;i<c;i++) {
+        const el = document.createElement('div');
+        el.style.cssText = `position:absolute;left:${x}px;top:${y
