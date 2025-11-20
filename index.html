@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN: Perfect Balance</title>
+    <title>HRAIN: Final</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -232,7 +232,7 @@
 
     // DATA
     function loadData() {
-        const saved = localStorage.getItem('hrain_v20_perfect');
+        const saved = localStorage.getItem('hrain_v21_final');
         if (saved) { try { return JSON.parse(saved); } catch (e) { return null; } }
         return null;
     }
@@ -283,17 +283,16 @@
         if(navigator.vibrate) navigator.vibrate(50);
     }
 
-    // PHYSICS (STABLE ZERO-G)
+    // PHYSICS (STABLE)
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(160))
         .force("charge", d3.forceManyBody().strength(-450))
         .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 50) + 20).iterations(2))
-        // Гравитация к центру, а не жесткий центр. Это предотвращает прыжки.
         .force("x", d3.forceX(width / 2).strength(0.015)) 
         .force("y", d3.forceY(height / 2).strength(0.015))
         .alphaDecay(0.05);
 
-    // BUTTON LOGIC
+    // === BUTTON LOGIC (FIXED BUG) ===
     const mainBtn = document.getElementById('main-btn');
     const deleteHint = document.getElementById('delete-hint');
     let pressTimer, isLongPress = false, isTouchAction = false;
@@ -306,7 +305,11 @@
             mainBtn.classList.add('holding-delete');
             deleteHint.classList.add('visible');
             tryVibrate(50);
-            pressTimer = setTimeout(() => { isLongPress = true; deleteSelectedNode(); tryVibrate([50,50]); }, 800);
+            pressTimer = setTimeout(() => { 
+                isLongPress = true; 
+                deleteSelectedNode(); 
+                tryVibrate([50,50]); 
+            }, 800);
         } else mainBtn.style.transform = "translateX(-50%) scale(0.9)";
     }
     
@@ -314,7 +317,19 @@
         if (e.type === 'mouseup' && isTouchAction) { isTouchAction = false; return; }
         clearTimeout(pressTimer);
         mainBtn.classList.remove('holding-delete'); deleteHint.classList.remove('visible'); mainBtn.style.transform = "";
-        if (selectedNode) { if (!isLongPress) openRename(); } else createNewNode();
+        
+        // === FIX LOGIC START ===
+        if (isLongPress) {
+            isLongPress = false;
+            return; // Если было долгое нажатие (удаление), ничего больше не делаем
+        }
+        // === FIX LOGIC END ===
+
+        if (selectedNode) { 
+             openRename(); 
+        } else { 
+             createNewNode(); 
+        }
         isLongPress = false;
     }
     mainBtn.addEventListener('mousedown', handleBtnStart); 
@@ -326,17 +341,15 @@
     function updateButtonState() { mainBtn.className = "ui-element " + (selectedNode ? "mode-edit" : "mode-add"); }
     function deselectNode() { selectedNode = null; updateButtonState(); updateTopology(); }
 
-    // CREATION (No Camera Jump)
+    // CREATION
     function createNewNode() {
         const t = d3.zoomTransform(svg.node());
         let x, y;
         if (selectedNode) {
-            // Sprout Logic (Отпочковывание)
             const angle = Math.random() * Math.PI * 2;
             x = selectedNode.x + Math.cos(angle) * 80;
             y = selectedNode.y + Math.sin(angle) * 80;
         } else {
-            // Center Logic
             x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
         }
 
@@ -345,7 +358,7 @@
         if (selectedNode) links.push({ source: selectedNode.id, target: newNode.id });
 
         selectedNode = newNode; 
-        updateButtonState(); updateTopology(0.3); saveData(); // 0.3 alpha для мягкого старта
+        updateButtonState(); updateTopology(0.3); saveData(); 
         tryVibrate(20); setTimeout(openRename, 50);
     }
     
@@ -353,7 +366,9 @@
         if(!selectedNode) return;
         nodes = nodes.filter(n => n.id !== selectedNode.id);
         links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
-        selectedNode = null; updateButtonState(); updateTopology(); saveData();
+        // IMPORTANT: selectedNode must be cleared for button logic to work correctly
+        selectedNode = null; 
+        updateButtonState(); updateTopology(); saveData();
     }
 
     // MODALS
@@ -379,7 +394,7 @@
         d3.selectAll(".node-group").transition().duration(500)
             .attr("transform", d => `translate(${d.x},${d.y}) scale(0)`).style("opacity", 0)
             .on("end", () => {
-                localStorage.removeItem('hrain_v20_perfect');
+                localStorage.removeItem('hrain_v21_final');
                 nodes = [ { id: Date.now(), label: "Core", x: width/2, y: height/2 } ];
                 links = [];
                 selectedNode = null;
@@ -387,26 +402,15 @@
             });
     }
 
-    // === INTERACTIONS (Classic Click-to-Connect) ===
+    // INTERACTIONS
     function handleNodeClick(event, d) {
         if (event.defaultPrevented) return;
-        
-        if (!selectedNode) { 
-            selectedNode = d; 
-            tryVibrate(15); 
-        } else if (selectedNode === d) { 
-            selectedNode = null; // Deselect self
-        } else {
-            // Connection Logic
+        if (!selectedNode) { selectedNode = d; tryVibrate(15); }
+        else if (selectedNode === d) { selectedNode = null; }
+        else {
             const exists = links.some(l => (l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id));
-            if(!exists) { 
-                links.push({ source: selectedNode.id, target: d.id }); 
-                animateImpulse(selectedNode, d); 
-                tryVibrate(30); 
-            } else { 
-                links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); 
-                tryVibrate([10,10]); 
-            }
+            if(!exists) { links.push({ source: selectedNode.id, target: d.id }); animateImpulse(selectedNode, d); tryVibrate(30); }
+            else { links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); tryVibrate([10,10]); }
             selectedNode = null; saveData();
         }
         updateButtonState(); updateTopology();
@@ -417,7 +421,7 @@
         impulse.transition().duration(500).ease(d3.easeQuadInOut).attr("cx", target.x).attr("cy", target.y).on("end", function() { d3.select(this).remove(); });
     }
 
-    // === TOPOLOGY LOOP ===
+    // TOPOLOGY
     function updateTopology(targetAlpha = 0.5) {
         nodes.forEach(node => {
             const connections = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id).length;
@@ -458,7 +462,6 @@
         simulation.alpha(targetAlpha).restart();
     }
 
-    // === VISUAL LOOP ===
     function animateVisuals() {
         d3.selectAll(".node-group").each(function(d) {
             if (!d.phase) d.phase = Math.random() * Math.PI * 2;
@@ -481,7 +484,7 @@
     function saveData() {
         const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
         const cleanLinks = links.map(l => ({ source: l.source.id||l.source, target: l.target.id||l.target }));
-        localStorage.setItem('hrain_v20_perfect', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
+        localStorage.setItem('hrain_v21_final', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
     }
 
     updateButtonState(); updateTopology();
