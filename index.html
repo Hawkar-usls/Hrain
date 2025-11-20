@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>HRAIN v2.3 (Mind Fix)</title>
+    <title>HRAIN v2.4 (One Button)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
@@ -13,7 +13,7 @@
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #f4f7f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
             overscroll-behavior: none;
         }
@@ -22,32 +22,45 @@
             position: absolute; top: 50px; left: 20px;
             font-size: 1.5rem; font-weight: 800; color: #333;
             pointer-events: none; z-index: 10; opacity: 0.8;
-            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
         }
-        
-        /* === НОВАЯ КНОПКА "+" (Красивая) === */
-        #add-btn {
+
+        /* === УМНАЯ КНОПКА === */
+        #main-btn {
             position: absolute;
             bottom: 40px; left: 50%;
             transform: translateX(-50%);
             width: 70px; height: 70px;
-            /* Градиент */
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border-radius: 50%; border: none;
-            font-size: 36px; font-weight: 300;
-            /* Тень с цветом */
-            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
+            font-size: 32px; color: white;
             z-index: 100; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             -webkit-tap-highlight-color: transparent;
-        }
-        #add-btn:active { 
-            transform: translateX(-50%) scale(0.85); 
-            box-shadow: 0 2px 10px rgba(118, 75, 162, 0.3);
+            /* Запрет выделения чтобы long-press работал корректно */
+            user-select: none; 
         }
 
+        /* Состояние 1: Добавить (Синий/Фиолетовый) */
+        #main-btn.mode-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* Состояние 2: Редактировать (Оранжевый) */
+        #main-btn.mode-edit {
+            background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+            box-shadow: 0 10px 25px rgba(255, 94, 98, 0.4);
+            transform: translateX(-50%) rotate(360deg); /* Крутой эффект поворота при смене */
+        }
+
+        /* Состояние 3: Удаление (Красный при удержании) */
+        #main-btn.holding-delete {
+            background: #dc2626;
+            transform: translateX(-50%) scale(1.2);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
+        }
+
+        /* Кнопка сброса */
         #reset-btn {
             position: absolute; top: 55px; right: 20px;
             font-size: 0.8rem; color: #888; background: rgba(255,255,255,0.5); 
@@ -56,56 +69,58 @@
         }
 
         #chart { width: 100%; height: 100%; touch-action: none; }
+        
         line.link { stroke: #b0b8c0; stroke-width: 2px; opacity: 0.6; }
         
         circle.node {
             fill: #ffffff; stroke: #333; stroke-width: 2px;
             transition: fill 0.2s, stroke 0.2s;
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.1));
         }
-        circle.node.selected { fill: #ffe082; stroke: #ffb300; stroke-width: 4px; }
+        /* Подсветка выбранного узла */
+        circle.node.selected { 
+            fill: #fff3e0; 
+            stroke: #ff5e62; /* Цвет под карандаш */
+            stroke-width: 4px; 
+        }
         
         text.label {
             font-size: 14px; fill: #222; pointer-events: none;
             text-anchor: middle; font-weight: 600;
-            font-family: "Segoe UI", Roboto, sans-serif;
-            paint-order: stroke; stroke: #f4f7f6; stroke-width: 3px; stroke-linecap: round; stroke-linejoin: round;
+            paint-order: stroke; stroke: #f4f7f6; stroke-width: 3px;
         }
 
-        /* Модальные окна */
+        /* Модальное окно переименования */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); z-index: 1000; display: none;
+            background: rgba(0,0,0,0.3); z-index: 2000; display: none;
             align-items: center; justify-content: center; backdrop-filter: blur(4px);
-            transition: opacity 0.2s;
         }
         .modal-content {
             background: white; width: 280px; border-radius: 24px; padding: 24px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center;
-            display: flex; flex-direction: column; gap: 12px;
-            transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-backdrop.active .modal-content { transform: scale(1); }
-        
-        h3 { margin: 0 0 5px 0; font-size: 1.3rem; color: #333; }
-        
-        .menu-btn {
-            padding: 14px; border: none; border-radius: 16px;
-            font-size: 1.1rem; font-weight: 500; cursor: pointer; width: 100%;
-            transition: background 0.2s;
-        }
-        .btn-edit { background: #eef2ff; color: #4f46e5; }
-        .btn-delete { background: #fef2f2; color: #dc2626; }
-        .btn-cancel { background: #f4f4f5; color: #71717a; margin-top: 5px;}
-        .btn-save { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 10px; }
-
         #rename-input {
-            font-size: 1.2rem; padding: 12px;
+            font-size: 1.2rem; padding: 12px; margin-bottom: 15px;
             border: 2px solid #e4e4e7; border-radius: 12px;
-            text-align: center; width: 100%; box-sizing: border-box;
-            outline: none; background: #fafafa;
+            text-align: center; width: 100%; box-sizing: border-box; outline: none;
         }
-        #rename-input:focus { border-color: #667eea; background: #fff; }
+        #rename-input:focus { border-color: #ff9966; }
+        
+        .modal-btn {
+            padding: 12px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 5px;
+        }
+        .btn-save { background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); color: white; }
+        .btn-cancel { background: #f4f4f5; color: #71717a; }
+
+        /* Индикатор удаления (текст над кнопкой) */
+        #delete-hint {
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 8px 16px;
+            border-radius: 20px; font-size: 0.9rem; pointer-events: none;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        #delete-hint.visible { opacity: 1; }
 
     </style>
 </head>
@@ -114,52 +129,40 @@
     <div id="logo">🧠 HRAIN</div>
     <button id="reset-btn" onclick="clearAllData()">Сброс</button>
     
-    <button id="add-btn" onclick="createNewNodeWithDelay()">+</button>
+    <div id="delete-hint">Удерживай для удаления</div>
 
-    <div id="action-menu-backdrop" class="modal-backdrop" onclick="if(event.target === this) closeMenu()">
-        <div class="modal-content">
-            <h3 id="menu-title">Действия</h3>
-            <button class="menu-btn btn-edit" onclick="switchToRename()">✏️ Переименовать</button>
-            <button class="menu-btn btn-delete" onclick="deleteCurrentNode()">🗑️ Удалить</button>
-            <button class="menu-btn btn-cancel" onclick="closeMenu()">Отмена</button>
-        </div>
-    </div>
+    <button id="main-btn" class="mode-add">+</button>
 
-    <div id="rename-modal-backdrop" class="modal-backdrop">
+    <div id="rename-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3>Имя Mind</h3>
+            <h3 style="margin-top:0; color:#333;">Новое имя</h3>
             <input type="text" id="rename-input" placeholder="Название">
-            <button class="menu-btn btn-save" onclick="saveRename()">Сохранить</button>
-            <button class="menu-btn btn-cancel" onclick="closeRenameModal()">Отмена</button>
+            <button class="modal-btn btn-save" onclick="saveRename()">Сохранить</button>
+            <button class="modal-btn btn-cancel" onclick="closeRename()">Отмена</button>
         </div>
     </div>
 
     <div id="chart"></div>
 
 <script>
-    // === 0. ЗАГРУЗКА ===
+    // === 0. ДАННЫЕ ===
     function loadData() {
-        const saved = localStorage.getItem('hrain_d3_v2');
-        if (saved) {
-            try { return JSON.parse(saved); } catch (e) { return null; }
-        }
+        const saved = localStorage.getItem('hrain_d3_v3');
+        if (saved) { try { return JSON.parse(saved); } catch (e) { return null; } }
         return null;
     }
     const initialData = loadData() || {
         nodes: [ { id: 1, label: "Mind", x: window.innerWidth/2, y: window.innerHeight/2 } ],
         links: []
     };
-
     let nodes = initialData.nodes;
     let links = initialData.links;
 
-    // === 1. НАСТРОЙКИ ===
+    // === 1. D3 SETUP ===
     const width = window.innerWidth;
     const height = window.innerHeight;
-    let selectedNode = null;
-    let activeMenuNode = null; // Узел, с которым мы работаем в меню
-    let longPressTimer;
-
+    let selectedNode = null; // Текущий выбранный узел
+    
     const svg = d3.select("#chart").append("svg")
         .attr("width", width).attr("height", height)
         .attr("viewBox", [0, 0, width, height]);
@@ -169,39 +172,175 @@
     const nodeGroup = g.append("g").attr("class", "nodes");
     const textGroup = g.append("g").attr("class", "texts");
 
+    // Клик по фону сбрасывает выделение
     const zoom = d3.zoom().scaleExtent([0.2, 5]).on("zoom", (event) => g.attr("transform", event.transform));
-    svg.call(zoom).on("dblclick.zoom", null);
+    
+    svg.call(zoom)
+       .on("dblclick.zoom", null)
+       .on("click", (event) => {
+           if (event.target.tagName === 'svg') {
+               deselectNode();
+           }
+       });
 
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(130))
         .force("charge", d3.forceManyBody().strength(-400))
         .force("collide", d3.forceCollide().radius(d => (d.radius || 30) + 10).iterations(2));
 
-    // === 2. ЛОГИКА ДАННЫХ ===
-    function saveData() {
-        const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
-        const cleanLinks = links.map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target }));
-        localStorage.setItem('hrain_d3_v2', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
-    }
-    function clearAllData() {
-        if(confirm("Сбросить всё?")) { localStorage.removeItem('hrain_d3_v2'); location.reload(); }
+    // === 2. УПРАВЛЕНИЕ КНОПКОЙ (ГЛАВНАЯ ЛОГИКА) ===
+    const mainBtn = document.getElementById('main-btn');
+    const deleteHint = document.getElementById('delete-hint');
+    let pressTimer;
+    let isLongPress = false;
+
+    // Обработчики нажатия на кнопку
+    function handleBtnDown(e) {
+        if (selectedNode) {
+            // Если узел выбран -> Режим КАРАНДАШ
+            e.preventDefault(); // Чтобы не сработал клик сразу
+            isLongPress = false;
+            
+            // Запускаем таймер удаления
+            mainBtn.classList.add('holding-delete'); // Анимация покраснения
+            deleteHint.classList.add('visible');
+            
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                deleteSelectedNode();
+                if (navigator.vibrate) navigator.vibrate(100);
+            }, 800); // 0.8 сек удержание = удаление
+        } else {
+            // Если узел не выбран -> Режим ПЛЮС
+            mainBtn.style.transform = "translateX(-50%) scale(0.9)";
+        }
     }
 
-    // === НОВАЯ ФУНКЦИЯ С ЗАДЕРЖКОЙ ===
-    function createNewNodeWithDelay() {
-        const btn = document.getElementById('add-btn');
-        // Визуальный эффект уже есть в CSS :active, но добавим логическую паузу
-        setTimeout(() => {
-            createNewNode();
-        }, 150); // 150мс задержка перед появлением
+    function handleBtnUp(e) {
+        // Очищаем таймер
+        clearTimeout(pressTimer);
+        mainBtn.classList.remove('holding-delete');
+        deleteHint.classList.remove('visible');
+        mainBtn.style.transform = "";
+
+        if (selectedNode) {
+            // Логика Карандаша
+            if (!isLongPress) {
+                // Короткое нажатие -> Переименовать
+                openRename();
+            }
+        } else {
+            // Логика Плюса
+            // Создаем ноду с микро-задержкой
+            setTimeout(createNewNode, 100);
+        }
+        isLongPress = false;
+    }
+
+    // Привязываем события (поддержка и Touch и Mouse)
+    mainBtn.addEventListener('mousedown', handleBtnDown);
+    mainBtn.addEventListener('touchstart', handleBtnDown, {passive: false});
+    
+    mainBtn.addEventListener('mouseup', handleBtnUp);
+    mainBtn.addEventListener('touchend', (e) => {
+        e.preventDefault(); // Важно для iOS
+        handleBtnUp(e);
+    });
+
+    // Функция обновления вида кнопки
+    function updateButtonState() {
+        if (selectedNode) {
+            mainBtn.textContent = "✎";
+            mainBtn.className = "mode-edit";
+        } else {
+            mainBtn.textContent = "+";
+            mainBtn.className = "mode-add";
+        }
+    }
+
+    // === 3. ФУНКЦИИ ДЕЙСТВИЙ ===
+
+    function deselectNode() {
+        selectedNode = null;
+        updateButtonState();
+        update();
     }
 
     function createNewNode() {
         const transform = d3.zoomTransform(svg.node());
         const x = (width / 2 - transform.x) / transform.k;
         const y = (height / 2 - transform.y) / transform.k;
-        nodes.push({ id: Date.now(), label: "Mind", x: x, y: y }); // Заменили "Идея" на "Mind"
+        nodes.push({ id: Date.now(), label: "Mind", x: x, y: y });
         update(); saveData();
+    }
+
+    function deleteSelectedNode() {
+        if (!selectedNode) return;
+        
+        // Удаляем
+        nodes = nodes.filter(n => n.id !== selectedNode.id);
+        links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
+        
+        selectedNode = null;
+        updateButtonState();
+        update();
+        saveData();
+    }
+
+    // === ПЕРЕИМЕНОВАНИЕ ===
+    const renameModal = document.getElementById('rename-modal');
+    const renameInput = document.getElementById('rename-input');
+
+    function openRename() {
+        if (!selectedNode) return;
+        renameInput.value = selectedNode.label;
+        renameModal.style.display = 'flex';
+        // Фокус с задержкой для клавиатуры iOS
+        setTimeout(() => renameInput.focus(), 100);
+    }
+
+    function closeRename() {
+        renameModal.style.display = 'none';
+    }
+
+    function saveRename() {
+        if (selectedNode && renameInput.value) {
+            selectedNode.label = renameInput.value;
+            update(); saveData();
+        }
+        closeRename();
+    }
+
+    // === D3 ЛОГИКА ===
+
+    function handleNodeClick(event, d) {
+        if (event.defaultPrevented) return; // Если тащили
+
+        if (selectedNode === null) {
+            // Выбор первого узла
+            selectedNode = d;
+        } else if (selectedNode === d) {
+            // Тапнули по уже выбранному -> снять выбор
+            selectedNode = null;
+        } else {
+            // Тапнули по другому -> СВЯЗАТЬ
+            const exists = links.some(l => 
+                (l.source.id === selectedNode.id && l.target.id === d.id) ||
+                (l.source.id === d.id && l.target.id === selectedNode.id)
+            );
+            if (!exists) { links.push({ source: selectedNode.id, target: d.id }); }
+            else {
+                links = links.filter(l => 
+                    !((l.source.id === selectedNode.id && l.target.id === d.id) ||
+                      (l.source.id === d.id && l.target.id === selectedNode.id))
+                );
+            }
+            // После связи сбрасываем выбор, чтобы кнопка вернулась в "+"
+            selectedNode = null;
+            saveData();
+        }
+        updateButtonState(); // ВАЖНО: Обновить кнопку
+        update();
     }
 
     function update() {
@@ -217,18 +356,19 @@
 
         const node = nodeGroup.selectAll("circle").data(nodes, d => d.id);
         node.exit().transition().duration(300).attr("r", 0).remove();
+        
         const nodeEnter = node.enter().append("circle")
             .attr("class", "node")
             .attr("r", 0)
             .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
-            .on("touchstart", handleTouchStart)
-            .on("touchend", handleTouchEnd)
             .on("click", handleNodeClick);
+
         const allNodes = nodeEnter.merge(node);
         
-        allNodes.transition().duration(300)
-            .attr("r", d => d.radius)
-            .attr("class", d => d === selectedNode ? "node selected" : "node");
+        // Обновляем классы для подсветки
+        allNodes.attr("class", d => d === selectedNode ? "node selected" : "node")
+                .transition().duration(300)
+                .attr("r", d => d.radius);
 
         const text = textGroup.selectAll("text").data(nodes, d => d.id);
         text.exit().remove();
@@ -246,114 +386,9 @@
         simulation.alpha(0.5).restart();
     }
 
-    // === 3. ВЗАИМОДЕЙСТВИЕ ===
-
-    function handleTouchStart(event, d) {
-        longPressTimer = setTimeout(() => openMenu(d), 500);
-    }
-    function handleTouchEnd(event, d) {
-        if (longPressTimer) clearTimeout(longPressTimer);
-    }
-
-    function handleNodeClick(event, d) {
-        if (event.defaultPrevented) return;
-        if (selectedNode === null) {
-            selectedNode = d;
-        } else if (selectedNode === d) {
-            selectedNode = null;
-        } else {
-            const exists = links.some(l => 
-                (l.source.id === selectedNode.id && l.target.id === d.id) ||
-                (l.source.id === d.id && l.target.id === selectedNode.id)
-            );
-            if (!exists) { links.push({ source: selectedNode.id, target: d.id }); }
-            else {
-                links = links.filter(l => 
-                    !((l.source.id === selectedNode.id && l.target.id === d.id) ||
-                      (l.source.id === d.id && l.target.id === selectedNode.id))
-                );
-            }
-            selectedNode = null;
-            saveData();
-        }
-        update();
-    }
-
-    // === ЛОГИКА МЕНЮ (ИСПРАВЛЕНО) ===
-    const menuBackdrop = document.getElementById('action-menu-backdrop');
-    const renameBackdrop = document.getElementById('rename-modal-backdrop');
-    const renameInput = document.getElementById('rename-input');
-    const menuTitle = document.getElementById('menu-title');
-
-    // 1. Открываем главное меню
-    function openMenu(d) {
-        activeMenuNode = d; // Запоминаем узел глобально
-        if (navigator.vibrate) navigator.vibrate(50);
-        menuTitle.textContent = d.label;
-        
-        menuBackdrop.style.display = 'flex';
-        setTimeout(() => menuBackdrop.classList.add('active'), 10); // Анимация
-    }
-
-    // 2. Закрываем главное меню (но НЕ сбрасываем узел, если идем в переименование)
-    function closeMenu() {
-        menuBackdrop.classList.remove('active');
-        setTimeout(() => {
-            menuBackdrop.style.display = 'none';
-            // activeMenuNode НЕ обнуляем здесь, иначе rename потеряет цель
-        }, 200);
-    }
-
-    // 3. Переключаемся на переименование
-    function switchToRename() {
-        // Скрываем меню действий
-        menuBackdrop.style.display = 'none'; 
-        menuBackdrop.classList.remove('active');
-
-        // Открываем меню переименования
-        if (!activeMenuNode) return;
-        
-        renameInput.value = activeMenuNode.label;
-        renameBackdrop.style.display = 'flex';
-        setTimeout(() => {
-            renameBackdrop.classList.add('active');
-            renameInput.focus(); // Фокус на поле ввода
-        }, 10);
-    }
-
-    function closeRenameModal() {
-        renameBackdrop.classList.remove('active');
-        setTimeout(() => {
-            renameBackdrop.style.display = 'none';
-            activeMenuNode = null; // Вот теперь можно забыть узел
-        }, 200);
-    }
-
-    function saveRename() {
-        if (activeMenuNode && renameInput.value) {
-            activeMenuNode.label = renameInput.value;
-            update();
-            saveData();
-        }
-        closeRenameModal();
-    }
-
-    function deleteCurrentNode() {
-        if (!activeMenuNode) return;
-        if (confirm("Удалить?")) {
-            nodes = nodes.filter(n => n.id !== activeMenuNode.id);
-            links = links.filter(l => l.source.id !== activeMenuNode.id && l.target.id !== activeMenuNode.id);
-            if (selectedNode === activeMenuNode) selectedNode = null;
-            update(); saveData();
-        }
-        closeMenu();
-        activeMenuNode = null;
-    }
-
     function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x; d.fy = d.y;
-        if (longPressTimer) clearTimeout(longPressTimer);
     }
     function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
     function dragended(event, d) {
@@ -362,6 +397,17 @@
         saveData();
     }
 
+    // === СИСТЕМНЫЕ ===
+    function saveData() {
+        const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
+        const cleanLinks = links.map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target }));
+        localStorage.setItem('hrain_d3_v3', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
+    }
+    function clearAllData() {
+        if(confirm("Сбросить всё?")) { localStorage.removeItem('hrain_d3_v3'); location.reload(); }
+    }
+
+    updateButtonState();
     update();
 
 </script>
