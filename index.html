@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>HRAIN v2.4 (One Button)</title>
+    <title>HRAIN v2.5 (Smart Input)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
@@ -37,30 +37,25 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             -webkit-tap-highlight-color: transparent;
-            /* Запрет выделения чтобы long-press работал корректно */
             user-select: none; 
         }
 
-        /* Состояние 1: Добавить (Синий/Фиолетовый) */
         #main-btn.mode-add {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        /* Состояние 2: Редактировать (Оранжевый) */
         #main-btn.mode-edit {
             background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
             box-shadow: 0 10px 25px rgba(255, 94, 98, 0.4);
-            transform: translateX(-50%) rotate(360deg); /* Крутой эффект поворота при смене */
+            transform: translateX(-50%) rotate(360deg); 
         }
 
-        /* Состояние 3: Удаление (Красный при удержании) */
         #main-btn.holding-delete {
             background: #dc2626;
             transform: translateX(-50%) scale(1.2);
             box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
         }
 
-        /* Кнопка сброса */
         #reset-btn {
             position: absolute; top: 55px; right: 20px;
             font-size: 0.8rem; color: #888; background: rgba(255,255,255,0.5); 
@@ -76,10 +71,9 @@
             fill: #ffffff; stroke: #333; stroke-width: 2px;
             transition: fill 0.2s, stroke 0.2s;
         }
-        /* Подсветка выбранного узла */
         circle.node.selected { 
             fill: #fff3e0; 
-            stroke: #ff5e62; /* Цвет под карандаш */
+            stroke: #ff5e62; 
             stroke-width: 4px; 
         }
         
@@ -89,7 +83,7 @@
             paint-order: stroke; stroke: #f4f7f6; stroke-width: 3px;
         }
 
-        /* Модальное окно переименования */
+        /* Модальное окно */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.3); z-index: 2000; display: none;
@@ -113,7 +107,6 @@
         .btn-save { background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); color: white; }
         .btn-cancel { background: #f4f4f5; color: #71717a; }
 
-        /* Индикатор удаления (текст над кнопкой) */
         #delete-hint {
             position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.7); color: white; padding: 8px 16px;
@@ -128,16 +121,15 @@
 
     <div id="logo">🧠 HRAIN</div>
     <button id="reset-btn" onclick="clearAllData()">Сброс</button>
-    
     <div id="delete-hint">Удерживай для удаления</div>
 
     <button id="main-btn" class="mode-add">+</button>
 
     <div id="rename-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3 style="margin-top:0; color:#333;">Новое имя</h3>
-            <input type="text" id="rename-input" placeholder="Название">
-            <button class="modal-btn btn-save" onclick="saveRename()">Сохранить</button>
+            <h3 style="margin-top:0; color:#333;">Имя</h3>
+            <input type="text" id="rename-input" placeholder="Введите название">
+            <button class="modal-btn btn-save" onclick="saveRename()">Готово</button>
             <button class="modal-btn btn-cancel" onclick="closeRename()">Отмена</button>
         </div>
     </div>
@@ -161,7 +153,7 @@
     // === 1. D3 SETUP ===
     const width = window.innerWidth;
     const height = window.innerHeight;
-    let selectedNode = null; // Текущий выбранный узел
+    let selectedNode = null; 
     
     const svg = d3.select("#chart").append("svg")
         .attr("width", width).attr("height", height)
@@ -172,82 +164,57 @@
     const nodeGroup = g.append("g").attr("class", "nodes");
     const textGroup = g.append("g").attr("class", "texts");
 
-    // Клик по фону сбрасывает выделение
     const zoom = d3.zoom().scaleExtent([0.2, 5]).on("zoom", (event) => g.attr("transform", event.transform));
-    
-    svg.call(zoom)
-       .on("dblclick.zoom", null)
-       .on("click", (event) => {
-           if (event.target.tagName === 'svg') {
-               deselectNode();
-           }
-       });
+    svg.call(zoom).on("dblclick.zoom", null).on("click", (event) => {
+        if (event.target.tagName === 'svg') deselectNode();
+    });
 
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(130))
         .force("charge", d3.forceManyBody().strength(-400))
         .force("collide", d3.forceCollide().radius(d => (d.radius || 30) + 10).iterations(2));
 
-    // === 2. УПРАВЛЕНИЕ КНОПКОЙ (ГЛАВНАЯ ЛОГИКА) ===
+    // === 2. УПРАВЛЕНИЕ КНОПКОЙ ===
     const mainBtn = document.getElementById('main-btn');
     const deleteHint = document.getElementById('delete-hint');
     let pressTimer;
     let isLongPress = false;
 
-    // Обработчики нажатия на кнопку
     function handleBtnDown(e) {
         if (selectedNode) {
-            // Если узел выбран -> Режим КАРАНДАШ
-            e.preventDefault(); // Чтобы не сработал клик сразу
+            e.preventDefault();
             isLongPress = false;
-            
-            // Запускаем таймер удаления
-            mainBtn.classList.add('holding-delete'); // Анимация покраснения
+            mainBtn.classList.add('holding-delete');
             deleteHint.classList.add('visible');
-            
             pressTimer = setTimeout(() => {
                 isLongPress = true;
                 deleteSelectedNode();
                 if (navigator.vibrate) navigator.vibrate(100);
-            }, 800); // 0.8 сек удержание = удаление
+            }, 800);
         } else {
-            // Если узел не выбран -> Режим ПЛЮС
             mainBtn.style.transform = "translateX(-50%) scale(0.9)";
         }
     }
 
     function handleBtnUp(e) {
-        // Очищаем таймер
         clearTimeout(pressTimer);
         mainBtn.classList.remove('holding-delete');
         deleteHint.classList.remove('visible');
         mainBtn.style.transform = "";
 
         if (selectedNode) {
-            // Логика Карандаша
-            if (!isLongPress) {
-                // Короткое нажатие -> Переименовать
-                openRename();
-            }
+            if (!isLongPress) openRename();
         } else {
-            // Логика Плюса
-            // Создаем ноду с микро-задержкой
             setTimeout(createNewNode, 100);
         }
         isLongPress = false;
     }
 
-    // Привязываем события (поддержка и Touch и Mouse)
     mainBtn.addEventListener('mousedown', handleBtnDown);
     mainBtn.addEventListener('touchstart', handleBtnDown, {passive: false});
-    
     mainBtn.addEventListener('mouseup', handleBtnUp);
-    mainBtn.addEventListener('touchend', (e) => {
-        e.preventDefault(); // Важно для iOS
-        handleBtnUp(e);
-    });
+    mainBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBtnUp(e); });
 
-    // Функция обновления вида кнопки
     function updateButtonState() {
         if (selectedNode) {
             mainBtn.textContent = "✎";
@@ -276,54 +243,57 @@
 
     function deleteSelectedNode() {
         if (!selectedNode) return;
-        
-        // Удаляем
         nodes = nodes.filter(n => n.id !== selectedNode.id);
         links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
-        
         selectedNode = null;
-        updateButtonState();
-        update();
-        saveData();
+        updateButtonState(); update(); saveData();
     }
 
-    // === ПЕРЕИМЕНОВАНИЕ ===
+    // === ПЕРЕИМЕНОВАНИЕ (УМНЫЙ ВВОД) ===
     const renameModal = document.getElementById('rename-modal');
     const renameInput = document.getElementById('rename-input');
 
     function openRename() {
         if (!selectedNode) return;
-        renameInput.value = selectedNode.label;
+        
+        // УМНАЯ ЛОГИКА ЗДЕСЬ:
+        if (selectedNode.label === "Mind") {
+            renameInput.value = ""; // Пусто, если это дефолт
+            renameInput.placeholder = "Mind";
+        } else {
+            renameInput.value = selectedNode.label; // Старый текст, если он есть
+        }
+
         renameModal.style.display = 'flex';
-        // Фокус с задержкой для клавиатуры iOS
-        setTimeout(() => renameInput.focus(), 100);
+        
+        setTimeout(() => { 
+            renameInput.focus();
+            // Выделяем текст, если он там есть (чтобы можно было перезаписать)
+            if (renameInput.value.length > 0) {
+                renameInput.select();
+            }
+        }, 50); // Быстрый фокус
     }
 
-    function closeRename() {
-        renameModal.style.display = 'none';
-    }
+    function closeRename() { renameModal.style.display = 'none'; }
 
     function saveRename() {
-        if (selectedNode && renameInput.value) {
-            selectedNode.label = renameInput.value;
+        if (selectedNode) {
+            // Если пусто, возвращаем "Mind", иначе то что ввели
+            selectedNode.label = renameInput.value.trim() === "" ? "Mind" : renameInput.value;
             update(); saveData();
         }
         closeRename();
     }
 
     // === D3 ЛОГИКА ===
-
     function handleNodeClick(event, d) {
-        if (event.defaultPrevented) return; // Если тащили
-
+        if (event.defaultPrevented) return;
         if (selectedNode === null) {
-            // Выбор первого узла
             selectedNode = d;
         } else if (selectedNode === d) {
-            // Тапнули по уже выбранному -> снять выбор
             selectedNode = null;
         } else {
-            // Тапнули по другому -> СВЯЗАТЬ
             const exists = links.some(l => 
                 (l.source.id === selectedNode.id && l.target.id === d.id) ||
                 (l.source.id === d.id && l.target.id === selectedNode.id)
@@ -335,11 +305,10 @@
                       (l.source.id === d.id && l.target.id === selectedNode.id))
                 );
             }
-            // После связи сбрасываем выбор, чтобы кнопка вернулась в "+"
             selectedNode = null;
             saveData();
         }
-        updateButtonState(); // ВАЖНО: Обновить кнопку
+        updateButtonState();
         update();
     }
 
@@ -356,19 +325,12 @@
 
         const node = nodeGroup.selectAll("circle").data(nodes, d => d.id);
         node.exit().transition().duration(300).attr("r", 0).remove();
-        
-        const nodeEnter = node.enter().append("circle")
-            .attr("class", "node")
-            .attr("r", 0)
+        const nodeEnter = node.enter().append("circle").attr("class", "node").attr("r", 0)
             .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
             .on("click", handleNodeClick);
-
         const allNodes = nodeEnter.merge(node);
-        
-        // Обновляем классы для подсветки
-        allNodes.attr("class", d => d === selectedNode ? "node selected" : "node")
-                .transition().duration(300)
-                .attr("r", d => d.radius);
+        allNodes.transition().duration(300).attr("r", d => d.radius)
+                .attr("class", d => d === selectedNode ? "node selected" : "node");
 
         const text = textGroup.selectAll("text").data(nodes, d => d.id);
         text.exit().remove();
@@ -381,7 +343,6 @@
             allNodes.attr("cx", d => d.x).attr("cy", d => d.y);
             allTexts.attr("x", d => d.x).attr("y", d => d.y);
         });
-        
         simulation.force("link").links(links);
         simulation.alpha(0.5).restart();
     }
@@ -397,7 +358,6 @@
         saveData();
     }
 
-    // === СИСТЕМНЫЕ ===
     function saveData() {
         const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
         const cleanLinks = links.map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target }));
