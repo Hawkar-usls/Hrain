@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN: Cinematic</title>
+    <title>HRAIN: Perfect Balance</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
             -webkit-touch-callout: none; overscroll-behavior: none; touch-action: none;
         }
 
-        /* ATMOSPHERE */
+        /* === ATMOSPHERE === */
         #neural-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark));
@@ -53,11 +53,10 @@
             100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
         }
 
-        /* UI TRANSITIONS */
-        .ui-element { transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s; }
+        /* === UI ELEMENTS === */
+        .ui-element { transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s; }
         body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.98); }
         
-        /* LOGO */
         #logo {
             position: absolute; top: 40px; left: 30px; z-index: 10;
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
@@ -66,7 +65,6 @@
         }
         #logo span { color: var(--neuron-core); text-shadow: 0 0 12px var(--neuron-core); }
 
-        /* WIPE BUTTON */
         #reset-btn {
             position: absolute; top: 40px; right: 30px; z-index: 10;
             background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
@@ -96,7 +94,6 @@
         #main-btn:active { transform: translateX(-50%) scale(0.92); }
         #main-btn.mode-edit { box-shadow: 0 0 0 1px var(--neuron-aura), 0 0 30px rgba(0, 240, 255, 0.2); }
         #main-btn.mode-edit::after { content: '✎'; color: var(--neuron-aura); text-shadow: 0 0 10px var(--neuron-aura); }
-        
         #main-btn.holding-delete {
             box-shadow: 0 0 0 1px var(--danger), 0 0 40px rgba(255, 42, 109, 0.3);
             transform: translateX(-50%) scale(1.1); animation: pulse-danger 0.5s infinite alternate;
@@ -107,14 +104,9 @@
         /* CANVAS */
         #chart { position: relative; width: 100%; height: 100%; z-index: 1; }
         
-        /* LINKS */
         .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; stroke-linecap: round; transition: stroke 0.3s; }
-        .drag-line { stroke: var(--neuron-aura); stroke-width: 2px; stroke-dasharray: 5; opacity: 0.6; pointer-events: none; }
-        
-        /* IMPULSE */
         .impulse { fill: var(--neuron-core); filter: drop-shadow(0 0 4px var(--neuron-core)); }
 
-        /* NODES */
         .neuron-core {
             fill: #0a0f14; stroke: var(--neuron-core); stroke-width: 1.5px;
             filter: drop-shadow(0 0 6px rgba(0, 255, 163, 0.3)); transition: all 0.3s;
@@ -125,7 +117,6 @@
         }
         .hitbox { fill: transparent; cursor: pointer; }
 
-        /* STATES */
         .node-group.selected .neuron-core {
             fill: rgba(0, 255, 163, 0.15); stroke: var(--neuron-aura); stroke-width: 2.5px;
             filter: drop-shadow(0 0 15px var(--neuron-aura));
@@ -139,14 +130,13 @@
         }
         .node-group.selected text.label { fill: var(--neuron-aura); text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
 
-        /* GENERIC MODAL STYLES */
+        /* MODALS */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
         }
         .modal-backdrop.open { opacity: 1; }
-        
         .modal-content {
             width: 85%; max-width: 320px; padding: 25px; text-align: center;
             background: rgba(15, 20, 25, 0.95); border: 1px solid var(--glass-border); border-radius: 20px;
@@ -154,25 +144,23 @@
         }
         .modal-backdrop.open .modal-content { transform: scale(1); }
 
-        /* Rename Inputs */
         #rename-input {
             width: 100%; background: transparent; border: none; border-bottom: 1px solid #333;
             color: var(--neuron-core); font-family: 'Rajdhani', sans-serif; font-size: 1.3rem;
             text-align: center; padding: 10px; outline: none; margin-bottom: 25px; border-radius: 0;
         }
-        
-        /* Buttons */
         .modal-btn {
             width: 100%; padding: 14px; margin-top: 5px; background: transparent;
             border: 1px solid #333; border-radius: 12px; color: #888; cursor: pointer;
             font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem;
         }
         .btn-save { border-color: var(--neuron-core); color: var(--neuron-core); background: rgba(0, 255, 163, 0.05); }
-        
+        .btn-save:active { background: var(--neuron-core); color: black; }
         .btn-danger { border-color: var(--danger); color: var(--danger); background: rgba(255, 42, 109, 0.05); }
-        .btn-danger:active { background: var(--danger); color: white; }
+        
+        .wipe-title { color: var(--danger); font-family: 'Orbitron', sans-serif; margin-bottom: 10px; }
+        .wipe-desc { color: #888; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
 
-        /* Hints */
         #delete-hint {
             position: absolute; bottom: calc(130px + env(safe-area-inset-bottom)); 
             left: 50%; transform: translateX(-50%); color: var(--danger);
@@ -190,11 +178,6 @@
             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
         }
         #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        
-        /* Wipe Modal Specific */
-        .wipe-title { color: var(--danger); font-family: 'Orbitron', sans-serif; margin-bottom: 10px; }
-        .wipe-desc { color: #888; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
-
     </style>
 </head>
 <body>
@@ -210,7 +193,6 @@
 
     <div id="focus-toast">Focus Mode Active</div>
 
-    <!-- RENAME MODAL -->
     <div id="rename-modal" class="modal-backdrop">
         <div class="modal-content">
             <input type="text" id="rename-input" placeholder="THOUGHT..." autocomplete="off">
@@ -219,12 +201,11 @@
         </div>
     </div>
 
-    <!-- WIPE CONFIRMATION MODAL -->
     <div id="wipe-modal" class="modal-backdrop">
         <div class="modal-content" style="border-color: var(--danger); box-shadow: 0 0 40px rgba(255,42,109,0.1);">
             <h3 class="wipe-title">SYSTEM PURGE</h3>
-            <p class="wipe-desc">This will irreversibly delete all neural connections.</p>
-            <button class="modal-btn btn-danger" onclick="confirmWipe()">CONFIRM WIPE</button>
+            <p class="wipe-desc">Irreversible disconnection of all nodes.</p>
+            <button class="modal-btn btn-danger" onclick="confirmWipe()">CONFIRM</button>
             <button class="modal-btn btn-cancel" onclick="closeWipe()">CANCEL</button>
         </div>
     </div>
@@ -232,7 +213,7 @@
     <div id="chart"></div>
 
 <script>
-    // === INIT PARTICLES ===
+    // INIT PARTICLES
     function initParticles() {
         const container = document.getElementById('particles');
         for(let i=0; i<20; i++) {
@@ -249,9 +230,9 @@
     }
     initParticles();
 
-    // === DATA ===
+    // DATA
     function loadData() {
-        const saved = localStorage.getItem('hrain_v17_cine');
+        const saved = localStorage.getItem('hrain_v20_perfect');
         if (saved) { try { return JSON.parse(saved); } catch (e) { return null; } }
         return null;
     }
@@ -262,11 +243,10 @@
     let nodes = initialData.nodes;
     let links = initialData.links;
 
-    // === D3 SETUP ===
+    // D3 SETUP
     const width = window.innerWidth;
     const height = window.innerHeight;
     let selectedNode = null; 
-    let dragLine = null; // Линия для магнитного соединения
     
     const svg = d3.select("#chart").append("svg")
         .attr("width", width).attr("height", height)
@@ -276,13 +256,10 @@
     const linkGroup = g.append("g").attr("class", "links");
     const impulseGroup = g.append("g").attr("class", "impulses");
     const nodeGroup = g.append("g").attr("class", "nodes");
-    
-    // Drag Line (Магнитная связь)
-    const dragGroup = g.append("g").attr("class", "drag-layer");
 
     const zoom = d3.zoom().scaleExtent([0.2, 4]).on("zoom", (event) => g.attr("transform", event.transform));
     
-    // === FOCUS MODE ===
+    // FOCUS MODE
     let lastTapTime = 0;
     const focusToast = document.getElementById('focus-toast');
 
@@ -306,15 +283,17 @@
         if(navigator.vibrate) navigator.vibrate(50);
     }
 
-    // === PHYSICS (STABLE) ===
+    // PHYSICS (STABLE ZERO-G)
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(160))
         .force("charge", d3.forceManyBody().strength(-450))
         .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 50) + 20).iterations(2))
-        .force("center", d3.forceCenter(width / 2, height / 2).strength(0.015))
+        // Гравитация к центру, а не жесткий центр. Это предотвращает прыжки.
+        .force("x", d3.forceX(width / 2).strength(0.015)) 
+        .force("y", d3.forceY(height / 2).strength(0.015))
         .alphaDecay(0.05);
 
-    // === BUTTON LOGIC ===
+    // BUTTON LOGIC
     const mainBtn = document.getElementById('main-btn');
     const deleteHint = document.getElementById('delete-hint');
     let pressTimer, isLongPress = false, isTouchAction = false;
@@ -347,15 +326,17 @@
     function updateButtonState() { mainBtn.className = "ui-element " + (selectedNode ? "mode-edit" : "mode-add"); }
     function deselectNode() { selectedNode = null; updateButtonState(); updateTopology(); }
 
-    // === CREATION ===
+    // CREATION (No Camera Jump)
     function createNewNode() {
         const t = d3.zoomTransform(svg.node());
         let x, y;
         if (selectedNode) {
+            // Sprout Logic (Отпочковывание)
             const angle = Math.random() * Math.PI * 2;
             x = selectedNode.x + Math.cos(angle) * 80;
             y = selectedNode.y + Math.sin(angle) * 80;
         } else {
+            // Center Logic
             x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
         }
 
@@ -364,7 +345,7 @@
         if (selectedNode) links.push({ source: selectedNode.id, target: newNode.id });
 
         selectedNode = newNode; 
-        updateButtonState(); updateTopology(); saveData(); 
+        updateButtonState(); updateTopology(0.3); saveData(); // 0.3 alpha для мягкого старта
         tryVibrate(20); setTimeout(openRename, 50);
     }
     
@@ -375,18 +356,10 @@
         selectedNode = null; updateButtonState(); updateTopology(); saveData();
     }
 
-    // === MODALS ===
-    function openModal(modal) {
-        modal.style.display = 'flex';
-        // Small delay for CSS transition
-        requestAnimationFrame(() => modal.classList.add('open'));
-    }
-    function closeModal(modal) {
-        modal.classList.remove('open');
-        setTimeout(() => modal.style.display = 'none', 300);
-    }
+    // MODALS
+    function openModal(modal) { modal.style.display = 'flex'; requestAnimationFrame(() => modal.classList.add('open')); }
+    function closeModal(modal) { modal.classList.remove('open'); setTimeout(() => modal.style.display = 'none', 300); }
 
-    // Rename Modal
     const renameModal = document.getElementById('rename-modal'), input = document.getElementById('rename-input');
     function openRename() {
         if(!selectedNode) return;
@@ -398,41 +371,42 @@
     function saveRename() { if(selectedNode) { selectedNode.label = input.value.trim() || selectedNode.label; updateTopology(); saveData(); } closeRename(); }
     input.addEventListener("keypress", (e) => { if(e.key === "Enter") saveRename(); });
 
-    // === WIPE MODAL & LOGIC ===
     const wipeModal = document.getElementById('wipe-modal');
-    
     function triggerWipe() { openModal(wipeModal); }
     function closeWipe() { closeModal(wipeModal); }
-    
     function confirmWipe() {
         closeWipe();
-        // Cinematic Implosion Animation
-        d3.selectAll(".node-group")
-            .transition().duration(500)
-            .attr("transform", d => `translate(${d.x},${d.y}) scale(0)`)
-            .style("opacity", 0)
+        d3.selectAll(".node-group").transition().duration(500)
+            .attr("transform", d => `translate(${d.x},${d.y}) scale(0)`).style("opacity", 0)
             .on("end", () => {
-                // Hard Reset Logic
-                localStorage.removeItem('hrain_v17_cine');
+                localStorage.removeItem('hrain_v20_perfect');
                 nodes = [ { id: Date.now(), label: "Core", x: width/2, y: height/2 } ];
                 links = [];
                 selectedNode = null;
-                updateButtonState();
-                updateTopology();
-                saveData();
+                updateButtonState(); updateTopology(); saveData();
             });
     }
 
-    // === INTERACTIONS ===
+    // === INTERACTIONS (Classic Click-to-Connect) ===
     function handleNodeClick(event, d) {
         if (event.defaultPrevented) return;
-        if (!selectedNode) { selectedNode = d; tryVibrate(15); }
-        else if (selectedNode === d) { selectedNode = null; }
-        else {
-            // Connect
+        
+        if (!selectedNode) { 
+            selectedNode = d; 
+            tryVibrate(15); 
+        } else if (selectedNode === d) { 
+            selectedNode = null; // Deselect self
+        } else {
+            // Connection Logic
             const exists = links.some(l => (l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id));
-            if(!exists) { links.push({ source: selectedNode.id, target: d.id }); animateImpulse(selectedNode, d); tryVibrate(30); }
-            else { links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); tryVibrate([10,10]); }
+            if(!exists) { 
+                links.push({ source: selectedNode.id, target: d.id }); 
+                animateImpulse(selectedNode, d); 
+                tryVibrate(30); 
+            } else { 
+                links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); 
+                tryVibrate([10,10]); 
+            }
             selectedNode = null; saveData();
         }
         updateButtonState(); updateTopology();
@@ -443,8 +417,8 @@
         impulse.transition().duration(500).ease(d3.easeQuadInOut).attr("cx", target.x).attr("cy", target.y).on("end", function() { d3.select(this).remove(); });
     }
 
-    // === TOPOLOGY (Stable) ===
-    function updateTopology() {
+    // === TOPOLOGY LOOP ===
+    function updateTopology(targetAlpha = 0.5) {
         nodes.forEach(node => {
             const connections = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id).length;
             node.coreRadius = 8 + (connections * 1.5); 
@@ -481,10 +455,10 @@
             allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
         });
         simulation.force("link").links(links);
-        simulation.alpha(0.5).restart();
+        simulation.alpha(targetAlpha).restart();
     }
 
-    // === VISUALS (Separate Loop) ===
+    // === VISUAL LOOP ===
     function animateVisuals() {
         d3.selectAll(".node-group").each(function(d) {
             if (!d.phase) d.phase = Math.random() * Math.PI * 2;
@@ -507,7 +481,7 @@
     function saveData() {
         const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
         const cleanLinks = links.map(l => ({ source: l.source.id||l.source, target: l.target.id||l.target }));
-        localStorage.setItem('hrain_v17_cine', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
+        localStorage.setItem('hrain_v20_perfect', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
     }
 
     updateButtonState(); updateTopology();
