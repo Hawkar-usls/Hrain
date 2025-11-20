@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>HRAIN Mobile v2 (Saved)</title>
+    <title>HRAIN v2.2 (Renaming Fix)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
@@ -17,11 +17,39 @@
             user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
             overscroll-behavior: none;
         }
+        
+        /* Логотип */
         #logo {
             position: absolute; top: 50px; left: 20px;
             font-size: 1.5rem; font-weight: 800; color: #333;
             pointer-events: none; z-index: 10; opacity: 0.8;
         }
+        
+        /* Кнопка ДОБАВИТЬ */
+        #add-btn {
+            position: absolute;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            width: 65px; height: 65px;
+            background-color: #333; color: white;
+            border-radius: 50%; border: none;
+            font-size: 32px; font-weight: 300;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            z-index: 100; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s;
+        }
+        #add-btn:active { transform: translateX(-50%) scale(0.9); }
+
+        /* Кнопка СБРОСА */
+        #reset-btn {
+            position: absolute; top: 55px; right: 20px;
+            font-size: 0.8rem; color: #999; background: none; border: 1px solid #ccc;
+            padding: 5px 10px; border-radius: 15px;
+            z-index: 10; cursor: pointer;
+        }
+
+        /* Графика */
         #chart { width: 100%; height: 100%; touch-action: none; }
         line.link { stroke: #b0b8c0; stroke-width: 2px; opacity: 0.6; }
         circle.node {
@@ -34,83 +62,97 @@
             text-anchor: middle; font-weight: 600;
             text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
-        #action-menu-backdrop {
+
+        /* Общие стили для модальных окон */
+        .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); z-index: 1000; display: none;
             align-items: center; justify-content: center; backdrop-filter: blur(3px);
         }
-        #action-menu {
-            background: white; width: 280px; border-radius: 20px; padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
-            display: flex; flex-direction: column; gap: 10px;
+        .modal-content {
+            background: white; width: 280px; border-radius: 24px; padding: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2); text-align: center;
+            display: flex; flex-direction: column; gap: 12px;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #menu-title { margin: 0 0 10px 0; font-size: 1.2rem; color: #333; }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #333; }
+        
         .menu-btn {
-            padding: 12px; border: none; border-radius: 12px;
+            padding: 14px; border: none; border-radius: 14px;
             font-size: 1rem; font-weight: 600; cursor: pointer;
+            width: 100%;
         }
         .btn-edit { background: #e3f2fd; color: #1976d2; }
         .btn-delete { background: #ffebee; color: #c62828; }
         .btn-cancel { background: #f5f5f5; color: #666; margin-top: 5px;}
-        
-        /* Кнопка сброса данных (для отладки или очистки) */
-        #reset-btn {
-            position: absolute; bottom: 20px; right: 20px;
-            font-size: 0.8rem; color: #999; background: none; border: none;
-            z-index: 5;
+        .btn-save { background: #4CAF50; color: white; margin-top: 10px; }
+
+        /* Поле ввода имени */
+        #rename-input {
+            font-size: 1.2rem; padding: 10px;
+            border: 2px solid #ddd; border-radius: 10px;
+            text-align: center; width: 100%; box-sizing: border-box;
+            outline: none;
         }
+        #rename-input:focus { border-color: #1976d2; }
+
     </style>
 </head>
 <body>
 
-    <div id="logo">🧠 HRAIN <span style="font-weight:400; font-size: 0.8em;">v2.0</span></div>
-    <button id="reset-btn" onclick="clearAllData()">Сброс данных</button>
+    <div id="logo">🧠 HRAIN <span style="font-weight:400; font-size: 0.8em;">v2.2</span></div>
+    <button id="reset-btn" onclick="clearAllData()">Сброс</button>
+    
+    <button id="add-btn" onclick="createNewNode()">+</button>
 
-    <div id="action-menu-backdrop">
-        <div id="action-menu">
+    <div id="action-menu-backdrop" class="modal-backdrop" onclick="if(event.target === this) closeMenu()">
+        <div class="modal-content">
             <h3 id="menu-title">Действия</h3>
-            <button class="menu-btn btn-edit" onclick="renameCurrentNode()">✏️ Переименовать</button>
+            <button class="menu-btn btn-edit" onclick="openRenameModal()">✏️ Переименовать</button>
             <button class="menu-btn btn-delete" onclick="deleteCurrentNode()">🗑️ Удалить</button>
             <button class="menu-btn btn-cancel" onclick="closeMenu()">Отмена</button>
+        </div>
+    </div>
+
+    <div id="rename-modal-backdrop" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Новое имя</h3>
+            <input type="text" id="rename-input" placeholder="Введите название">
+            <button class="menu-btn btn-save" onclick="saveRename()">Сохранить</button>
+            <button class="menu-btn btn-cancel" onclick="closeRenameModal()">Отмена</button>
         </div>
     </div>
 
     <div id="chart"></div>
 
 <script>
-    // === 0. ЗАГРУЗКА ДАННЫХ ===
-    
-    // Функция загрузки из localStorage
+    // === 0. ЗАГРУЗКА ===
     function loadData() {
-        const saved = localStorage.getItem('hrain_d3_data');
+        const saved = localStorage.getItem('hrain_d3_v2');
         if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (e) {
-                console.error("Ошибка чтения данных", e);
-                return null;
-            }
+            try { return JSON.parse(saved); } 
+            catch (e) { return null; }
         }
         return null;
     }
-
-    // Начальные данные (если ничего не сохранено)
     const initialData = loadData() || {
-        nodes: [
-            { id: 1, label: "Идея", x: window.innerWidth/2, y: window.innerHeight/2 }
-        ],
+        nodes: [ { id: 1, label: "Старт", x: window.innerWidth/2, y: window.innerHeight/2 } ],
         links: []
     };
 
     let nodes = initialData.nodes;
     let links = initialData.links;
 
-    // === 1. НАСТРОЙКИ D3 ===
+    // === 1. НАСТРОЙКИ ===
     const width = window.innerWidth;
     const height = window.innerHeight;
     let selectedNode = null;
     let menuNode = null;
-    let lastTapTime = 0;
     let longPressTimer;
 
     const svg = d3.select("#chart").append("svg")
@@ -122,62 +164,43 @@
     const nodeGroup = g.append("g").attr("class", "nodes");
     const textGroup = g.append("g").attr("class", "texts");
 
-    const zoom = d3.zoom().scaleExtent([0.2, 5]).on("zoom", (event) => {
-        g.attr("transform", event.transform);
-    });
+    const zoom = d3.zoom().scaleExtent([0.2, 5]).on("zoom", (event) => g.attr("transform", event.transform));
     svg.call(zoom).on("dblclick.zoom", null);
 
-    // Физика
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(130))
         .force("charge", d3.forceManyBody().strength(-400))
         .force("collide", d3.forceCollide().radius(d => (d.radius || 30) + 10).iterations(2));
-        // Убрали forceCenter, чтобы при загрузке шары не улетали в центр, если мы их растащили
 
-    // === 2. СОХРАНЕНИЕ ===
+    // === 2. ЛОГИКА ДАННЫХ ===
     function saveData() {
-        // D3 добавляет кучу мусора в объекты (vx, vy, index...). 
-        // Нам нужно сохранить только суть.
-        const cleanNodes = nodes.map(n => ({
-            id: n.id,
-            label: n.label,
-            x: n.x, // Сохраняем позицию!
-            y: n.y
-        }));
-
-        const cleanLinks = links.map(l => ({
-            source: l.source.id, // D3 заменяет source на объект, нам нужен ID для сохранения
-            target: l.target.id
-        }));
-
-        const dataToSave = { nodes: cleanNodes, links: cleanLinks };
-        localStorage.setItem('hrain_d3_data', JSON.stringify(dataToSave));
-        console.log("Saved!");
+        const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
+        const cleanLinks = links.map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target }));
+        localStorage.setItem('hrain_d3_v2', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
     }
-    
     function clearAllData() {
-        if(confirm("Удалить все данные и начать заново?")) {
-            localStorage.removeItem('hrain_d3_data');
-            location.reload();
-        }
+        if(confirm("Сбросить всё?")) { localStorage.removeItem('hrain_d3_v2'); location.reload(); }
     }
 
-    // === 3. ОБНОВЛЕНИЕ (UPDATE) ===
+    function createNewNode() {
+        const transform = d3.zoomTransform(svg.node());
+        const x = (width / 2 - transform.x) / transform.k;
+        const y = (height / 2 - transform.y) / transform.k;
+        nodes.push({ id: Date.now(), label: "Идея", x: x, y: y });
+        update(); saveData();
+    }
+
     function update() {
-        // Авто-размер
         nodes.forEach(node => {
-            const connections = links.filter(l => l.source.id === node.id || l.target.id === node.id).length;
+            const connections = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id).length;
             node.radius = 30 + (connections * 5);
         });
 
-        // Линии
-        const link = linkGroup.selectAll("line")
-            .data(links, d => (d.source.id || d.source) + "-" + (d.target.id || d.target));
+        const link = linkGroup.selectAll("line").data(links, d => (d.source.id || d.source) + "-" + (d.target.id || d.target));
         link.exit().remove();
         const linkEnter = link.enter().append("line").attr("class", "link");
         const allLinks = linkEnter.merge(link);
 
-        // Шары
         const node = nodeGroup.selectAll("circle").data(nodes, d => d.id);
         node.exit().transition().duration(300).attr("r", 0).remove();
         const nodeEnter = node.enter().append("circle")
@@ -193,48 +216,26 @@
             .attr("r", d => d.radius)
             .attr("class", d => d === selectedNode ? "node selected" : "node");
 
-        // Текст
         const text = textGroup.selectAll("text").data(nodes, d => d.id);
         text.exit().remove();
-        const textEnter = text.enter().append("text")
-            .attr("class", "label")
-            .attr("dy", 5).text(d => d.label);
+        const textEnter = text.enter().append("text").attr("class", "label").attr("dy", 5).text(d => d.label);
         const allTexts = textEnter.merge(text).text(d => d.label);
 
         simulation.nodes(nodes).on("tick", () => {
-            allLinks
-                .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+            allLinks.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
             allNodes.attr("cx", d => d.x).attr("cy", d => d.y);
             allTexts.attr("x", d => d.x).attr("y", d => d.y);
         });
         
         simulation.force("link").links(links);
-        simulation.alpha(0.3).restart(); // Легкий толчок при обновлении
-        
-        // ! ВАЖНО: Сохраняем после каждого обновления структуры
-        saveData();
+        simulation.alpha(0.5).restart();
     }
 
-    // === 4. ЛОГИКА ===
-
-    svg.on("touchstart", (event) => {
-        if (event.target.tagName === "circle") return;
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        if (tapLength < 300 && tapLength > 0) {
-            event.preventDefault();
-            const transform = d3.zoomTransform(svg.node());
-            const touch = event.touches[0];
-            const [x, y] = transform.invert([touch.clientX, touch.clientY]);
-            nodes.push({ id: Date.now(), label: "...", x: x, y: y });
-            update();
-        }
-        lastTapTime = currentTime;
-    });
+    // === 3. ВЗАИМОДЕЙСТВИЕ ===
 
     function handleTouchStart(event, d) {
-        longPressTimer = setTimeout(() => openMenu(d), 600);
+        longPressTimer = setTimeout(() => openMenu(d), 500);
     }
     function handleTouchEnd(event, d) {
         if (longPressTimer) clearTimeout(longPressTimer);
@@ -251,66 +252,85 @@
                 (l.source.id === selectedNode.id && l.target.id === d.id) ||
                 (l.source.id === d.id && l.target.id === selectedNode.id)
             );
-            if (!exists) {
-                links.push({ source: selectedNode.id, target: d.id });
-            } else {
+            if (!exists) { links.push({ source: selectedNode.id, target: d.id }); }
+            else {
                 links = links.filter(l => 
                     !((l.source.id === selectedNode.id && l.target.id === d.id) ||
                       (l.source.id === d.id && l.target.id === selectedNode.id))
                 );
             }
             selectedNode = null;
+            saveData();
         }
         update();
     }
 
-    // Меню
+    // === МЕНЮ И ПЕРЕИМЕНОВАНИЕ (ОБНОВЛЕНО) ===
     const menuBackdrop = document.getElementById('action-menu-backdrop');
+    const renameBackdrop = document.getElementById('rename-modal-backdrop');
+    const renameInput = document.getElementById('rename-input');
     const menuTitle = document.getElementById('menu-title');
 
     function openMenu(d) {
         menuNode = d;
         if (navigator.vibrate) navigator.vibrate(50);
-        menuTitle.textContent = `Узел: "${d.label}"`;
+        menuTitle.textContent = d.label;
         menuBackdrop.style.display = 'flex';
     }
     function closeMenu() {
         menuBackdrop.style.display = 'none';
+        menuNode = null; // Сбрасываем только если не переходим к переименованию
+    }
+
+    // Открытие модалки переименования
+    function openRenameModal() {
+        if(!menuNode) return;
+        const targetNode = menuNode; // Сохраняем ссылку
+        closeMenu(); // Закрываем меню
+        menuNode = targetNode; // Восстанавливаем ссылку, т.к. closeMenu ее стер
+        
+        renameInput.value = menuNode.label;
+        renameBackdrop.style.display = 'flex';
+        setTimeout(() => renameInput.focus(), 100); // Фокус с задержкой для iOS
+    }
+
+    function closeRenameModal() {
+        renameBackdrop.style.display = 'none';
         menuNode = null;
     }
-    function renameCurrentNode() {
-        if (!menuNode) return;
-        const newName = prompt("Новое название:", menuNode.label);
-        if (newName) {
-            menuNode.label = newName;
+
+    function saveRename() {
+        if (menuNode && renameInput.value) {
+            menuNode.label = renameInput.value;
             update();
+            saveData();
         }
-        closeMenu();
+        closeRenameModal();
     }
+
     function deleteCurrentNode() {
         if (!menuNode) return;
-        if (confirm("Удалить этот узел?")) {
+        if (confirm("Удалить узел?")) {
             nodes = nodes.filter(n => n.id !== menuNode.id);
             links = links.filter(l => l.source.id !== menuNode.id && l.target.id !== menuNode.id);
             if (selectedNode === menuNode) selectedNode = null;
             update();
+            saveData();
         }
         closeMenu();
     }
 
-    // Drag & Drop + Save position on end
+    // D3 Drag
     function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x; d.fy = d.y;
         if (longPressTimer) clearTimeout(longPressTimer);
     }
-    function dragged(event, d) {
-        d.fx = event.x; d.fy = event.y;
-    }
+    function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
     function dragended(event, d) {
         if (!event.active) simulation.alphaTarget(0);
         d.fx = null; d.fy = null;
-        saveData(); // Сохраняем позицию после перетаскивания
+        saveData();
     }
 
     update();
