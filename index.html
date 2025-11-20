@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>HRAIN v2.2 (Renaming Fix)</title>
+    <title>HRAIN v2.3 (Mind Fix)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
@@ -18,102 +18,108 @@
             overscroll-behavior: none;
         }
         
-        /* Логотип */
         #logo {
             position: absolute; top: 50px; left: 20px;
             font-size: 1.5rem; font-weight: 800; color: #333;
             pointer-events: none; z-index: 10; opacity: 0.8;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
         }
         
-        /* Кнопка ДОБАВИТЬ */
+        /* === НОВАЯ КНОПКА "+" (Красивая) === */
         #add-btn {
             position: absolute;
-            bottom: 30px; left: 50%;
+            bottom: 40px; left: 50%;
             transform: translateX(-50%);
-            width: 65px; height: 65px;
-            background-color: #333; color: white;
+            width: 70px; height: 70px;
+            /* Градиент */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-radius: 50%; border: none;
-            font-size: 32px; font-weight: 300;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            font-size: 36px; font-weight: 300;
+            /* Тень с цветом */
+            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
             z-index: 100; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.1s;
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
-        #add-btn:active { transform: translateX(-50%) scale(0.9); }
+        #add-btn:active { 
+            transform: translateX(-50%) scale(0.85); 
+            box-shadow: 0 2px 10px rgba(118, 75, 162, 0.3);
+        }
 
-        /* Кнопка СБРОСА */
         #reset-btn {
             position: absolute; top: 55px; right: 20px;
-            font-size: 0.8rem; color: #999; background: none; border: 1px solid #ccc;
-            padding: 5px 10px; border-radius: 15px;
-            z-index: 10; cursor: pointer;
+            font-size: 0.8rem; color: #888; background: rgba(255,255,255,0.5); 
+            border: 1px solid #ccc; padding: 6px 12px; border-radius: 20px;
+            z-index: 10; cursor: pointer; backdrop-filter: blur(5px);
         }
 
-        /* Графика */
         #chart { width: 100%; height: 100%; touch-action: none; }
         line.link { stroke: #b0b8c0; stroke-width: 2px; opacity: 0.6; }
+        
         circle.node {
             fill: #ffffff; stroke: #333; stroke-width: 2px;
-            transition: fill 0.2s, stroke 0.2s, stroke-width 0.2s;
+            transition: fill 0.2s, stroke 0.2s;
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.1));
         }
-        circle.node.selected { fill: #ffe082; stroke: #ffca28; stroke-width: 4px; }
+        circle.node.selected { fill: #ffe082; stroke: #ffb300; stroke-width: 4px; }
+        
         text.label {
-            font-size: 14px; fill: #333; pointer-events: none;
+            font-size: 14px; fill: #222; pointer-events: none;
             text-anchor: middle; font-weight: 600;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            font-family: "Segoe UI", Roboto, sans-serif;
+            paint-order: stroke; stroke: #f4f7f6; stroke-width: 3px; stroke-linecap: round; stroke-linejoin: round;
         }
 
-        /* Общие стили для модальных окон */
+        /* Модальные окна */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); z-index: 1000; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(3px);
+            background: rgba(0,0,0,0.3); z-index: 1000; display: none;
+            align-items: center; justify-content: center; backdrop-filter: blur(4px);
+            transition: opacity 0.2s;
         }
         .modal-content {
             background: white; width: 280px; border-radius: 24px; padding: 24px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2); text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center;
             display: flex; flex-direction: column; gap: 12px;
-            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #333; }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+        
+        h3 { margin: 0 0 5px 0; font-size: 1.3rem; color: #333; }
         
         .menu-btn {
-            padding: 14px; border: none; border-radius: 14px;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            width: 100%;
+            padding: 14px; border: none; border-radius: 16px;
+            font-size: 1.1rem; font-weight: 500; cursor: pointer; width: 100%;
+            transition: background 0.2s;
         }
-        .btn-edit { background: #e3f2fd; color: #1976d2; }
-        .btn-delete { background: #ffebee; color: #c62828; }
-        .btn-cancel { background: #f5f5f5; color: #666; margin-top: 5px;}
-        .btn-save { background: #4CAF50; color: white; margin-top: 10px; }
+        .btn-edit { background: #eef2ff; color: #4f46e5; }
+        .btn-delete { background: #fef2f2; color: #dc2626; }
+        .btn-cancel { background: #f4f4f5; color: #71717a; margin-top: 5px;}
+        .btn-save { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 10px; }
 
-        /* Поле ввода имени */
         #rename-input {
-            font-size: 1.2rem; padding: 10px;
-            border: 2px solid #ddd; border-radius: 10px;
+            font-size: 1.2rem; padding: 12px;
+            border: 2px solid #e4e4e7; border-radius: 12px;
             text-align: center; width: 100%; box-sizing: border-box;
-            outline: none;
+            outline: none; background: #fafafa;
         }
-        #rename-input:focus { border-color: #1976d2; }
+        #rename-input:focus { border-color: #667eea; background: #fff; }
 
     </style>
 </head>
 <body>
 
-    <div id="logo">🧠 HRAIN <span style="font-weight:400; font-size: 0.8em;">v2.2</span></div>
+    <div id="logo">🧠 HRAIN</div>
     <button id="reset-btn" onclick="clearAllData()">Сброс</button>
     
-    <button id="add-btn" onclick="createNewNode()">+</button>
+    <button id="add-btn" onclick="createNewNodeWithDelay()">+</button>
 
     <div id="action-menu-backdrop" class="modal-backdrop" onclick="if(event.target === this) closeMenu()">
         <div class="modal-content">
             <h3 id="menu-title">Действия</h3>
-            <button class="menu-btn btn-edit" onclick="openRenameModal()">✏️ Переименовать</button>
+            <button class="menu-btn btn-edit" onclick="switchToRename()">✏️ Переименовать</button>
             <button class="menu-btn btn-delete" onclick="deleteCurrentNode()">🗑️ Удалить</button>
             <button class="menu-btn btn-cancel" onclick="closeMenu()">Отмена</button>
         </div>
@@ -121,8 +127,8 @@
 
     <div id="rename-modal-backdrop" class="modal-backdrop">
         <div class="modal-content">
-            <h3>Новое имя</h3>
-            <input type="text" id="rename-input" placeholder="Введите название">
+            <h3>Имя Mind</h3>
+            <input type="text" id="rename-input" placeholder="Название">
             <button class="menu-btn btn-save" onclick="saveRename()">Сохранить</button>
             <button class="menu-btn btn-cancel" onclick="closeRenameModal()">Отмена</button>
         </div>
@@ -135,13 +141,12 @@
     function loadData() {
         const saved = localStorage.getItem('hrain_d3_v2');
         if (saved) {
-            try { return JSON.parse(saved); } 
-            catch (e) { return null; }
+            try { return JSON.parse(saved); } catch (e) { return null; }
         }
         return null;
     }
     const initialData = loadData() || {
-        nodes: [ { id: 1, label: "Старт", x: window.innerWidth/2, y: window.innerHeight/2 } ],
+        nodes: [ { id: 1, label: "Mind", x: window.innerWidth/2, y: window.innerHeight/2 } ],
         links: []
     };
 
@@ -152,7 +157,7 @@
     const width = window.innerWidth;
     const height = window.innerHeight;
     let selectedNode = null;
-    let menuNode = null;
+    let activeMenuNode = null; // Узел, с которым мы работаем в меню
     let longPressTimer;
 
     const svg = d3.select("#chart").append("svg")
@@ -182,11 +187,20 @@
         if(confirm("Сбросить всё?")) { localStorage.removeItem('hrain_d3_v2'); location.reload(); }
     }
 
+    // === НОВАЯ ФУНКЦИЯ С ЗАДЕРЖКОЙ ===
+    function createNewNodeWithDelay() {
+        const btn = document.getElementById('add-btn');
+        // Визуальный эффект уже есть в CSS :active, но добавим логическую паузу
+        setTimeout(() => {
+            createNewNode();
+        }, 150); // 150мс задержка перед появлением
+    }
+
     function createNewNode() {
         const transform = d3.zoomTransform(svg.node());
         const x = (width / 2 - transform.x) / transform.k;
         const y = (height / 2 - transform.y) / transform.k;
-        nodes.push({ id: Date.now(), label: "Идея", x: x, y: y });
+        nodes.push({ id: Date.now(), label: "Mind", x: x, y: y }); // Заменили "Идея" на "Mind"
         update(); saveData();
     }
 
@@ -265,43 +279,59 @@
         update();
     }
 
-    // === МЕНЮ И ПЕРЕИМЕНОВАНИЕ (ОБНОВЛЕНО) ===
+    // === ЛОГИКА МЕНЮ (ИСПРАВЛЕНО) ===
     const menuBackdrop = document.getElementById('action-menu-backdrop');
     const renameBackdrop = document.getElementById('rename-modal-backdrop');
     const renameInput = document.getElementById('rename-input');
     const menuTitle = document.getElementById('menu-title');
 
+    // 1. Открываем главное меню
     function openMenu(d) {
-        menuNode = d;
+        activeMenuNode = d; // Запоминаем узел глобально
         if (navigator.vibrate) navigator.vibrate(50);
         menuTitle.textContent = d.label;
+        
         menuBackdrop.style.display = 'flex';
-    }
-    function closeMenu() {
-        menuBackdrop.style.display = 'none';
-        menuNode = null; // Сбрасываем только если не переходим к переименованию
+        setTimeout(() => menuBackdrop.classList.add('active'), 10); // Анимация
     }
 
-    // Открытие модалки переименования
-    function openRenameModal() {
-        if(!menuNode) return;
-        const targetNode = menuNode; // Сохраняем ссылку
-        closeMenu(); // Закрываем меню
-        menuNode = targetNode; // Восстанавливаем ссылку, т.к. closeMenu ее стер
+    // 2. Закрываем главное меню (но НЕ сбрасываем узел, если идем в переименование)
+    function closeMenu() {
+        menuBackdrop.classList.remove('active');
+        setTimeout(() => {
+            menuBackdrop.style.display = 'none';
+            // activeMenuNode НЕ обнуляем здесь, иначе rename потеряет цель
+        }, 200);
+    }
+
+    // 3. Переключаемся на переименование
+    function switchToRename() {
+        // Скрываем меню действий
+        menuBackdrop.style.display = 'none'; 
+        menuBackdrop.classList.remove('active');
+
+        // Открываем меню переименования
+        if (!activeMenuNode) return;
         
-        renameInput.value = menuNode.label;
+        renameInput.value = activeMenuNode.label;
         renameBackdrop.style.display = 'flex';
-        setTimeout(() => renameInput.focus(), 100); // Фокус с задержкой для iOS
+        setTimeout(() => {
+            renameBackdrop.classList.add('active');
+            renameInput.focus(); // Фокус на поле ввода
+        }, 10);
     }
 
     function closeRenameModal() {
-        renameBackdrop.style.display = 'none';
-        menuNode = null;
+        renameBackdrop.classList.remove('active');
+        setTimeout(() => {
+            renameBackdrop.style.display = 'none';
+            activeMenuNode = null; // Вот теперь можно забыть узел
+        }, 200);
     }
 
     function saveRename() {
-        if (menuNode && renameInput.value) {
-            menuNode.label = renameInput.value;
+        if (activeMenuNode && renameInput.value) {
+            activeMenuNode.label = renameInput.value;
             update();
             saveData();
         }
@@ -309,18 +339,17 @@
     }
 
     function deleteCurrentNode() {
-        if (!menuNode) return;
-        if (confirm("Удалить узел?")) {
-            nodes = nodes.filter(n => n.id !== menuNode.id);
-            links = links.filter(l => l.source.id !== menuNode.id && l.target.id !== menuNode.id);
-            if (selectedNode === menuNode) selectedNode = null;
-            update();
-            saveData();
+        if (!activeMenuNode) return;
+        if (confirm("Удалить?")) {
+            nodes = nodes.filter(n => n.id !== activeMenuNode.id);
+            links = links.filter(l => l.source.id !== activeMenuNode.id && l.target.id !== activeMenuNode.id);
+            if (selectedNode === activeMenuNode) selectedNode = null;
+            update(); saveData();
         }
         closeMenu();
+        activeMenuNode = null;
     }
 
-    // D3 Drag
     function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x; d.fy = d.y;
