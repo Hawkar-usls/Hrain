@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN: Final</title>
+    <title>HRAIN v4.3 (Responsive)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
             --neuron-aura: #00f0ff;
             --synapse-off: rgba(0, 240, 255, 0.15);
             --synapse-on: #00ffa3;
+            --grid-line: rgba(0, 255, 163, 0.08);
             --danger: #ff2a6d;
             --glass-border: rgba(255, 255, 255, 0.1);
         }
@@ -36,6 +37,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark));
             z-index: 0; animation: deep-breathe 15s infinite alternate ease-in-out;
+            pointer-events: none;
         }
         @keyframes deep-breathe { 0% { opacity: 0.8; } 100% { opacity: 1; } }
 
@@ -53,27 +55,50 @@
             100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
         }
 
+        /* === GRID OVERLAY === */
+        #grid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0; transition: opacity 0.5s ease;
+            z-index: 1; pointer-events: none;
+            transform-origin: 0 0;
+        }
+        body.grid-active #grid-bg { opacity: 1; }
+
         /* === UI ELEMENTS === */
         .ui-element { transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s; }
-        body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.98); }
         
         #logo {
             position: absolute; top: 40px; left: 30px; z-index: 10;
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
             color: rgba(255,255,255,0.4); pointer-events: none;
-            padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left);
+            padding-top: env(safe-area-inset-top);
         }
         #logo span { color: var(--neuron-core); text-shadow: 0 0 12px var(--neuron-core); }
 
-        #reset-btn {
+        /* UI GROUP (GRID & WIPE) */
+        .ui-group {
             position: absolute; top: 40px; right: 30px; z-index: 10;
+            display: flex; gap: 10px;
+            padding-top: env(safe-area-inset-top);
+        }
+        .ui-btn {
             background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.5); backdrop-filter: blur(10px);
             padding: 8px 16px; border-radius: 8px;
             font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.9rem;
-            cursor: pointer; padding-top: calc(8px + env(safe-area-inset-top)); right: calc(30px + env(safe-area-inset-right));
-            transition: 0.3s;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
         }
+        .ui-btn:active { border-color: var(--neuron-core); color: var(--neuron-core); }
+        
+        .ui-btn.active {
+            border-color: var(--neuron-core); color: var(--neuron-core);
+            background: rgba(0, 255, 163, 0.15); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
+        }
+        
         #reset-btn:active { border-color: var(--danger); color: var(--danger); background: rgba(255, 42, 109, 0.1); }
 
         /* MAIN ORB */
@@ -102,7 +127,7 @@
         @keyframes pulse-danger { from { transform: translateX(-50%) scale(1.1); } to { transform: translateX(-50%) scale(1.15); } }
 
         /* CANVAS */
-        #chart { position: relative; width: 100%; height: 100%; z-index: 1; }
+        #chart { position: relative; width: 100%; height: 100%; z-index: 2; }
         
         .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; stroke-linecap: round; transition: stroke 0.3s; }
         .impulse { fill: var(--neuron-core); filter: drop-shadow(0 0 4px var(--neuron-core)); }
@@ -170,28 +195,47 @@
         }
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
-        #focus-toast {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-            color: rgba(0, 255, 163, 0.8); font-size: 0.9rem; letter-spacing: 2px;
-            pointer-events: none; opacity: 0; z-index: 5; text-transform: uppercase; font-weight: 700;
-            text-shadow: 0 0 20px var(--neuron-aura);
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        /* ADAPTIVE UI FOR MOBILE */
+        @media (max-width: 768px) {
+            #logo { 
+                top: 20px; left: 20px; font-size: 1.1rem; 
+                padding-top: env(safe-area-inset-top);
+            }
+            .ui-group { 
+                top: 20px; right: 20px; 
+                padding-top: env(safe-area-inset-top);
+            }
+            .ui-btn {
+                padding: 6px 12px; font-size: 0.8rem;
+            }
+            #delete-hint {
+                bottom: calc(100px + env(safe-area-inset-bottom));
+                font-size: 0.75rem;
+            }
+            #main-btn {
+                width: 60px; height: 60px;
+                bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+            #main-btn::after { font-size: 28px; }
         }
-        #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     </style>
 </head>
 <body>
 
     <div id="neural-bg"></div>
     <div id="particles"></div>
+    <div id="grid-bg"></div>
 
     <div id="logo" class="ui-element">HR<span>ai</span>N</div>
-    <button id="reset-btn" class="ui-element" onclick="triggerWipe()">WIPE</button>
+    
+    <div class="ui-group ui-element">
+        <button id="grid-btn" class="ui-btn" onclick="toggleGrid()">GRID</button>
+        <button id="reset-btn" class="ui-btn" onclick="triggerWipe()">WIPE</button>
+    </div>
+
     <div id="delete-hint" class="ui-element">DISCONNECTING...</div>
 
     <button id="main-btn" class="mode-add ui-element"></button>
-
-    <div id="focus-toast">Focus Mode Active</div>
 
     <div id="rename-modal" class="modal-backdrop">
         <div class="modal-content">
@@ -213,9 +257,10 @@
     <div id="chart"></div>
 
 <script>
-    // INIT PARTICLES
+    // === ATMOSPHERE ===
     function initParticles() {
         const container = document.getElementById('particles');
+        container.innerHTML = '';
         for(let i=0; i<20; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
@@ -230,9 +275,23 @@
     }
     initParticles();
 
+    // === CONFIGURATION & RESPONSIVENESS ===
+    const isMobile = window.innerWidth < 768;
+    const GRID_SIZE = isMobile ? 40 : 60; // Smaller grid for mobile
+    let isGridEnabled = false;
+
+    // PHYSICS PARAMS
+    const PHYS = {
+        linkDist: isMobile ? 100 : 160,     // Shorter links on mobile
+        charge: isMobile ? -250 : -450,     // Less repulsion on mobile
+        collide: isMobile ? 10 : 20,        // Buffer
+        nodeScale: isMobile ? 0.7 : 1.0     // Visual scaling
+    };
+
     // DATA
     function loadData() {
-        const saved = localStorage.getItem('hrain_v21_final');
+        let saved = localStorage.getItem('hrain_v21_final');
+        if (!saved) saved = localStorage.getItem('hrain_v3_arch');
         if (saved) { try { return JSON.parse(saved); } catch (e) { return null; } }
         return null;
     }
@@ -257,42 +316,52 @@
     const impulseGroup = g.append("g").attr("class", "impulses");
     const nodeGroup = g.append("g").attr("class", "nodes");
 
-    const zoom = d3.zoom().scaleExtent([0.2, 4]).on("zoom", (event) => g.attr("transform", event.transform));
+    // Zoom Setup with initial mobile scale
+    const initialScale = isMobile ? 0.7 : 1;
+    const zoom = d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        const grid = document.getElementById('grid-bg');
+        grid.style.backgroundPosition = `${event.transform.x}px ${event.transform.y}px`;
+        grid.style.backgroundSize = `${GRID_SIZE * event.transform.k}px ${GRID_SIZE * event.transform.k}px`;
+    });
     
-    // FOCUS MODE
-    let lastTapTime = 0;
-    const focusToast = document.getElementById('focus-toast');
-
-    svg.call(zoom).on("dblclick.zoom", null).on("click", (event) => { 
-        if (event.target.tagName === 'svg') {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTapTime;
-            if (tapLength < 300 && tapLength > 0) {
-                toggleFocusMode(); event.preventDefault();
-            } else { deselectNode(); }
-            lastTapTime = currentTime;
-        }
+    // Apply initial zoom AFTER svg is defined
+    svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(initialScale).translate(-width/2, -height/2));
+    
+    svg.on("dblclick.zoom", null).on("click", (event) => { 
+        if (event.target.tagName === 'svg') deselectNode();
     });
 
-    function toggleFocusMode() {
-        document.body.classList.toggle('focus-active');
-        if (document.body.classList.contains('focus-active')) {
-            focusToast.classList.add('show');
-            setTimeout(() => focusToast.classList.remove('show'), 800);
-        }
-        if(navigator.vibrate) navigator.vibrate(50);
-    }
-
-    // PHYSICS (STABLE)
+    // === PHYSICS ENGINE (ADAPTIVE) ===
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(160))
-        .force("charge", d3.forceManyBody().strength(-450))
-        .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 50) + 20).iterations(2))
+        .force("link", d3.forceLink(links).id(d => d.id).distance(PHYS.linkDist))
+        .force("charge", d3.forceManyBody().strength(PHYS.charge))
+        .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 30) + PHYS.collide).iterations(2))
         .force("x", d3.forceX(width / 2).strength(0.015)) 
         .force("y", d3.forceY(height / 2).strength(0.015))
         .alphaDecay(0.05);
 
-    // === BUTTON LOGIC (FIXED BUG) ===
+    // === MAGNETIC GRID LOGIC ===
+    function magneticForce(alpha) {
+        if (!isGridEnabled) return;
+        const strength = 0.15; 
+        nodes.forEach(d => {
+            if (d.fx || d.fy) return;
+            const targetX = Math.round(d.x / GRID_SIZE) * GRID_SIZE;
+            const targetY = Math.round(d.y / GRID_SIZE) * GRID_SIZE;
+            d.x += (targetX - d.x) * strength * alpha;
+            d.y += (targetY - d.y) * strength * alpha;
+        });
+    }
+
+    function toggleGrid() {
+        isGridEnabled = !isGridEnabled;
+        document.body.classList.toggle('grid-active', isGridEnabled);
+        document.getElementById('grid-btn').classList.toggle('active', isGridEnabled);
+        if (isGridEnabled) simulation.alpha(0.3).restart();
+    }
+
+    // === BUTTON LOGIC ===
     const mainBtn = document.getElementById('main-btn');
     const deleteHint = document.getElementById('delete-hint');
     let pressTimer, isLongPress = false, isTouchAction = false;
@@ -318,12 +387,7 @@
         clearTimeout(pressTimer);
         mainBtn.classList.remove('holding-delete'); deleteHint.classList.remove('visible'); mainBtn.style.transform = "";
         
-        // === FIX LOGIC START ===
-        if (isLongPress) {
-            isLongPress = false;
-            return; // Если было долгое нажатие (удаление), ничего больше не делаем
-        }
-        // === FIX LOGIC END ===
+        if (isLongPress) { isLongPress = false; return; }
 
         if (selectedNode) { 
              openRename(); 
@@ -345,7 +409,13 @@
     function createNewNode() {
         const t = d3.zoomTransform(svg.node());
         let x, y;
-        if (selectedNode) {
+        
+        if (isGridEnabled && selectedNode) {
+            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+            const dir = directions[Math.floor(Math.random() * directions.length)];
+            x = selectedNode.x + (dir[0] * GRID_SIZE * 2);
+            y = selectedNode.y + (dir[1] * GRID_SIZE * 2);
+        } else if (selectedNode) {
             const angle = Math.random() * Math.PI * 2;
             x = selectedNode.x + Math.cos(angle) * 80;
             y = selectedNode.y + Math.sin(angle) * 80;
@@ -355,7 +425,10 @@
 
         const newNode = { id: Date.now(), label: "Idea", x, y };
         nodes.push(newNode);
-        if (selectedNode) links.push({ source: selectedNode.id, target: newNode.id });
+        if (selectedNode) {
+            links.push({ source: selectedNode.id, target: newNode.id });
+            animateImpulse(selectedNode, newNode);
+        }
 
         selectedNode = newNode; 
         updateButtonState(); updateTopology(0.3); saveData(); 
@@ -366,7 +439,6 @@
         if(!selectedNode) return;
         nodes = nodes.filter(n => n.id !== selectedNode.id);
         links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
-        // IMPORTANT: selectedNode must be cleared for button logic to work correctly
         selectedNode = null; 
         updateButtonState(); updateTopology(); saveData();
     }
@@ -425,8 +497,13 @@
     function updateTopology(targetAlpha = 0.5) {
         nodes.forEach(node => {
             const connections = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id).length;
-            node.coreRadius = 8 + (connections * 1.5); 
-            node.auraRadius = 22 + (connections * 3.5);
+            
+            // ADAPTIVE RADIUS CALCULATION
+            const baseCore = 8 * PHYS.nodeScale;
+            const baseAura = 22 * PHYS.nodeScale;
+            
+            node.coreRadius = baseCore + (connections * (1.5 * PHYS.nodeScale)); 
+            node.auraRadius = baseAura + (connections * (3.5 * PHYS.nodeScale));
             node.currentRadius = node.auraRadius;
         });
 
@@ -436,14 +513,21 @@
 
         const node = nodeGroup.selectAll("g").data(nodes, d => d.id);
         node.exit().transition().duration(300).style("opacity", 0).remove();
+        
         const nodeEnter = node.enter().append("g").attr("class", "node-group")
             .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
             .on("click", handleNodeClick);
 
         nodeEnter.append("circle").attr("class", "hitbox");
         nodeEnter.append("circle").attr("class", "neuron-aura");
-        nodeEnter.append("circle").attr("class", "neuron-core");
-        nodeEnter.append("text").attr("class", "label").attr("dy", 0).text(d => d.label);
+        nodeEnter.append("circle").attr("class", "neuron-core").attr("cx", 0).attr("cy", 0); 
+        
+        // Update text size for mobile
+        nodeEnter.append("text")
+            .attr("class", "label")
+            .attr("dy", 0)
+            .style("font-size", isMobile ? "11px" : "14px")
+            .text(d => d.label);
 
         const allNodes = nodeEnter.merge(node);
         allNodes.attr("class", d => d === selectedNode ? "node-group selected" : "node-group");
@@ -451,10 +535,13 @@
 
         allNodes.select(".neuron-core").transition().duration(300).attr("r", d => d.coreRadius);
         allNodes.select(".neuron-aura").transition().duration(300).attr("r", d => d.auraRadius);
-        allNodes.select(".hitbox").attr("r", d => Math.max(50, d.auraRadius + 15));
-        allNodes.select("text.label").transition().duration(300).attr("dy", d => d.auraRadius + 18);
+        
+        // Fix hitbox and text position based on new smaller radii
+        allNodes.select(".hitbox").attr("r", d => Math.max(40, d.auraRadius + 15));
+        allNodes.select("text.label").transition().duration(300).attr("dy", d => d.auraRadius + (isMobile ? 12 : 18));
 
         simulation.nodes(nodes).on("tick", () => {
+            magneticForce(simulation.alpha());
             linkGroup.selectAll("line").attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
             allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
         });
@@ -479,7 +566,16 @@
 
     function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
     function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-    function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; saveData(); }
+    function dragended(event, d) { 
+        if (!event.active) simulation.alphaTarget(0); 
+        if (isGridEnabled) {
+             d.fx = Math.round(event.x / GRID_SIZE) * GRID_SIZE;
+             d.fy = Math.round(event.y / GRID_SIZE) * GRID_SIZE;
+        } else {
+             d.fx = null; d.fy = null;
+        }
+        saveData(); 
+    }
     
     function saveData() {
         const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
@@ -491,4 +587,3 @@
 </script>
 </body>
 </html>
-
