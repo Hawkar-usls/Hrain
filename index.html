@@ -6,218 +6,180 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN v4.3 (Responsive)</title>
+    <title>HRAIN v6.1 (Stable IO)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     
-    <style>
+    <style id="main-styles">
         :root {
             --bg-dark: #030508;
             --bg-pulse: #080c12;
-            --neuron-core: #00ffa3;
+            --c-cyan: #00ffa3;
+            --c-red: #ff2a6d;
+            --c-yellow: #ffc107;
+            --c-purple: #d300ff;
+            --neuron-core: var(--c-cyan);
             --neuron-aura: #00f0ff;
             --synapse-off: rgba(0, 240, 255, 0.15);
-            --synapse-on: #00ffa3;
             --grid-line: rgba(0, 255, 163, 0.08);
-            --danger: #ff2a6d;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.15);
         }
+
+        /* NODE TYPES */
+        .type-default { --local-color: var(--c-cyan); --local-aura: #00f0ff; }
+        .type-danger { --local-color: var(--c-red); --local-aura: #ff5e62; }
+        .type-warn { --local-color: var(--c-yellow); --local-aura: #ffe082; }
+        .type-info { --local-color: var(--c-purple); --local-aura: #e040fb; }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: var(--bg-dark);
             font-family: 'Rajdhani', sans-serif; color: #e0e0e0;
             -webkit-user-select: none; user-select: none;
-            -webkit-touch-callout: none; overscroll-behavior: none; touch-action: none;
+            touch-action: none;
         }
 
-        /* === ATMOSPHERE === */
+        /* ATMOSPHERE */
         #neural-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark));
-            z-index: 0; animation: deep-breathe 15s infinite alternate ease-in-out;
-            pointer-events: none;
+            z-index: 0; animation: deep-breathe 15s infinite alternate ease-in-out; pointer-events: none;
         }
         @keyframes deep-breathe { 0% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        #particles {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none; opacity: 0.3;
-        }
-        .particle {
-            position: absolute; background: var(--neuron-aura);
-            border-radius: 50%; opacity: 0.3; animation: float 30s infinite linear;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) translateX(0); opacity: 0; }
-            50% { opacity: 0.4; }
-            100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
-        }
-
-        /* === GRID OVERLAY === */
+        #particles, #grid-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #particles { z-index: 0; opacity: 0.3; }
         #grid-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 60px 60px;
-            opacity: 0; transition: opacity 0.5s ease;
-            z-index: 1; pointer-events: none;
-            transform-origin: 0 0;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 60px 60px; opacity: 0; transition: opacity 0.5s ease; z-index: 1;
         }
         body.grid-active #grid-bg { opacity: 1; }
+        .particle { position: absolute; background: var(--neuron-aura); border-radius: 50%; opacity: 0.3; animation: float 30s infinite linear; }
+        @keyframes float { 0% { transform: translateY(0) translateX(0); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: translateY(-100vh) translateX(20px); opacity: 0; } }
 
-        /* === UI ELEMENTS === */
-        .ui-element { transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s; }
+        /* UI */
+        .ui-element { transition: opacity 0.6s, transform 0.6s; }
+        body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.95); }
         
         #logo {
             position: absolute; top: 40px; left: 30px; z-index: 10;
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
             color: rgba(255,255,255,0.4); pointer-events: none;
             padding-top: env(safe-area-inset-top);
+            transition: all 0.3s ease;
         }
-        #logo span { color: var(--neuron-core); text-shadow: 0 0 12px var(--neuron-core); }
+        #logo span { color: var(--c-cyan); text-shadow: 0 0 12px var(--c-cyan); }
 
-        /* UI GROUP (GRID & WIPE) */
+        /* BUTTON GROUP */
         .ui-group {
             position: absolute; top: 40px; right: 30px; z-index: 10;
-            display: flex; gap: 10px;
-            padding-top: env(safe-area-inset-top);
+            display: flex; gap: 6px; padding-top: env(safe-area-inset-top);
+            transition: all 0.3s ease;
         }
         .ui-btn {
             background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.5); backdrop-filter: blur(10px);
-            padding: 8px 16px; border-radius: 8px;
-            font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.9rem;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            color: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            padding: 8px 12px; border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            white-space: nowrap;
         }
-        .ui-btn:active { border-color: var(--neuron-core); color: var(--neuron-core); }
+        .ui-btn:active { transform: scale(0.95); color: white; border-color: white; }
+        .ui-btn.active { border-color: var(--c-cyan); color: var(--c-cyan); background: rgba(0, 255, 163, 0.1); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2); }
         
-        .ui-btn.active {
-            border-color: var(--neuron-core); color: var(--neuron-core);
-            background: rgba(0, 255, 163, 0.15); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
-        }
-        
-        #reset-btn:active { border-color: var(--danger); color: var(--danger); background: rgba(255, 42, 109, 0.1); }
+        #btn-wipe { border-color: rgba(255, 42, 109, 0.3); color: rgba(255, 42, 109, 0.7); }
+        #btn-wipe:active { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.1); }
 
-        /* MAIN ORB */
+        /* MAIN ADD BUTTON */
         #main-btn {
-            position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); 
-            left: 50%; transform: translateX(-50%);
-            width: 72px; height: 72px; z-index: 100;
-            border-radius: 50%; border: none;
+            position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            width: 72px; height: 72px; z-index: 100; border-radius: 50%; border: none;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.6));
             box-shadow: 0 0 0 1px var(--glass-border), 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 240, 255, 0.05);
             backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: opacity 0.6s, transform 0.3s; -webkit-tap-highlight-color: transparent;
         }
-        #main-btn::after {
-            content: '+'; font-size: 32px; font-weight: 300; color: var(--neuron-core);
-            text-shadow: 0 0 8px var(--neuron-core); transition: 0.3s;
-        }
+        #main-btn::after { content: '+'; font-size: 32px; font-weight: 300; color: var(--c-cyan); text-shadow: 0 0 8px var(--c-cyan); transition: 0.3s; }
         #main-btn:active { transform: translateX(-50%) scale(0.92); }
-        #main-btn.mode-edit { box-shadow: 0 0 0 1px var(--neuron-aura), 0 0 30px rgba(0, 240, 255, 0.2); }
-        #main-btn.mode-edit::after { content: '✎'; color: var(--neuron-aura); text-shadow: 0 0 10px var(--neuron-aura); }
-        #main-btn.holding-delete {
-            box-shadow: 0 0 0 1px var(--danger), 0 0 40px rgba(255, 42, 109, 0.3);
-            transform: translateX(-50%) scale(1.1); animation: pulse-danger 0.5s infinite alternate;
-        }
-        #main-btn.holding-delete::after { content: '×'; color: var(--danger); text-shadow: 0 0 10px var(--danger); }
-        @keyframes pulse-danger { from { transform: translateX(-50%) scale(1.1); } to { transform: translateX(-50%) scale(1.15); } }
+        #main-btn.mode-edit { box-shadow: 0 0 0 1px var(--c-cyan), 0 0 30px rgba(0, 240, 255, 0.2); }
+        #main-btn.mode-edit::after { content: '✎'; color: var(--c-cyan); }
+        #main-btn.holding-delete { box-shadow: 0 0 0 1px var(--c-red), 0 0 40px rgba(255, 42, 109, 0.3); transform: translateX(-50%) scale(1.1); }
+        #main-btn.holding-delete::after { content: '×'; color: var(--c-red); }
 
-        /* CANVAS */
+        /* D3 STYLES */
         #chart { position: relative; width: 100%; height: 100%; z-index: 2; }
-        
-        .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; stroke-linecap: round; transition: stroke 0.3s; }
-        .impulse { fill: var(--neuron-core); filter: drop-shadow(0 0 4px var(--neuron-core)); }
-
-        .neuron-core {
-            fill: #0a0f14; stroke: var(--neuron-core); stroke-width: 1.5px;
-            filter: drop-shadow(0 0 6px rgba(0, 255, 163, 0.3)); transition: all 0.3s;
-        }
-        .neuron-aura {
-            fill: transparent; stroke: var(--neuron-aura); stroke-width: 1px;
-            opacity: 0.2; filter: blur(3px); transform-origin: center;
-        }
+        .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; transition: stroke 0.3s; }
+        .impulse { filter: drop-shadow(0 0 4px currentColor); pointer-events: none; }
+        .neuron-core { fill: #0a0f14; stroke: var(--local-color, var(--c-cyan)); stroke-width: 1.5px; filter: drop-shadow(0 0 6px var(--local-color, var(--c-cyan))); transition: r 0.3s, stroke 0.3s; }
+        .neuron-aura { fill: transparent; stroke: var(--local-aura, var(--neuron-aura)); stroke-width: 1px; opacity: 0.2; filter: blur(3px); transition: stroke 0.3s; }
         .hitbox { fill: transparent; cursor: pointer; }
-
-        .node-group.selected .neuron-core {
-            fill: rgba(0, 255, 163, 0.15); stroke: var(--neuron-aura); stroke-width: 2.5px;
-            filter: drop-shadow(0 0 15px var(--neuron-aura));
-        }
+        .node-group.selected .neuron-core { fill: rgba(255,255,255,0.1); stroke-width: 2.5px; filter: drop-shadow(0 0 15px var(--local-color, var(--c-cyan))); }
         .node-group.selected .neuron-aura { opacity: 0.5; }
-
-        text.label {
-            font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
-            fill: rgba(255,255,255,0.5); pointer-events: none; text-anchor: middle;
-            text-shadow: 0 2px 4px #000; transition: fill 0.3s;
-        }
-        .node-group.selected text.label { fill: var(--neuron-aura); text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+        text.label { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600; fill: rgba(255,255,255,0.5); pointer-events: none; text-anchor: middle; text-shadow: 0 2px 4px #000; transition: fill 0.3s; }
+        .node-group.selected text.label { fill: var(--local-color, var(--c-cyan)); text-shadow: 0 0 10px rgba(0,0,0,0.8); }
 
         /* MODALS */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+            z-index: 2000; display: none; align-items: center; justify-content: center;
         }
-        .modal-backdrop.open { opacity: 1; }
         .modal-content {
             width: 85%; max-width: 320px; padding: 25px; text-align: center;
             background: rgba(15, 20, 25, 0.95); border: 1px solid var(--glass-border); border-radius: 20px;
-            box-shadow: 0 0 40px rgba(0, 255, 163, 0.05); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 40px rgba(0, 255, 163, 0.05); animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .modal-backdrop.open .modal-content { transform: scale(1); }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         #rename-input {
             width: 100%; background: transparent; border: none; border-bottom: 1px solid #333;
-            color: var(--neuron-core); font-family: 'Rajdhani', sans-serif; font-size: 1.3rem;
-            text-align: center; padding: 10px; outline: none; margin-bottom: 25px; border-radius: 0;
+            color: var(--c-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.3rem;
+            text-align: center; padding: 10px; outline: none; margin-bottom: 20px; border-radius: 0;
         }
+        .color-picker { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+        .color-opt {
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            background: var(--bg); box-shadow: 0 0 10px var(--bg);
+            border: 2px solid transparent; transition: 0.2s;
+        }
+        .color-opt.selected { transform: scale(1.3); border-color: white; }
+
         .modal-btn {
             width: 100%; padding: 14px; margin-top: 5px; background: transparent;
             border: 1px solid #333; border-radius: 12px; color: #888; cursor: pointer;
             font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem;
         }
-        .btn-save { border-color: var(--neuron-core); color: var(--neuron-core); background: rgba(0, 255, 163, 0.05); }
-        .btn-save:active { background: var(--neuron-core); color: black; }
-        .btn-danger { border-color: var(--danger); color: var(--danger); background: rgba(255, 42, 109, 0.05); }
+        .btn-save { border-color: var(--c-cyan); color: var(--c-cyan); background: rgba(0, 255, 163, 0.05); }
+        .btn-danger { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.05); }
         
-        .wipe-title { color: var(--danger); font-family: 'Orbitron', sans-serif; margin-bottom: 10px; }
-        .wipe-desc { color: #888; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
-
         #delete-hint {
-            position: absolute; bottom: calc(130px + env(safe-area-inset-bottom)); 
-            left: 50%; transform: translateX(-50%); color: var(--danger);
-            font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
-            opacity: 0; transition: 0.3s; pointer-events: none; font-weight: 700;
-            text-shadow: 0 0 15px rgba(255, 42, 109, 0.6);
+            position: absolute; bottom: calc(130px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            color: var(--c-red); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
+            opacity: 0; transition: 0.3s; pointer-events: none; font-weight: 700; text-shadow: 0 0 15px rgba(255, 42, 109, 0.6);
         }
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
-        /* ADAPTIVE UI FOR MOBILE */
-        @media (max-width: 768px) {
-            #logo { 
-                top: 20px; left: 20px; font-size: 1.1rem; 
-                padding-top: env(safe-area-inset-top);
-            }
-            .ui-group { 
-                top: 20px; right: 20px; 
-                padding-top: env(safe-area-inset-top);
-            }
-            .ui-btn {
-                padding: 6px 12px; font-size: 0.8rem;
-            }
-            #delete-hint {
-                bottom: calc(100px + env(safe-area-inset-bottom));
-                font-size: 0.75rem;
-            }
-            #main-btn {
-                width: 60px; height: 60px;
-                bottom: calc(30px + env(safe-area-inset-bottom));
-            }
-            #main-btn::after { font-size: 28px; }
+        #focus-toast {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            color: rgba(0, 255, 163, 0.8); font-size: 0.9rem; letter-spacing: 2px; pointer-events: none; opacity: 0; z-index: 5; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 20px var(--neuron-aura); transition: opacity 0.3s, transform 0.3s;
         }
+        #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        /* COMPACT MOBILE UI */
+        @media (max-width: 768px) {
+            #logo { font-size: 1rem; top: 15px; left: 15px; }
+            .ui-group { 
+                top: 15px; right: 15px; 
+                width: auto; flex-wrap: nowrap; gap: 6px;
+            }
+            .ui-btn { 
+                padding: 6px 10px; font-size: 0.7rem; flex-grow: 0; width: auto;
+            }
+            #main-btn { width: 60px; height: 60px; bottom: calc(30px + env(safe-area-inset-bottom)); }
+        }
+        
+        #file-input { display: none; }
     </style>
 </head>
 <body>
@@ -230,93 +192,109 @@
     
     <div class="ui-group ui-element">
         <button id="grid-btn" class="ui-btn" onclick="toggleGrid()">GRID</button>
-        <button id="reset-btn" class="ui-btn" onclick="triggerWipe()">WIPE</button>
+        <button class="ui-btn" onclick="takeSnapshot()">SNAP</button>
+        <button class="ui-btn" onclick="downloadData()">SAVE</button>
+        <button class="ui-btn" onclick="triggerUpload()">LOAD</button>
+        <button id="btn-wipe" class="ui-btn" onclick="showWipeModal()">WIPE</button>
     </div>
+    <input type="file" id="file-input" accept=".json" onchange="uploadData(this)">
 
     <div id="delete-hint" class="ui-element">DISCONNECTING...</div>
+    <div id="focus-toast">Focus Mode Active</div>
 
     <button id="main-btn" class="mode-add ui-element"></button>
 
+    <!-- RENAME MODAL -->
     <div id="rename-modal" class="modal-backdrop">
         <div class="modal-content">
             <input type="text" id="rename-input" placeholder="THOUGHT..." autocomplete="off">
-            <button class="modal-btn btn-save" onclick="saveRename()">INITIALIZE</button>
-            <button class="modal-btn btn-cancel" onclick="closeRename()">CANCEL</button>
+            <div class="color-picker">
+                <div class="color-opt selected" data-type="default" style="--bg: var(--c-cyan)" onclick="selectColor('default')"></div>
+                <div class="color-opt" data-type="danger" style="--bg: var(--c-red)" onclick="selectColor('danger')"></div>
+                <div class="color-opt" data-type="warn" style="--bg: var(--c-yellow)" onclick="selectColor('warn')"></div>
+                <div class="color-opt" data-type="info" style="--bg: var(--c-purple)" onclick="selectColor('info')"></div>
+            </div>
+            <button class="modal-btn btn-save" onclick="saveRename()">CONFIRM</button>
+            <button class="modal-btn" onclick="closeModal('rename-modal')">CANCEL</button>
         </div>
     </div>
 
+    <!-- WIPE MODAL -->
     <div id="wipe-modal" class="modal-backdrop">
-        <div class="modal-content" style="border-color: var(--danger); box-shadow: 0 0 40px rgba(255,42,109,0.1);">
-            <h3 class="wipe-title">SYSTEM PURGE</h3>
-            <p class="wipe-desc">Irreversible disconnection of all nodes.</p>
-            <button class="modal-btn btn-danger" onclick="confirmWipe()">CONFIRM</button>
-            <button class="modal-btn btn-cancel" onclick="closeWipe()">CANCEL</button>
+        <div class="modal-content" style="border-color: var(--c-red); box-shadow: 0 0 40px rgba(255,42,109,0.1);">
+            <h3 style="color: var(--c-red); font-family: 'Orbitron'; margin-bottom: 10px;">SYSTEM PURGE</h3>
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">Irreversible data deletion.</p>
+            <button class="modal-btn btn-danger" onclick="confirmWipe()">ERASE ALL</button>
+            <button class="modal-btn" onclick="closeModal('wipe-modal')">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- ALERT MODAL -->
+    <div id="alert-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 id="alert-title" style="color: var(--c-cyan); margin-bottom: 10px;">NOTICE</h3>
+            <p id="alert-msg" style="color: #ccc; margin-bottom: 20px;"></p>
+            <button class="modal-btn btn-save" onclick="closeModal('alert-modal')">OK</button>
         </div>
     </div>
 
     <div id="chart"></div>
 
 <script>
-    // === ATMOSPHERE ===
+    // === CONFIG ===
+    const isMobile = window.innerWidth < 768;
+    const GRID_SIZE = isMobile ? 40 : 60;
+    let isGridEnabled = false;
+    
+    const COLORS = {
+        'default': '#00ffa3', 'danger': '#ff2a6d', 'warn': '#ffc107', 'info': '#d300ff'
+    };
+    const PHYS = {
+        linkDist: isMobile ? 100 : 160,
+        charge: isMobile ? -250 : -450,
+        collide: isMobile ? 10 : 20,
+        nodeScale: isMobile ? 0.7 : 1.0
+    };
+
+    // PARTICLES
     function initParticles() {
         const container = document.getElementById('particles');
-        container.innerHTML = '';
         for(let i=0; i<20; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.top = Math.random() * 100 + '%';
-            p.style.width = (Math.random() * 3 + 1) + 'px';
-            p.style.height = p.style.width;
-            p.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            p.style.animationDelay = -(Math.random() * 20) + 's';
+            p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
+            p.style.width = (Math.random()*3+1)+'px'; p.style.height = p.style.width;
+            p.style.animationDuration = (Math.random()*10+15)+'s';
+            p.style.animationDelay = -(Math.random()*20)+'s';
             container.appendChild(p);
         }
     }
     initParticles();
 
-    // === CONFIGURATION & RESPONSIVENESS ===
-    const isMobile = window.innerWidth < 768;
-    const GRID_SIZE = isMobile ? 40 : 60; // Smaller grid for mobile
-    let isGridEnabled = false;
-
-    // PHYSICS PARAMS
-    const PHYS = {
-        linkDist: isMobile ? 100 : 160,     // Shorter links on mobile
-        charge: isMobile ? -250 : -450,     // Less repulsion on mobile
-        collide: isMobile ? 10 : 20,        // Buffer
-        nodeScale: isMobile ? 0.7 : 1.0     // Visual scaling
-    };
-
     // DATA
     function loadData() {
-        let saved = localStorage.getItem('hrain_v21_final');
-        if (!saved) saved = localStorage.getItem('hrain_v3_arch');
-        if (saved) { try { return JSON.parse(saved); } catch (e) { return null; } }
+        let saved = localStorage.getItem('hrain_v5_pro');
+        if(!saved) saved = localStorage.getItem('hrain_v21_final');
+        if(saved) { try { return JSON.parse(saved); } catch(e){ return null; } }
         return null;
     }
     const initialData = loadData() || {
-        nodes: [ { id: 1, label: "Core", x: window.innerWidth/2, y: window.innerHeight/2 } ],
+        nodes: [ { id: 1, label: "Core", x: window.innerWidth/2, y: window.innerHeight/2, type: "default" } ],
         links: []
     };
     let nodes = initialData.nodes;
     let links = initialData.links;
 
     // D3 SETUP
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = window.innerWidth, height = window.innerHeight;
     let selectedNode = null; 
     
-    const svg = d3.select("#chart").append("svg")
-        .attr("width", width).attr("height", height)
-        .attr("viewBox", [0, 0, width, height]);
-
+    const svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height).attr("viewBox", [0, 0, width, height]);
     const g = svg.append("g");
     const linkGroup = g.append("g").attr("class", "links");
     const impulseGroup = g.append("g").attr("class", "impulses");
     const nodeGroup = g.append("g").attr("class", "nodes");
 
-    // Zoom Setup with initial mobile scale
     const initialScale = isMobile ? 0.7 : 1;
     const zoom = d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
         g.attr("transform", event.transform);
@@ -324,33 +302,44 @@
         grid.style.backgroundPosition = `${event.transform.x}px ${event.transform.y}px`;
         grid.style.backgroundSize = `${GRID_SIZE * event.transform.k}px ${GRID_SIZE * event.transform.k}px`;
     });
-    
-    // Apply initial zoom AFTER svg is defined
     svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(initialScale).translate(-width/2, -height/2));
     
-    svg.on("dblclick.zoom", null).on("click", (event) => { 
-        if (event.target.tagName === 'svg') deselectNode();
+    // FOCUS MODE
+    let lastTapTime = 0;
+    svg.on("click", (event) => { 
+        if (event.target.tagName === 'svg') {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastTapTime < 300) toggleFocusMode(); 
+            else deselectNode();
+            lastTapTime = currentTime;
+        }
     });
 
-    // === PHYSICS ENGINE (ADAPTIVE) ===
+    function toggleFocusMode() {
+        document.body.classList.toggle('focus-active');
+        if (document.body.classList.contains('focus-active')) {
+            const t = document.getElementById('focus-toast');
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 800);
+        }
+    }
+
+    // SIMULATION
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(PHYS.linkDist))
         .force("charge", d3.forceManyBody().strength(PHYS.charge))
         .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 30) + PHYS.collide).iterations(2))
-        .force("x", d3.forceX(width / 2).strength(0.015)) 
-        .force("y", d3.forceY(height / 2).strength(0.015))
+        .force("x", d3.forceX(width/2).strength(0.015)) 
+        .force("y", d3.forceY(height/2).strength(0.015))
         .alphaDecay(0.05);
 
-    // === MAGNETIC GRID LOGIC ===
+    // LOGIC
     function magneticForce(alpha) {
         if (!isGridEnabled) return;
         const strength = 0.15; 
         nodes.forEach(d => {
             if (d.fx || d.fy) return;
-            const targetX = Math.round(d.x / GRID_SIZE) * GRID_SIZE;
-            const targetY = Math.round(d.y / GRID_SIZE) * GRID_SIZE;
-            d.x += (targetX - d.x) * strength * alpha;
-            d.y += (targetY - d.y) * strength * alpha;
+            d.x += (Math.round(d.x/GRID_SIZE)*GRID_SIZE - d.x) * strength * alpha;
+            d.y += (Math.round(d.y/GRID_SIZE)*GRID_SIZE - d.y) * strength * alpha;
         });
     }
 
@@ -361,182 +350,247 @@
         if (isGridEnabled) simulation.alpha(0.3).restart();
     }
 
-    // === BUTTON LOGIC ===
-    const mainBtn = document.getElementById('main-btn');
-    const deleteHint = document.getElementById('delete-hint');
-    let pressTimer, isLongPress = false, isTouchAction = false;
-
-    function handleBtnStart(e) {
-        if (e.type === 'touchstart') isTouchAction = true;
-        if (e.type === 'mousedown' && isTouchAction) return;
-        if (selectedNode) {
-            isLongPress = false;
-            mainBtn.classList.add('holding-delete');
-            deleteHint.classList.add('visible');
-            tryVibrate(50);
-            pressTimer = setTimeout(() => { 
-                isLongPress = true; 
-                deleteSelectedNode(); 
-                tryVibrate([50,50]); 
-            }, 800);
-        } else mainBtn.style.transform = "translateX(-50%) scale(0.9)";
-    }
-    
-    function handleBtnEnd(e) {
-        if (e.type === 'mouseup' && isTouchAction) { isTouchAction = false; return; }
-        clearTimeout(pressTimer);
-        mainBtn.classList.remove('holding-delete'); deleteHint.classList.remove('visible'); mainBtn.style.transform = "";
-        
-        if (isLongPress) { isLongPress = false; return; }
-
-        if (selectedNode) { 
-             openRename(); 
-        } else { 
-             createNewNode(); 
+    // === STABLE IO (BLOB BASED) ===
+    function downloadData() {
+        try {
+            const cleanNodes = nodes.map(n => ({ id:n.id, label:n.label, x:n.x, y:n.y, type:n.type||'default' }));
+            const cleanLinks = links.map(l => ({ source:l.source.id||l.source, target:l.target.id||l.target }));
+            
+            const blob = new Blob([JSON.stringify({nodes: cleanNodes, links: cleanLinks})], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "hrain_memory.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch(e) {
+            showAlert("Save Error: " + e.message);
         }
-        isLongPress = false;
     }
-    mainBtn.addEventListener('mousedown', handleBtnStart); 
-    mainBtn.addEventListener('touchstart', handleBtnStart, {passive: false});
-    mainBtn.addEventListener('mouseup', handleBtnEnd); 
-    mainBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBtnEnd(e); });
 
-    function tryVibrate(pattern) { if (navigator.vibrate) try { navigator.vibrate(pattern); } catch(e){} }
-    function updateButtonState() { mainBtn.className = "ui-element " + (selectedNode ? "mode-edit" : "mode-add"); }
-    function deselectNode() { selectedNode = null; updateButtonState(); updateTopology(); }
-
-    // CREATION
-    function createNewNode() {
-        const t = d3.zoomTransform(svg.node());
-        let x, y;
-        
-        if (isGridEnabled && selectedNode) {
-            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-            const dir = directions[Math.floor(Math.random() * directions.length)];
-            x = selectedNode.x + (dir[0] * GRID_SIZE * 2);
-            y = selectedNode.y + (dir[1] * GRID_SIZE * 2);
-        } else if (selectedNode) {
-            const angle = Math.random() * Math.PI * 2;
-            x = selectedNode.x + Math.cos(angle) * 80;
-            y = selectedNode.y + Math.sin(angle) * 80;
-        } else {
-            x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
+    function takeSnapshot() {
+        try {
+            const svgNode = document.querySelector('svg');
+            const clone = svgNode.cloneNode(true);
+            
+            // Embed styles directly
+            const style = document.createElement('style');
+            style.textContent = document.getElementById('main-styles').textContent;
+            clone.insertBefore(style, clone.firstChild);
+            
+            const svgString = new XMLSerializer().serializeToString(clone);
+            const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#030508";
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0);
+                
+                const pngUrl = canvas.toDataURL("image/png");
+                const a = document.createElement('a');
+                a.download = 'hrain_snap.png';
+                a.href = pngUrl;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        } catch(e) {
+            showAlert("Snap Error: " + e.message);
         }
-
-        const newNode = { id: Date.now(), label: "Idea", x, y };
-        nodes.push(newNode);
-        if (selectedNode) {
-            links.push({ source: selectedNode.id, target: newNode.id });
-            animateImpulse(selectedNode, newNode);
-        }
-
-        selectedNode = newNode; 
-        updateButtonState(); updateTopology(0.3); saveData(); 
-        tryVibrate(20); setTimeout(openRename, 50);
     }
-    
-    function deleteSelectedNode() {
-        if(!selectedNode) return;
-        nodes = nodes.filter(n => n.id !== selectedNode.id);
-        links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
-        selectedNode = null; 
-        updateButtonState(); updateTopology(); saveData();
+
+    function triggerUpload() { document.getElementById('file-input').click(); }
+
+    function uploadData(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                if(json.nodes && json.links) {
+                    nodes = json.nodes; links = json.links;
+                    updateTopology();
+                    simulation.nodes(nodes); simulation.force("link").links(links); simulation.alpha(1).restart();
+                    saveData();
+                    showAlert("MEMORY LOADED");
+                }
+            } catch(err) { showAlert("FILE CORRUPTED"); }
+        };
+        reader.readAsText(file);
+        input.value = '';
     }
 
     // MODALS
-    function openModal(modal) { modal.style.display = 'flex'; requestAnimationFrame(() => modal.classList.add('open')); }
-    function closeModal(modal) { modal.classList.remove('open'); setTimeout(() => modal.style.display = 'none', 300); }
-
-    const renameModal = document.getElementById('rename-modal'), input = document.getElementById('rename-input');
-    function openRename() {
-        if(!selectedNode) return;
-        input.value = selectedNode.label === "Idea" ? "" : selectedNode.label;
-        input.placeholder = selectedNode.label;
-        openModal(renameModal); setTimeout(() => input.focus(), 50);
-    }
-    function closeRename() { closeModal(renameModal); }
-    function saveRename() { if(selectedNode) { selectedNode.label = input.value.trim() || selectedNode.label; updateTopology(); saveData(); } closeRename(); }
-    input.addEventListener("keypress", (e) => { if(e.key === "Enter") saveRename(); });
-
-    const wipeModal = document.getElementById('wipe-modal');
-    function triggerWipe() { openModal(wipeModal); }
-    function closeWipe() { closeModal(wipeModal); }
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function showAlert(msg) { document.getElementById('alert-msg').innerText = msg; showModal('alert-modal'); }
+    
+    function showWipeModal() { showModal('wipe-modal'); }
     function confirmWipe() {
-        closeWipe();
+        closeModal('wipe-modal');
         d3.selectAll(".node-group").transition().duration(500)
             .attr("transform", d => `translate(${d.x},${d.y}) scale(0)`).style("opacity", 0)
             .on("end", () => {
-                localStorage.removeItem('hrain_v21_final');
-                nodes = [ { id: Date.now(), label: "Core", x: width/2, y: height/2 } ];
-                links = [];
-                selectedNode = null;
+                localStorage.removeItem('hrain_v5_pro');
+                nodes = [{ id: Date.now(), label: "Core", x: width/2, y: height/2, type:"default" }];
+                links = []; selectedNode = null;
                 updateButtonState(); updateTopology(); saveData();
             });
     }
 
-    // INTERACTIONS
+    // NODE EDITING
+    let tempColor = 'default';
+    function selectColor(type) {
+        tempColor = type;
+        document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
+        const el = document.querySelector(`.color-opt[data-type="${type}"]`);
+        if(el) el.classList.add('selected');
+        const inp = document.getElementById('rename-input');
+        inp.style.color = COLORS[type]; inp.style.borderColor = COLORS[type];
+    }
+
+    function openRename() {
+        if(!selectedNode) return;
+        const inp = document.getElementById('rename-input');
+        inp.value = selectedNode.label === "Idea" ? "" : selectedNode.label;
+        inp.placeholder = selectedNode.label;
+        selectColor(selectedNode.type || 'default');
+        showModal('rename-modal');
+        setTimeout(() => inp.focus(), 50);
+    }
+    function saveRename() { 
+        if(selectedNode) { 
+            selectedNode.label = document.getElementById('rename-input').value.trim() || selectedNode.label; 
+            selectedNode.type = tempColor; 
+            updateTopology(); saveData(); 
+        } 
+        closeModal('rename-modal'); 
+    }
+    document.getElementById('rename-input').addEventListener("keypress", (e) => { if(e.key === "Enter") saveRename(); });
+
+    // INTERACTION
+    const mainBtn = document.getElementById('main-btn');
+    const deleteHint = document.getElementById('delete-hint');
+    let pressTimer, isLongPress = false;
+
+    function handleBtnStart(e) {
+        if (e.target.closest('.ui-group')) return; 
+        if (selectedNode) {
+            isLongPress = false;
+            mainBtn.classList.add('holding-delete');
+            deleteHint.classList.add('visible');
+            if(navigator.vibrate) navigator.vibrate(50);
+            pressTimer = setTimeout(() => { isLongPress = true; deleteSelectedNode(); if(navigator.vibrate) navigator.vibrate([50,50]); }, 800);
+        } else mainBtn.style.transform = "translateX(-50%) scale(0.9)";
+    }
+    function handleBtnEnd(e) {
+        clearTimeout(pressTimer);
+        mainBtn.classList.remove('holding-delete'); deleteHint.classList.remove('visible'); mainBtn.style.transform = "";
+        if (isLongPress) { isLongPress = false; return; }
+        selectedNode ? openRename() : createNewNode();
+    }
+    mainBtn.addEventListener('mousedown', handleBtnStart); mainBtn.addEventListener('touchstart', handleBtnStart, {passive: false});
+    mainBtn.addEventListener('mouseup', handleBtnEnd); mainBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBtnEnd(e); });
+
+    function createNewNode() {
+        const t = d3.zoomTransform(svg.node());
+        let x, y;
+        if (isGridEnabled && selectedNode) {
+            const dir = [[0,-1],[1,0],[0,1],[-1,0]][Math.floor(Math.random()*4)];
+            x = selectedNode.x + dir[0]*GRID_SIZE*2; y = selectedNode.y + dir[1]*GRID_SIZE*2;
+        } else if (selectedNode) {
+            const a = Math.random()*6.28; x = selectedNode.x+Math.cos(a)*80; y = selectedNode.y+Math.sin(a)*80;
+        } else { x = (width/2-t.x)/t.k; y = (height/2-t.y)/t.k; }
+
+        const newNode = { id: Date.now(), label: "Idea", x, y, type: selectedNode ? selectedNode.type : 'default' }; 
+        nodes.push(newNode);
+        if (selectedNode) { 
+            links.push({ source: selectedNode.id, target: newNode.id }); 
+            animateImpulse(selectedNode, newNode); 
+        }
+        selectedNode = newNode; updateButtonState(); updateTopology(0.3); saveData(); setTimeout(openRename, 50);
+    }
+
+    function deleteSelectedNode() {
+        if(!selectedNode) return;
+        nodes = nodes.filter(n => n.id !== selectedNode.id);
+        links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
+        selectedNode = null; updateButtonState(); updateTopology(); saveData();
+    }
+
     function handleNodeClick(event, d) {
         if (event.defaultPrevented) return;
-        if (!selectedNode) { selectedNode = d; tryVibrate(15); }
+        if (!selectedNode) { selectedNode = d; }
         else if (selectedNode === d) { selectedNode = null; }
         else {
             const exists = links.some(l => (l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id));
-            if(!exists) { links.push({ source: selectedNode.id, target: d.id }); animateImpulse(selectedNode, d); tryVibrate(30); }
-            else { links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); tryVibrate([10,10]); }
+            if(!exists) { 
+                links.push({ source: selectedNode.id, target: d.id }); 
+                animateImpulse(selectedNode, d); 
+            }
+            else { links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); }
             selectedNode = null; saveData();
         }
         updateButtonState(); updateTopology();
     }
 
+    function updateButtonState() { 
+        mainBtn.className = "ui-element " + (selectedNode ? "mode-edit" : "mode-add"); 
+        if(selectedNode) {
+            const c = COLORS[selectedNode.type || 'default'];
+            mainBtn.style.boxShadow = `0 0 0 1px ${c}, 0 0 30px ${c}40`;
+        } else { mainBtn.style.boxShadow = ""; }
+    }
+    function deselectNode() { selectedNode = null; updateButtonState(); updateTopology(); }
+
     function animateImpulse(source, target) {
-        const impulse = impulseGroup.append("circle").attr("class", "impulse").attr("r", 4).attr("cx", source.x).attr("cy", source.y);
-        impulse.transition().duration(500).ease(d3.easeQuadInOut).attr("cx", target.x).attr("cy", target.y).on("end", function() { d3.select(this).remove(); });
+        const color = COLORS[source.type || 'default'];
+        const impulse = impulseGroup.append("circle").attr("class", "impulse")
+            .attr("r", 4).attr("cx", source.x).attr("cy", source.y)
+            .style("fill", color).style("color", color);
+        impulse.transition().duration(600).ease(d3.easeQuadInOut)
+            .attr("cx", target.x).attr("cy", target.y).on("end", function() { d3.select(this).remove(); });
     }
 
-    // TOPOLOGY
-    function updateTopology(targetAlpha = 0.5) {
-        nodes.forEach(node => {
-            const connections = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id).length;
-            
-            // ADAPTIVE RADIUS CALCULATION
-            const baseCore = 8 * PHYS.nodeScale;
-            const baseAura = 22 * PHYS.nodeScale;
-            
-            node.coreRadius = baseCore + (connections * (1.5 * PHYS.nodeScale)); 
-            node.auraRadius = baseAura + (connections * (3.5 * PHYS.nodeScale));
-            node.currentRadius = node.auraRadius;
+    function updateTopology(alpha=0.5) {
+        nodes.forEach(n => {
+            const c = links.filter(l => (l.source.id||l.source)===n.id || (l.target.id||l.target)===n.id).length;
+            n.coreRadius = (8 + c * 1.5) * PHYS.nodeScale;
+            n.auraRadius = (22 + c * 3.5) * PHYS.nodeScale;
         });
 
-        const link = linkGroup.selectAll("line").data(links, d => (d.source.id||d.source) + "-" + (d.target.id||d.target));
-        link.exit().remove();
-        link.enter().append("line").attr("class", "link").merge(link);
+        const link = linkGroup.selectAll("line").data(links, d => (d.source.id||d.source)+"-"+(d.target.id||d.target));
+        link.exit().remove(); link.enter().append("line").attr("class", "link").merge(link);
 
         const node = nodeGroup.selectAll("g").data(nodes, d => d.id);
         node.exit().transition().duration(300).style("opacity", 0).remove();
-        
-        const nodeEnter = node.enter().append("g").attr("class", "node-group")
-            .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
+        const nodeEnter = node.enter().append("g")
+            .call(d3.drag().on("start", (e,d)=>{if(!e.active)simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y})
+            .on("drag", (e,d)=>{d.fx=e.x; d.fy=e.y})
+            .on("end", (e,d)=>{if(!e.active)simulation.alphaTarget(0); if(isGridEnabled){d.fx=Math.round(e.x/GRID_SIZE)*GRID_SIZE; d.fy=Math.round(e.y/GRID_SIZE)*GRID_SIZE;}else{d.fx=null; d.fy=null;} saveData();}))
             .on("click", handleNodeClick);
 
         nodeEnter.append("circle").attr("class", "hitbox");
         nodeEnter.append("circle").attr("class", "neuron-aura");
-        nodeEnter.append("circle").attr("class", "neuron-core").attr("cx", 0).attr("cy", 0); 
-        
-        // Update text size for mobile
-        nodeEnter.append("text")
-            .attr("class", "label")
-            .attr("dy", 0)
-            .style("font-size", isMobile ? "11px" : "14px")
-            .text(d => d.label);
+        nodeEnter.append("circle").attr("class", "neuron-core").attr("cx", 0).attr("cy", 0);
+        nodeEnter.append("text").attr("class", "label").attr("dy", 0).style("font-size", isMobile?"11px":"14px");
 
         const allNodes = nodeEnter.merge(node);
-        allNodes.attr("class", d => d === selectedNode ? "node-group selected" : "node-group");
+        allNodes.attr("class", d => `node-group type-${d.type || 'default'} ${d===selectedNode ? 'selected' : ''}`);
         allNodes.select("text").text(d => d.label);
-
         allNodes.select(".neuron-core").transition().duration(300).attr("r", d => d.coreRadius);
         allNodes.select(".neuron-aura").transition().duration(300).attr("r", d => d.auraRadius);
-        
-        // Fix hitbox and text position based on new smaller radii
         allNodes.select(".hitbox").attr("r", d => Math.max(40, d.auraRadius + 15));
         allNodes.select("text.label").transition().duration(300).attr("dy", d => d.auraRadius + (isMobile ? 12 : 18));
 
@@ -546,41 +600,27 @@
             allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
         });
         simulation.force("link").links(links);
-        simulation.alpha(targetAlpha).restart();
+        simulation.alpha(alpha).restart();
     }
 
     function animateVisuals() {
         d3.selectAll(".node-group").each(function(d) {
-            if (!d.phase) d.phase = Math.random() * Math.PI * 2;
-            d.phase += 0.03;
-            const breath = 1 + Math.sin(d.phase) * 0.02; 
-            d3.select(this).select(".neuron-aura").attr("transform", `scale(${breath})`);
+            if(!d.phase) d.phase = Math.random()*6.28; d.phase+=0.03;
+            d3.select(this).select(".neuron-aura").attr("transform", `scale(${1+Math.sin(d.phase)*0.02})`);
         });
-        if (Math.random() > 0.98 && links.length > 0) {
-             const l = links[Math.floor(Math.random() * links.length)];
-             if(l.source.x && l.target.x) animateImpulse(l.source, l.target);
+        
+        if(links.length > 0 && Math.random() > 0.92) {
+            const l = links[Math.floor(Math.random()*links.length)];
+            if(l.source.x && l.target.x) animateImpulse(l.source, l.target);
         }
         requestAnimationFrame(animateVisuals);
     }
     animateVisuals();
 
-    function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
-    function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-    function dragended(event, d) { 
-        if (!event.active) simulation.alphaTarget(0); 
-        if (isGridEnabled) {
-             d.fx = Math.round(event.x / GRID_SIZE) * GRID_SIZE;
-             d.fy = Math.round(event.y / GRID_SIZE) * GRID_SIZE;
-        } else {
-             d.fx = null; d.fy = null;
-        }
-        saveData(); 
-    }
-    
     function saveData() {
-        const cleanNodes = nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y }));
-        const cleanLinks = links.map(l => ({ source: l.source.id||l.source, target: l.target.id||l.target }));
-        localStorage.setItem('hrain_v21_final', JSON.stringify({ nodes: cleanNodes, links: cleanLinks }));
+        const cl = nodes.map(n => ({ id:n.id, label:n.label, x:n.x, y:n.y, type:n.type||'default' }));
+        const ln = links.map(l => ({ source:l.source.id||l.source, target:l.target.id||l.target }));
+        localStorage.setItem('hrain_v5_pro', JSON.stringify({ nodes:cl, links:ln }));
     }
 
     updateButtonState(); updateTopology();
