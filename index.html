@@ -6,9 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN v6.1 (TG Fixed)</title>
+    <title>HRAIN v6.3 (Live Visuals)</title>
     
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -40,7 +39,6 @@
             font-family: 'Rajdhani', sans-serif; color: #e0e0e0;
             -webkit-user-select: none; user-select: none;
             touch-action: none;
-            /* Fix for iOS momentum scrolling causing bounce */
             position: fixed; 
         }
 
@@ -62,13 +60,24 @@
         .particle { position: absolute; background: var(--neuron-aura); border-radius: 50%; opacity: 0.3; animation: float 30s infinite linear; }
         @keyframes float { 0% { transform: translateY(0) translateX(0); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: translateY(-100vh) translateX(20px); opacity: 0; } }
 
+        /* LIVE VISUALS (New CSS Animations) */
+        @keyframes aura-breathe {
+            0% { opacity: 0.15; transform: scale(0.95); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+            100% { opacity: 0.15; transform: scale(0.95); }
+        }
+        @keyframes core-beat {
+            0% { filter: drop-shadow(0 0 5px var(--local-color)); stroke-width: 1.5px; }
+            50% { filter: drop-shadow(0 0 12px var(--local-color)); stroke-width: 2px; }
+            100% { filter: drop-shadow(0 0 5px var(--local-color)); stroke-width: 1.5px; }
+        }
+
         /* UI */
         .ui-element { transition: opacity 0.6s, transform 0.6s; }
         body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.95); }
         
         #logo {
-            position: fixed; /* Changed to fixed */
-            top: 40px; left: 30px; z-index: 10;
+            position: fixed; top: 40px; left: 30px; z-index: 10;
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
             color: rgba(255,255,255,0.4); pointer-events: none;
             padding-top: env(safe-area-inset-top);
@@ -76,10 +85,8 @@
         }
         #logo span { color: var(--c-cyan); text-shadow: 0 0 12px var(--c-cyan); }
 
-        /* BUTTON GROUP */
         .ui-group {
-            position: fixed; /* Changed to fixed */
-            top: 40px; right: 30px; z-index: 10;
+            position: fixed; top: 40px; right: 30px; z-index: 10;
             display: flex; gap: 6px; padding-top: env(safe-area-inset-top);
             transition: all 0.3s ease;
         }
@@ -97,11 +104,8 @@
         #btn-wipe { border-color: rgba(255, 42, 109, 0.3); color: rgba(255, 42, 109, 0.7); }
         #btn-wipe:active { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.1); }
 
-        /* MAIN ADD BUTTON */
         #main-btn {
-            position: fixed; /* Crucial Fix: Changed from absolute to fixed */
-            bottom: calc(50px + env(safe-area-inset-bottom)); /* Increased bottom margin slightly */
-            left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             width: 72px; height: 72px; z-index: 100; border-radius: 50%; border: none;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.6));
             box-shadow: 0 0 0 1px var(--glass-border), 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 240, 255, 0.05);
@@ -115,19 +119,56 @@
         #main-btn.holding-delete { box-shadow: 0 0 0 1px var(--c-red), 0 0 40px rgba(255, 42, 109, 0.3); transform: translateX(-50%) scale(1.1); }
         #main-btn.holding-delete::after { content: '×'; color: var(--c-red); }
 
-        /* D3 STYLES */
         #chart { position: relative; width: 100%; height: 100%; z-index: 2; }
         .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; transition: stroke 0.3s; }
         .impulse { filter: drop-shadow(0 0 4px currentColor); pointer-events: none; }
-        .neuron-core { fill: #0a0f14; stroke: var(--local-color, var(--c-cyan)); stroke-width: 1.5px; filter: drop-shadow(0 0 6px var(--local-color, var(--c-cyan))); transition: r 0.3s, stroke 0.3s; }
-        .neuron-aura { fill: transparent; stroke: var(--local-aura, var(--neuron-aura)); stroke-width: 1px; opacity: 0.2; filter: blur(3px); transition: stroke 0.3s; }
+        
+        /* UPDATED NODE STYLES */
+        .neuron-core { 
+            fill: #0a0f14; 
+            stroke: var(--local-color, var(--c-cyan)); 
+            stroke-width: 1.5px; 
+            filter: drop-shadow(0 0 6px var(--local-color, var(--c-cyan))); 
+            transition: r 0.3s;
+            /* Animation Hook */
+            transform-origin: center;
+            transform-box: fill-box;
+            animation: core-beat 3s infinite ease-in-out;
+        }
+        .neuron-aura { 
+            fill: transparent; 
+            stroke: var(--local-aura, var(--neuron-aura)); 
+            stroke-width: 1px; 
+            opacity: 0.2; 
+            filter: blur(3px); 
+            /* Animation Hook */
+            transform-origin: center;
+            transform-box: fill-box;
+            animation: aura-breathe 4s infinite ease-in-out;
+            /* Randomize start time handled in JS or delayed via CSS child */
+        }
+        /* Stagger animations slightly for organic feel */
+        .node-group:nth-child(odd) .neuron-aura { animation-delay: 1s; }
+        .node-group:nth-child(2n) .neuron-aura { animation-delay: 0.5s; }
+        .node-group:nth-child(3n) .neuron-aura { animation-delay: 2s; }
+
         .hitbox { fill: transparent; cursor: pointer; }
-        .node-group.selected .neuron-core { fill: rgba(255,255,255,0.1); stroke-width: 2.5px; filter: drop-shadow(0 0 15px var(--local-color, var(--c-cyan))); }
-        .node-group.selected .neuron-aura { opacity: 0.5; }
+        .node-group.selected .neuron-core { 
+            fill: rgba(255,255,255,0.1); 
+            filter: drop-shadow(0 0 20px var(--local-color, var(--c-cyan))); 
+            animation: none; /* Solid focus when selected */
+            stroke-width: 2.5px;
+        }
+        .node-group.selected .neuron-aura { 
+            opacity: 0.6; 
+            animation: none;
+            transform: scale(1.1);
+            transition: 0.3s;
+        }
+        
         text.label { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600; fill: rgba(255,255,255,0.5); pointer-events: none; text-anchor: middle; text-shadow: 0 2px 4px #000; transition: fill 0.3s; }
         .node-group.selected text.label { fill: var(--local-color, var(--c-cyan)); text-shadow: 0 0 10px rgba(0,0,0,0.8); }
 
-        /* MODALS */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
@@ -162,34 +203,24 @@
         .btn-danger { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.05); }
         
         #delete-hint {
-            position: fixed; /* Changed to fixed */
-            bottom: calc(140px + env(safe-area-inset-bottom)); /* Adjusted */
-            left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: calc(140px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             color: var(--c-red); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
             opacity: 0; transition: 0.3s; pointer-events: none; font-weight: 700; text-shadow: 0 0 15px rgba(255, 42, 109, 0.6);
         }
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
         #focus-toast {
-            position: fixed; /* Changed to fixed */
-            top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
             color: rgba(0, 255, 163, 0.8); font-size: 0.9rem; letter-spacing: 2px; pointer-events: none; opacity: 0; z-index: 5; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 20px var(--neuron-aura); transition: opacity 0.3s, transform 0.3s;
         }
         #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* COMPACT MOBILE UI */
         @media (max-width: 768px) {
             #logo { font-size: 1rem; top: 15px; left: 15px; }
-            .ui-group { 
-                top: 15px; right: 15px; 
-                width: auto; flex-wrap: nowrap; gap: 6px;
-            }
-            .ui-btn { 
-                padding: 6px 10px; font-size: 0.7rem; flex-grow: 0; width: auto;
-            }
+            .ui-group { top: 15px; right: 15px; width: auto; flex-wrap: nowrap; gap: 6px; }
+            .ui-btn { padding: 6px 10px; font-size: 0.7rem; flex-grow: 0; width: auto; }
             #main-btn { width: 60px; height: 60px; bottom: calc(40px + env(safe-area-inset-bottom)); }
         }
-        
         #file-input { display: none; }
     </style>
 </head>
@@ -256,9 +287,7 @@
     try {
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand(); // Force full height
-        // Optional: Match Telegram Theme
-        // document.body.style.backgroundColor = tg.themeParams.bg_color;
+        tg.expand();
     } catch (e) {
         console.log("Not in Telegram Environment");
     }
@@ -396,8 +425,6 @@
         try {
             const svgNode = document.querySelector('svg');
             const clone = svgNode.cloneNode(true);
-            
-            // Embed styles directly
             const style = document.createElement('style');
             style.textContent = document.getElementById('main-styles').textContent;
             clone.insertBefore(style, clone.firstChild);
@@ -505,25 +532,50 @@
     const mainBtn = document.getElementById('main-btn');
     const deleteHint = document.getElementById('delete-hint');
     let pressTimer, isLongPress = false;
+    let actionCooldown = false;
 
     function handleBtnStart(e) {
+        if (actionCooldown) return;
         if (e.target.closest('.ui-group')) return; 
+        
         if (selectedNode) {
             isLongPress = false;
             mainBtn.classList.add('holding-delete');
             deleteHint.classList.add('visible');
             if(navigator.vibrate) navigator.vibrate(50);
-            pressTimer = setTimeout(() => { isLongPress = true; deleteSelectedNode(); if(navigator.vibrate) navigator.vibrate([50,50]); }, 800);
-        } else mainBtn.style.transform = "translateX(-50%) scale(0.9)";
+            
+            pressTimer = setTimeout(() => { 
+                isLongPress = true; 
+                actionCooldown = true;
+                deleteSelectedNode(); 
+                if(navigator.vibrate) navigator.vibrate([50,50]);
+                setTimeout(() => { actionCooldown = false; }, 500);
+            }, 800);
+        } else {
+            mainBtn.style.transform = "translateX(-50%) scale(0.9)";
+        }
     }
+
     function handleBtnEnd(e) {
+        e.preventDefault();
         clearTimeout(pressTimer);
-        mainBtn.classList.remove('holding-delete'); deleteHint.classList.remove('visible'); mainBtn.style.transform = "";
-        if (isLongPress) { isLongPress = false; return; }
+        
+        mainBtn.classList.remove('holding-delete'); 
+        deleteHint.classList.remove('visible'); 
+        mainBtn.style.transform = "";
+
+        if (actionCooldown || isLongPress) { 
+            isLongPress = false; 
+            return; 
+        }
+
         selectedNode ? openRename() : createNewNode();
     }
-    mainBtn.addEventListener('mousedown', handleBtnStart); mainBtn.addEventListener('touchstart', handleBtnStart, {passive: false});
-    mainBtn.addEventListener('mouseup', handleBtnEnd); mainBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBtnEnd(e); });
+
+    mainBtn.addEventListener('mousedown', handleBtnStart); 
+    mainBtn.addEventListener('touchstart', handleBtnStart, {passive: false});
+    mainBtn.addEventListener('mouseup', handleBtnEnd); 
+    mainBtn.addEventListener('touchend', handleBtnEnd);
 
     function createNewNode() {
         const t = d3.zoomTransform(svg.node());
@@ -626,11 +678,6 @@
     }
 
     function animateVisuals() {
-        d3.selectAll(".node-group").each(function(d) {
-            if(!d.phase) d.phase = Math.random()*6.28; d.phase+=0.03;
-            d3.select(this).select(".neuron-aura").attr("transform", `scale(${1+Math.sin(d.phase)*0.02})`);
-        });
-        
         if(links.length > 0 && Math.random() > 0.92) {
             const l = links[Math.floor(Math.random()*links.length)];
             if(l.source.x && l.target.x) animateImpulse(l.source, l.target);
@@ -649,4 +696,5 @@
 </script>
 </body>
 </html>
+
 
