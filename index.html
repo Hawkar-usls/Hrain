@@ -6,8 +6,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN v6.1 (Stable IO)</title>
+    <title>HRAIN v6.1 (TG Fixed)</title>
     
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     
@@ -38,6 +40,8 @@
             font-family: 'Rajdhani', sans-serif; color: #e0e0e0;
             -webkit-user-select: none; user-select: none;
             touch-action: none;
+            /* Fix for iOS momentum scrolling causing bounce */
+            position: fixed; 
         }
 
         /* ATMOSPHERE */
@@ -63,7 +67,8 @@
         body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.95); }
         
         #logo {
-            position: absolute; top: 40px; left: 30px; z-index: 10;
+            position: fixed; /* Changed to fixed */
+            top: 40px; left: 30px; z-index: 10;
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
             color: rgba(255,255,255,0.4); pointer-events: none;
             padding-top: env(safe-area-inset-top);
@@ -73,7 +78,8 @@
 
         /* BUTTON GROUP */
         .ui-group {
-            position: absolute; top: 40px; right: 30px; z-index: 10;
+            position: fixed; /* Changed to fixed */
+            top: 40px; right: 30px; z-index: 10;
             display: flex; gap: 6px; padding-top: env(safe-area-inset-top);
             transition: all 0.3s ease;
         }
@@ -93,7 +99,9 @@
 
         /* MAIN ADD BUTTON */
         #main-btn {
-            position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            position: fixed; /* Crucial Fix: Changed from absolute to fixed */
+            bottom: calc(50px + env(safe-area-inset-bottom)); /* Increased bottom margin slightly */
+            left: 50%; transform: translateX(-50%);
             width: 72px; height: 72px; z-index: 100; border-radius: 50%; border: none;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.6));
             box-shadow: 0 0 0 1px var(--glass-border), 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 240, 255, 0.05);
@@ -154,14 +162,17 @@
         .btn-danger { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.05); }
         
         #delete-hint {
-            position: absolute; bottom: calc(130px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            position: fixed; /* Changed to fixed */
+            bottom: calc(140px + env(safe-area-inset-bottom)); /* Adjusted */
+            left: 50%; transform: translateX(-50%);
             color: var(--c-red); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
             opacity: 0; transition: 0.3s; pointer-events: none; font-weight: 700; text-shadow: 0 0 15px rgba(255, 42, 109, 0.6);
         }
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
         #focus-toast {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            position: fixed; /* Changed to fixed */
+            top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
             color: rgba(0, 255, 163, 0.8); font-size: 0.9rem; letter-spacing: 2px; pointer-events: none; opacity: 0; z-index: 5; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 20px var(--neuron-aura); transition: opacity 0.3s, transform 0.3s;
         }
         #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -176,7 +187,7 @@
             .ui-btn { 
                 padding: 6px 10px; font-size: 0.7rem; flex-grow: 0; width: auto;
             }
-            #main-btn { width: 60px; height: 60px; bottom: calc(30px + env(safe-area-inset-bottom)); }
+            #main-btn { width: 60px; height: 60px; bottom: calc(40px + env(safe-area-inset-bottom)); }
         }
         
         #file-input { display: none; }
@@ -241,6 +252,17 @@
     <div id="chart"></div>
 
 <script>
+    // === TELEGRAM INIT ===
+    try {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Force full height
+        // Optional: Match Telegram Theme
+        // document.body.style.backgroundColor = tg.themeParams.bg_color;
+    } catch (e) {
+        console.log("Not in Telegram Environment");
+    }
+
     // === CONFIG ===
     const isMobile = window.innerWidth < 768;
     const GRID_SIZE = isMobile ? 40 : 60;
@@ -627,3 +649,4 @@
 </script>
 </body>
 </html>
+
