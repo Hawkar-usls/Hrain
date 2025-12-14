@@ -1,4 +1,4 @@
-# HRain — Offline Mind-Mapping Engine for BCI
+# HRain — Offline/Online Mind-Mapping Engine for BCI
 
 Pure manual version of iNaiHR.  
 No internet. No API key. No external data transfer.
