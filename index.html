@@ -3,225 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN v6.3 (Live Visuals)</title>
+    <title>HRAIN v10.5: Janus Link</title>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     
-    <style id="main-styles">
+    <style>
         :root {
             --bg-dark: #030508;
-            --bg-pulse: #080c12;
-            --c-cyan: #00ffa3;
-            --c-red: #ff2a6d;
-            --c-yellow: #ffc107;
-            --c-purple: #d300ff;
-            --neuron-core: var(--c-cyan);
-            --neuron-aura: #00f0ff;
-            --synapse-off: rgba(0, 240, 255, 0.15);
-            --grid-line: rgba(0, 255, 163, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-        }
+            --bg-pulse: #0b101a;
+            
+            /* NEON PALETTE */
+            --c-default: #00ffa3; 
+            --c-danger: #ff2a6d;
+            --c-warn: #ffc107;
+            --c-info: #d300ff;
 
-        /* NODE TYPES */
-        .type-default { --local-color: var(--c-cyan); --local-aura: #00f0ff; }
-        .type-danger { --local-color: var(--c-red); --local-aura: #ff5e62; }
-        .type-warn { --local-color: var(--c-yellow); --local-aura: #ffe082; }
-        .type-info { --local-color: var(--c-purple); --local-aura: #e040fb; }
+            /* DYNAMIC AMBIENT COLOR */
+            --c-ambient: #00ffa3; 
+
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.15);
+        }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: var(--bg-dark);
             font-family: 'Rajdhani', sans-serif; color: #e0e0e0;
-            -webkit-user-select: none; user-select: none;
-            touch-action: none;
-            position: fixed; 
+            user-select: none; touch-action: none; position: fixed;
         }
 
-        /* ATMOSPHERE */
+        /* --- ATMOSPHERE --- */
         #neural-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark));
-            z-index: 0; animation: deep-breathe 15s infinite alternate ease-in-out; pointer-events: none;
+            z-index: 0; animation: breathe 12s infinite alternate ease-in-out; pointer-events: none;
         }
-        @keyframes deep-breathe { 0% { opacity: 0.8; } 100% { opacity: 1; } }
+        @keyframes breathe { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 1; transform: scale(1.1); } }
 
-        #particles, #grid-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        #particles { z-index: 0; opacity: 0.3; }
+        #particles { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        
+        .particle {
+            position: absolute; 
+            background: var(--c-ambient); /* Dynamic Color */
+            border-radius: 50%;
+            opacity: 0.3; 
+            animation: float 30s infinite linear;
+            box-shadow: 0 0 10px var(--c-ambient); /* Dynamic Glow */
+            transition: background-color 3s ease, box-shadow 3s ease; /* Smooth transition */
+        }
+        
+        @keyframes float { 
+            0% { transform: translateY(0) translateX(0); opacity: 0; } 
+            50% { opacity: 0.5; } 
+            100% { transform: translateY(-100vh) translateX(40px); opacity: 0; } 
+        }
+
         #grid-bg {
-            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 60px 60px; opacity: 0; transition: opacity 0.5s ease; z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            /* Grid color will be updated via JS to match ambient */
+            background-size: 50px 50px; opacity: 0; transition: opacity 0.5s, background-image 3s ease; z-index: 1; pointer-events: none;
         }
         body.grid-active #grid-bg { opacity: 1; }
-        .particle { position: absolute; background: var(--neuron-aura); border-radius: 50%; opacity: 0.3; animation: float 30s infinite linear; }
-        @keyframes float { 0% { transform: translateY(0) translateX(0); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: translateY(-100vh) translateX(20px); opacity: 0; } }
 
-        /* LIVE VISUALS (New CSS Animations) */
-        @keyframes aura-breathe {
-            0% { opacity: 0.15; transform: scale(0.95); }
-            50% { opacity: 0.4; transform: scale(1.15); }
-            100% { opacity: 0.15; transform: scale(0.95); }
-        }
-        @keyframes core-beat {
-            0% { filter: drop-shadow(0 0 5px var(--local-color)); stroke-width: 1.5px; }
-            50% { filter: drop-shadow(0 0 12px var(--local-color)); stroke-width: 2px; }
-            100% { filter: drop-shadow(0 0 5px var(--local-color)); stroke-width: 1.5px; }
-        }
+        /* --- UI LAYER --- */
+        .ui-layer { position: fixed; z-index: 20; pointer-events: none; width: 100%; height: 100%; top: 0; left: 0; }
+        .ui-interactive { pointer-events: auto !important; }
 
-        /* UI */
-        .ui-element { transition: opacity 0.6s, transform 0.6s; }
-        body.focus-active .ui-element { opacity: 0 !important; pointer-events: none !important; transform: scale(0.95); }
-        
         #logo {
-            position: fixed; top: 40px; left: 30px; z-index: 10;
-            font-family: 'Orbitron', sans-serif; font-size: 1.4rem; letter-spacing: 2px;
-            color: rgba(255,255,255,0.4); pointer-events: none;
-            padding-top: env(safe-area-inset-top);
-            transition: all 0.3s ease;
+            position: absolute; top: 30px; left: 30px;
+            font-family: 'Orbitron'; font-size: 1.4rem; letter-spacing: 2px;
+            color: rgba(255,255,255,0.3); text-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
+            cursor: pointer;
         }
-        #logo span { color: var(--c-cyan); text-shadow: 0 0 12px var(--c-cyan); }
+        #logo span { color: var(--c-default); }
 
-        .ui-group {
-            position: fixed; top: 40px; right: 30px; z-index: 10;
-            display: flex; gap: 6px; padding-top: env(safe-area-inset-top);
-            transition: all 0.3s ease;
+        .top-controls {
+            position: absolute; top: 30px; right: 30px;
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
+            max-width: 70%; 
         }
-        .ui-btn {
-            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
-            padding: 8px 12px; border-radius: 8px;
+
+        .btn {
+            background: rgba(10, 15, 20, 0.7); border: 1px solid var(--border);
+            color: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+            padding: 10px 16px; border-radius: 8px;
             font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.85rem;
-            cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
-            white-space: nowrap;
+            cursor: pointer; transition: 0.1s; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
         }
-        .ui-btn:active { transform: scale(0.95); color: white; border-color: white; }
-        .ui-btn.active { border-color: var(--c-cyan); color: var(--c-cyan); background: rgba(0, 255, 163, 0.1); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2); }
+        .btn:active { transform: scale(0.92); background: rgba(0, 255, 163, 0.1); border-color: var(--c-default); color: #fff; }
+        .btn.active { border-color: var(--c-default); color: var(--c-default); background: rgba(0, 255, 163, 0.15); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2); }
+        .btn.loading { border-color: var(--c-info); color: var(--c-info); background: rgba(211, 0, 255, 0.1); pointer-events: none; animation: pulse-btn 1s infinite alternate; }
+        .btn.success { border-color: var(--c-default); color: var(--c-default); background: rgba(0, 255, 163, 0.2); }
         
-        #btn-wipe { border-color: rgba(255, 42, 109, 0.3); color: rgba(255, 42, 109, 0.7); }
-        #btn-wipe:active { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.1); }
+        @keyframes pulse-btn { 0% { box-shadow: 0 0 5px var(--c-info); opacity: 0.7; } 100% { box-shadow: 0 0 20px var(--c-info); opacity: 1; } }
 
+        /* DIVE BUTTON */
+        #btn-dive {
+            position: absolute; bottom: 40px; left: 30px;
+            border-color: var(--c-default); color: var(--c-default);
+            font-family: 'Orbitron'; font-size: 1rem; padding: 12px 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 163, 0.1);
+            opacity: 0; transform: translateY(20px); transition: 0.4s; pointer-events: none;
+            background: rgba(0, 20, 10, 0.9);
+        }
+        #btn-dive.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        #nav-context {
+            position: absolute; top: 80px; left: 30px;
+            display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s;
+        }
+        #nav-context.visible { opacity: 1; }
+        .crumb { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 5px; }
+        .crumb.active { color: var(--c-default); font-weight: bold; text-shadow: 0 0 10px rgba(0,255,163,0.4); }
+        #btn-ascend {
+            padding: 6px 12px; font-size: 0.75rem; 
+            border: 1px solid var(--c-default); background: rgba(0,0,0,0.6);
+            color: var(--c-default); width: fit-content; margin-top: 5px;
+        }
+
+        /* MAIN BUTTON (+) */
         #main-btn {
-            position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-            width: 72px; height: 72px; z-index: 100; border-radius: 50%; border: none;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.6));
-            box-shadow: 0 0 0 1px var(--glass-border), 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 240, 255, 0.05);
-            backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: opacity 0.6s, transform 0.3s; -webkit-tap-highlight-color: transparent;
+            position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            width: 72px; height: 72px; border-radius: 50%; border: none;
+            background: radial-gradient(circle at 40% 40%, rgba(40,40,40,0.5), rgba(0,0,0,0.95));
+            box-shadow: 0 0 0 1px var(--border), 0 10px 30px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; -webkit-tap-highlight-color: transparent;
         }
-        #main-btn::after { content: '+'; font-size: 32px; font-weight: 300; color: var(--c-cyan); text-shadow: 0 0 8px var(--c-cyan); transition: 0.3s; }
-        #main-btn:active { transform: translateX(-50%) scale(0.92); }
-        #main-btn.mode-edit { box-shadow: 0 0 0 1px var(--c-cyan), 0 0 30px rgba(0, 240, 255, 0.2); }
-        #main-btn.mode-edit::after { content: '✎'; color: var(--c-cyan); }
-        #main-btn.holding-delete { box-shadow: 0 0 0 1px var(--c-red), 0 0 40px rgba(255, 42, 109, 0.3); transform: translateX(-50%) scale(1.1); }
-        #main-btn.holding-delete::after { content: '×'; color: var(--c-red); }
-
-        #chart { position: relative; width: 100%; height: 100%; z-index: 2; }
-        .link { fill: none; stroke: var(--synapse-off); stroke-width: 1.5px; transition: stroke 0.3s; }
-        .impulse { filter: drop-shadow(0 0 4px currentColor); pointer-events: none; }
+        #main-btn::after { content: '+'; font-size: 32px; font-weight: 300; color: var(--c-default); transition: 0.3s; text-shadow: 0 0 10px var(--c-default); }
+        #main-btn:active { transform: translateX(-50%) scale(0.9); }
         
-        /* UPDATED NODE STYLES */
-        .neuron-core { 
-            fill: #0a0f14; 
-            stroke: var(--local-color, var(--c-cyan)); 
-            stroke-width: 1.5px; 
-            filter: drop-shadow(0 0 6px var(--local-color, var(--c-cyan))); 
-            transition: r 0.3s;
-            /* Animation Hook */
-            transform-origin: center;
-            transform-box: fill-box;
-            animation: core-beat 3s infinite ease-in-out;
-        }
-        .neuron-aura { 
-            fill: transparent; 
-            stroke: var(--local-aura, var(--neuron-aura)); 
-            stroke-width: 1px; 
-            opacity: 0.2; 
-            filter: blur(3px); 
-            /* Animation Hook */
-            transform-origin: center;
-            transform-box: fill-box;
-            animation: aura-breathe 4s infinite ease-in-out;
-            /* Randomize start time handled in JS or delayed via CSS child */
-        }
-        /* Stagger animations slightly for organic feel */
-        .node-group:nth-child(odd) .neuron-aura { animation-delay: 1s; }
-        .node-group:nth-child(2n) .neuron-aura { animation-delay: 0.5s; }
-        .node-group:nth-child(3n) .neuron-aura { animation-delay: 2s; }
+        #main-btn.mode-edit { box-shadow: 0 0 0 2px var(--color-target, var(--c-default)), 0 0 50px var(--color-target, var(--c-default)); }
+        #main-btn.mode-edit::after { content: '✎'; color: #fff; text-shadow: none; }
+        
+        #main-btn.holding-delete { box-shadow: 0 0 0 2px var(--c-danger), 0 0 60px var(--c-danger); transform: translateX(-50%) scale(1.1); }
+        #main-btn.holding-delete::after { content: '×'; color: var(--c-danger); }
 
-        .hitbox { fill: transparent; cursor: pointer; }
+        /* --- NOTIFICATIONS --- */
+        #toast-container {
+            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 4000;
+            width: 90%; max-width: 350px;
+        }
+        .toast {
+            background: rgba(10, 15, 20, 0.95); border: 1px solid var(--border);
+            color: #ddd; padding: 12px 16px; border-radius: 8px;
+            font-family: 'Rajdhani'; font-weight: 600; font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            opacity: 0; transform: translateY(20px); transition: 0.3s; text-align: center;
+        }
+        .toast.visible { opacity: 1; transform: translateY(0); }
+        .toast.error { border-color: var(--c-danger); color: var(--c-danger); box-shadow: 0 0 15px rgba(255, 42, 109, 0.2); }
+
+        /* --- VISUALS --- */
+        #chart { width: 100%; height: 100%; position: relative; z-index: 1; }
+        
+        .link { 
+            fill: none; 
+            stroke-width: 2.5px; 
+            opacity: 0.7;
+            transition: 0.3s; 
+            filter: drop-shadow(0 0 3px currentColor);
+        }
+        .impulse { filter: drop-shadow(0 0 8px currentColor); pointer-events: none; mix-blend-mode: screen; opacity: 0.7; }
+        
+        @keyframes core-pulse { 0% { filter: drop-shadow(0 0 5px var(--node-color)); stroke-width: 2px; } 50% { filter: drop-shadow(0 0 15px var(--node-color)); stroke-width: 3px; } 100% { filter: drop-shadow(0 0 5px var(--node-color)); stroke-width: 2px; } }
+        @keyframes aura-spin { 0% { opacity: 0.2; transform: scale(0.95); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 0.2; transform: scale(0.95); } }
+        @keyframes select-spin { 0% { transform: rotate(0deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1.1); } }
+
+        .neuron-core { 
+            fill: var(--node-bg, rgba(0,255,163,0.15)); 
+            stroke-width: 2px; transition: 0.3s;
+            stroke: var(--node-color, #00ffa3);
+            animation: core-pulse 4s infinite ease-in-out;
+        }
+        .neuron-aura {
+            fill: transparent; stroke: var(--node-color, #00ffa3); stroke-width: 1px; opacity: 0.3;
+            transform-origin: center; transform-box: fill-box;
+            animation: aura-spin 6s infinite ease-in-out;
+        }
+        
+        /* HERO SELECTION */
         .node-group.selected .neuron-core { 
-            fill: rgba(255,255,255,0.1); 
-            filter: drop-shadow(0 0 20px var(--local-color, var(--c-cyan))); 
-            animation: none; /* Solid focus when selected */
-            stroke-width: 2.5px;
+            stroke: #fff; 
+            filter: drop-shadow(0 0 10px var(--node-color)) drop-shadow(0 0 20px var(--node-color)); 
+            stroke-width: 3px;
         }
         .node-group.selected .neuron-aura { 
-            opacity: 0.6; 
-            animation: none;
-            transform: scale(1.1);
-            transition: 0.3s;
+            opacity: 0.8; 
+            stroke-width: 2px;
+            stroke-dasharray: 10, 5;
+            animation: select-spin 10s infinite linear; 
         }
         
-        text.label { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600; fill: rgba(255,255,255,0.5); pointer-events: none; text-anchor: middle; text-shadow: 0 2px 4px #000; transition: fill 0.3s; }
-        .node-group.selected text.label { fill: var(--local-color, var(--c-cyan)); text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .node-group.is-root .neuron-core { stroke-width: 4px; fill: rgba(255,255,255,0.1); }
 
-        .modal-backdrop {
+        text.emoji { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+        text.label { font-family: 'Rajdhani'; font-size: 13px; font-weight: 700; fill: rgba(255,255,255,0.9); text-anchor: middle; pointer-events: none; text-shadow: 0 2px 5px #000; transition: 0.3s; }
+
+        .type-default { --node-color: var(--c-default); --node-bg: rgba(0, 255, 163, 0.15); }
+        .type-danger { --node-color: var(--c-danger); --node-bg: rgba(255, 42, 109, 0.15); }
+        .type-warn { --node-color: var(--c-warn); --node-bg: rgba(255, 193, 7, 0.15); }
+        .type-info { --node-color: var(--c-info); --node-bg: rgba(211, 0, 255, 0.15); }
+
+        /* --- MODALS --- */
+        .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 2000; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+            z-index: 3000; display: none; align-items: center; justify-content: center;
         }
-        .modal-content {
-            width: 85%; max-width: 320px; padding: 25px; text-align: center;
-            background: rgba(15, 20, 25, 0.95); border: 1px solid var(--glass-border); border-radius: 20px;
-            box-shadow: 0 0 40px rgba(0, 255, 163, 0.05); animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .modal-box {
+            width: 80%; max-width: 280px; padding: 25px; background: #080c10;
+            border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,255,163,0.1);
+            text-align: center; border-radius: 16px;
         }
-        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         #rename-input {
-            width: 100%; background: transparent; border: none; border-bottom: 1px solid #333;
-            color: var(--c-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.3rem;
-            text-align: center; padding: 10px; outline: none; margin-bottom: 20px; border-radius: 0;
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--c-default);
+            color: #fff; font-size: 1.5rem; text-align: center; padding: 10px; margin-bottom: 20px; outline: none;
+            font-family: 'Orbitron';
         }
-        .color-picker { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
-        .color-opt {
-            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
-            background: var(--bg); box-shadow: 0 0 10px var(--bg);
-            border: 2px solid transparent; transition: 0.2s;
-        }
-        .color-opt.selected { transform: scale(1.3); border-color: white; }
+        #btn-confirm { width: 100%; padding: 12px; font-size: 1rem; letter-spacing: 2px; border-color: var(--c-default); color: var(--c-default); }
 
-        .modal-btn {
-            width: 100%; padding: 14px; margin-top: 5px; background: transparent;
-            border: 1px solid #333; border-radius: 12px; color: #888; cursor: pointer;
-            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem;
+        #chat-panel {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70%;
+            background: rgba(5, 8, 12, 0.98); border-top: 1px solid var(--c-default);
+            z-index: 3500; transform: translateY(100%); transition: 0.3s; display: flex; flex-direction: column;
         }
-        .btn-save { border-color: var(--c-cyan); color: var(--c-cyan); background: rgba(0, 255, 163, 0.05); }
-        .btn-danger { border-color: var(--c-red); color: var(--c-red); background: rgba(255, 42, 109, 0.05); }
+        #chat-panel.open { transform: translateY(0); }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 12px; border-radius: 8px; font-size: 0.95rem; max-width: 85%; line-height: 1.4; }
+        .msg.ai { align-self: flex-start; background: rgba(0,255,163,0.1); border-left: 2px solid var(--c-default); color: #ddd; }
+        .msg.user { align-self: flex-end; background: rgba(255,255,255,0.1); color: #fff; text-align: right; }
         
         #delete-hint {
-            position: fixed; bottom: calc(140px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-            color: var(--c-red); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
-            opacity: 0; transition: 0.3s; pointer-events: none; font-weight: 700; text-shadow: 0 0 15px rgba(255, 42, 109, 0.6);
+            position: fixed; bottom: calc(130px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            color: var(--c-danger); font-size: 0.85rem; letter-spacing: 2px; font-weight: 700; 
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 50;
         }
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
-
-        #focus-toast {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-            color: rgba(0, 255, 163, 0.8); font-size: 0.9rem; letter-spacing: 2px; pointer-events: none; opacity: 0; z-index: 5; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 20px var(--neuron-aura); transition: opacity 0.3s, transform 0.3s;
-        }
-        #focus-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-        @media (max-width: 768px) {
-            #logo { font-size: 1rem; top: 15px; left: 15px; }
-            .ui-group { top: 15px; right: 15px; width: auto; flex-wrap: nowrap; gap: 6px; }
-            .ui-btn { padding: 6px 10px; font-size: 0.7rem; flex-grow: 0; width: auto; }
-            #main-btn { width: 60px; height: 60px; bottom: calc(40px + env(safe-area-inset-bottom)); }
-        }
-        #file-input { display: none; }
     </style>
 </head>
 <body>
@@ -230,471 +253,746 @@
     <div id="particles"></div>
     <div id="grid-bg"></div>
 
-    <div id="logo" class="ui-element">HR<span>ai</span>N</div>
-    
-    <div class="ui-group ui-element">
-        <button id="grid-btn" class="ui-btn" onclick="toggleGrid()">GRID</button>
-        <button class="ui-btn" onclick="takeSnapshot()">SNAP</button>
-        <button class="ui-btn" onclick="downloadData()">SAVE</button>
-        <button class="ui-btn" onclick="triggerUpload()">LOAD</button>
-        <button id="btn-wipe" class="ui-btn" onclick="showWipeModal()">WIPE</button>
+    <div class="ui-layer">
+        <div id="logo">HR<span>ai</span>N</div>
+        
+        <div id="nav-context" class="ui-interactive">
+            <div id="breadcrumbs"></div>
+            <button id="btn-ascend" class="btn" onclick="ascend()">▲ ASCEND</button>
+        </div>
+
+        <div class="top-controls ui-interactive">
+            <button id="btn-grid" class="btn" onclick="toggleGrid()">GRID</button>
+            <button id="btn-chat" class="btn" onclick="toggleChat()">AI CHAT</button>
+            <button id="btn-synth" class="btn" onclick="synthNode(this)">SYNTH</button>
+            <button id="btn-save" class="btn" onclick="exportData(this)">SAVE</button>
+            <button id="btn-load" class="btn" onclick="document.getElementById('import-file').click()">LOAD</button>
+            <button id="btn-wipe" class="btn" onclick="wipeData(this)">WIPE</button>
+        </div>
+        
+        <!-- Hidden Import Input -->
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(this)">
+
+        <button id="btn-dive" class="btn ui-interactive" onclick="dive()">DIVE</button>
+        <button id="main-btn" class="ui-interactive"></button>
+        <div id="delete-hint">DISCONNECTING...</div>
+        
+        <!-- TOAST CONTAINER -->
+        <div id="toast-container"></div>
     </div>
-    <input type="file" id="file-input" accept=".json" onchange="uploadData(this)">
 
-    <div id="delete-hint" class="ui-element">DISCONNECTING...</div>
-    <div id="focus-toast">Focus Mode Active</div>
-
-    <button id="main-btn" class="mode-add ui-element"></button>
-
-    <!-- RENAME MODAL -->
-    <div id="rename-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <input type="text" id="rename-input" placeholder="THOUGHT..." autocomplete="off">
-            <div class="color-picker">
-                <div class="color-opt selected" data-type="default" style="--bg: var(--c-cyan)" onclick="selectColor('default')"></div>
-                <div class="color-opt" data-type="danger" style="--bg: var(--c-red)" onclick="selectColor('danger')"></div>
-                <div class="color-opt" data-type="warn" style="--bg: var(--c-yellow)" onclick="selectColor('warn')"></div>
-                <div class="color-opt" data-type="info" style="--bg: var(--c-purple)" onclick="selectColor('info')"></div>
-            </div>
-            <button class="modal-btn btn-save" onclick="saveRename()">CONFIRM</button>
-            <button class="modal-btn" onclick="closeModal('rename-modal')">CANCEL</button>
+    <!-- MODAL -->
+    <div id="rename-modal" class="modal ui-interactive">
+        <div class="modal-box">
+            <input type="text" id="rename-input" placeholder="VOID..." autocomplete="off" onkeypress="if(event.key==='Enter') confirmRename()">
+            <button id="btn-confirm" class="btn" onclick="confirmRename()">CONFIRM</button>
         </div>
     </div>
 
-    <!-- WIPE MODAL -->
-    <div id="wipe-modal" class="modal-backdrop">
-        <div class="modal-content" style="border-color: var(--c-red); box-shadow: 0 0 40px rgba(255,42,109,0.1);">
-            <h3 style="color: var(--c-red); font-family: 'Orbitron'; margin-bottom: 10px;">SYSTEM PURGE</h3>
-            <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">Irreversible data deletion.</p>
-            <button class="modal-btn btn-danger" onclick="confirmWipe()">ERASE ALL</button>
-            <button class="modal-btn" onclick="closeModal('wipe-modal')">CANCEL</button>
+    <div id="chat-panel" class="ui-interactive">
+        <div style="padding:15px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items: center;">
+            <span style="color:var(--c-default); font-family:'Orbitron'; font-size:1.2rem;">NEURAL LINK</span>
+            <button onclick="toggleChat()" style="background:none; border:none; color:#fff; font-size:1.5rem;">×</button>
         </div>
-    </div>
-
-    <!-- ALERT MODAL -->
-    <div id="alert-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3 id="alert-title" style="color: var(--c-cyan); margin-bottom: 10px;">NOTICE</h3>
-            <p id="alert-msg" style="color: #ccc; margin-bottom: 20px;"></p>
-            <button class="modal-btn btn-save" onclick="closeModal('alert-modal')">OK</button>
+        <div id="chat-msgs"></div>
+        <div style="padding:15px; background:#000; display:flex;">
+            <input id="chat-in" type="text" placeholder="Задайте вопрос..." style="flex:1; background:#111; border:none; color:#fff; padding:12px; font-family:'Rajdhani';" onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()" style="background:var(--c-default); border:none; padding:0 20px; font-weight:bold; color:#000;">></button>
         </div>
     </div>
 
     <div id="chart"></div>
 
 <script>
-    // === TELEGRAM INIT ===
-    try {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-    } catch (e) {
-        console.log("Not in Telegram Environment");
-    }
+    // --- CONFIGURATION ---
+    const apiKey = ""; // Keep empty to use Backend
+    const BACKEND_URL = "https://supperless-yoshiko-noneruditely.ngrok-free.dev"; 
+    // ---------------------
 
-    // === CONFIG ===
     const isMobile = window.innerWidth < 768;
     const GRID_SIZE = isMobile ? 40 : 60;
-    let isGridEnabled = false;
-    
-    const COLORS = {
-        'default': '#00ffa3', 'danger': '#ff2a6d', 'warn': '#ffc107', 'info': '#d300ff'
-    };
-    const PHYS = {
-        linkDist: isMobile ? 100 : 160,
-        charge: isMobile ? -250 : -450,
-        collide: isMobile ? 10 : 20,
-        nodeScale: isMobile ? 0.7 : 1.0
-    };
 
-    // PARTICLES
+    let globalNodes = [], globalLinks = [];
+    let viewNodes = [], viewLinks = [];
+    let contextStack = []; 
+    let selectedNode = null;
+    let isGrid = false;
+    
+    // Valid Types for CSS
+    const VALID_TYPES = ['default', 'danger', 'warn', 'info'];
+
     function initParticles() {
-        const container = document.getElementById('particles');
-        for(let i=0; i<20; i++) {
+        const c = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
             p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
-            p.style.width = (Math.random()*3+1)+'px'; p.style.height = p.style.width;
-            p.style.animationDuration = (Math.random()*10+15)+'s';
-            p.style.animationDelay = -(Math.random()*20)+'s';
-            container.appendChild(p);
+            p.style.width = (Math.random()*3+2)+'px'; p.style.height = p.style.width;
+            p.style.animationDuration = (Math.random()*15+15)+'s';
+            p.style.animationDelay = -(Math.random()*15)+'s';
+            c.appendChild(p);
         }
     }
     initParticles();
+    // Initialize default grid color
+    document.getElementById('grid-bg').style.backgroundImage = `linear-gradient(rgba(0, 255, 163, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 163, 0.06) 1px, transparent 1px)`;
 
-    // DATA
-    function loadData() {
-        let saved = localStorage.getItem('hrain_v5_pro');
-        if(!saved) saved = localStorage.getItem('hrain_v21_final');
-        if(saved) { try { return JSON.parse(saved); } catch(e){ return null; } }
-        return null;
+    function init() {
+        const saved = localStorage.getItem('hrain_v10_4_restore');
+        if(saved) {
+            try {
+                const d = JSON.parse(saved);
+                globalNodes = d.nodes || [];
+                globalLinks = d.links || [];
+                globalNodes.forEach(n => { if(n.parentId === undefined) n.parentId = null; if(!n.chatHistory) n.chatHistory = []; });
+            } catch(e) {}
+        }
+        
+        if(globalNodes.length === 0) {
+            globalNodes.push({id:1, label:"Void", emoji:"🌀", type:"default", x:window.innerWidth/2, y:window.innerHeight/2, parentId: null, chatHistory:[]});
+        }
+
+        updateView();
+        animateVisuals();
     }
-    const initialData = loadData() || {
-        nodes: [ { id: 1, label: "Core", x: window.innerWidth/2, y: window.innerHeight/2, type: "default" } ],
-        links: []
-    };
-    let nodes = initialData.nodes;
-    let links = initialData.links;
 
-    // D3 SETUP
     const width = window.innerWidth, height = window.innerHeight;
-    let selectedNode = null; 
-    
-    const svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height).attr("viewBox", [0, 0, width, height]);
+    const svg = d3.select("#chart").append("svg").attr("width",width).attr("height",height);
     const g = svg.append("g");
-    const linkGroup = g.append("g").attr("class", "links");
-    const impulseGroup = g.append("g").attr("class", "impulses");
-    const nodeGroup = g.append("g").attr("class", "nodes");
+    const linkG = g.append("g").attr("class","links");
+    const impulseG = g.append("g").attr("class","impulses");
+    const nodeG = g.append("g").attr("class","nodes");
 
-    const initialScale = isMobile ? 0.7 : 1;
-    const zoom = d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
-        g.attr("transform", event.transform);
-        const grid = document.getElementById('grid-bg');
-        grid.style.backgroundPosition = `${event.transform.x}px ${event.transform.y}px`;
-        grid.style.backgroundSize = `${GRID_SIZE * event.transform.k}px ${GRID_SIZE * event.transform.k}px`;
+    const zoom = d3.zoom().scaleExtent([0.1, 4]).on("zoom", e => {
+        g.attr("transform", e.transform);
+        if(isGrid) document.getElementById('grid-bg').style.backgroundPosition = `${e.transform.x}px ${e.transform.y}px`;
+        if(isGrid) document.getElementById('grid-bg').style.backgroundSize = `${GRID_SIZE * e.transform.k}px ${GRID_SIZE * e.transform.k}px`;
     });
-    svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(initialScale).translate(-width/2, -height/2));
-    
-    // FOCUS MODE
-    let lastTapTime = 0;
-    svg.on("click", (event) => { 
-        if (event.target.tagName === 'svg') {
-            const currentTime = new Date().getTime();
-            if (currentTime - lastTapTime < 300) toggleFocusMode(); 
-            else deselectNode();
-            lastTapTime = currentTime;
-        }
-    });
+    svg.call(zoom).on("dblclick.zoom", null);
+    svg.on("click", e => { if(e.target.tagName==='svg') deselect(); });
 
-    function toggleFocusMode() {
-        document.body.classList.toggle('focus-active');
-        if (document.body.classList.contains('focus-active')) {
-            const t = document.getElementById('focus-toast');
-            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 800);
+    // UPDATED PHYSICS
+    const sim = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d=>d.id).distance(isMobile?160:200)) 
+        .force("charge", d3.forceManyBody().strength(-2000)) 
+        .force("collide", d3.forceCollide().radius(110).strength(1).iterations(3)) 
+        .force("x", d3.forceX(width/2).strength(0.01))
+        .force("y", d3.forceY(height/2).strength(0.01))
+        .velocityDecay(0.6); 
+
+    function getCurrentRoot() { return contextStack.length > 0 ? contextStack[contextStack.length-1] : null; }
+
+    function updateView() {
+        const rootId = getCurrentRoot();
+        
+        if(!rootId) {
+            viewNodes = globalNodes.filter(n => n.parentId == null);
+            document.getElementById('nav-context').classList.remove('visible');
+        } else {
+            const root = globalNodes.find(n => n.id === rootId);
+            if(!root) { contextStack.pop(); updateView(); return; }
+            root.fx = width/2; root.fy = height/2; 
+            viewNodes = globalNodes.filter(n => n.id === rootId || n.parentId === rootId);
+            updateNav();
         }
+
+        const nodeMap = new Set(viewNodes.map(n => n.id));
+        viewLinks = globalLinks.filter(l => {
+            const s = l.source.id||l.source; const t = l.target.id||l.target;
+            return nodeMap.has(s) && nodeMap.has(t);
+        });
+
+        render();
+        updateButtons();
+        sim.alpha(1).restart(); 
     }
 
-    // SIMULATION
-    const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(PHYS.linkDist))
-        .force("charge", d3.forceManyBody().strength(PHYS.charge))
-        .force("collide", d3.forceCollide().radius(d => (d.currentRadius || 30) + PHYS.collide).iterations(2))
-        .force("x", d3.forceX(width/2).strength(0.015)) 
-        .force("y", d3.forceY(height/2).strength(0.015))
-        .alphaDecay(0.05);
+    function render() {
+        const n = nodeG.selectAll(".node-group").data(viewNodes, d=>d.id);
+        n.exit().transition().duration(200).style("opacity", 0).remove();
+        
+        const nEnter = n.enter().append("g").attr("class", "node-group")
+            .attr("opacity", 0)
+            .call(d3.drag().on("start",dragStart).on("drag",dragged).on("end",dragEnd))
+            .on("click", clickNode);
 
-    // LOGIC
-    function magneticForce(alpha) {
-        if (!isGridEnabled) return;
-        const strength = 0.15; 
-        nodes.forEach(d => {
-            if (d.fx || d.fy) return;
-            d.x += (Math.round(d.x/GRID_SIZE)*GRID_SIZE - d.x) * strength * alpha;
-            d.y += (Math.round(d.y/GRID_SIZE)*GRID_SIZE - d.y) * strength * alpha;
+        nEnter.transition().duration(400).attr("opacity", 1);
+
+        nEnter.append("circle").attr("class","neuron-aura");
+        nEnter.append("circle").attr("class","neuron-core");
+        nEnter.append("text").attr("class","emoji").attr("dy", 1);
+        nEnter.append("text").attr("class","label");
+
+        const allN = nEnter.merge(n);
+        const rootId = getCurrentRoot();
+
+        allN.attr("class", d => {
+            let t = d.type || 'default';
+            if(!VALID_TYPES.includes(t)) t = 'default';
+            return `node-group type-${t} ${d===selectedNode?'selected':''} ${d.id===rootId?'is-root':''}`;
+        });
+        
+        allN.select(".neuron-core").attr("r", d => d.id===rootId ? 35 : 26);
+        allN.select(".neuron-aura").attr("r", d => d.id===rootId ? 80 : 55);
+        allN.select(".emoji").text(d => d.emoji || "💠");
+        allN.select(".label").text(d => d.label).attr("dy", 48);
+
+        const l = linkG.selectAll(".link").data(viewLinks, d => (d.source.id||d.source)+"-"+(d.target.id||d.target));
+        l.exit().remove();
+        const lEnter = l.enter().append("line").attr("class","link");
+        const allL = lEnter.merge(l);
+        allL.style("stroke", d => {
+            const target = viewNodes.find(n=>n.id===(d.target.id||d.target));
+            if (target) {
+                let t = target.type || 'default';
+                if(!VALID_TYPES.includes(t)) t = 'default';
+                return `var(--c-${t})`;
+            }
+            return 'var(--c-default)';
+        });
+
+        // SIMULATION TICK WITH CLIPPING
+        sim.nodes(viewNodes).on("tick", () => {
+            if(isGrid) magneticGrid(sim.alpha());
+            
+            allL.each(function(d) {
+                const s = d.source; const t = d.target;
+                const rS = (s.id === rootId ? 35 : 26) + 5; 
+                const rT = (t.id === rootId ? 35 : 26) + 5;
+                const dx = t.x - s.x; const dy = t.y - s.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist > rS + rT) {
+                    const nx = dx / dist; const ny = dy / dist;
+                    d3.select(this)
+                        .attr("x1", s.x + nx * rS).attr("y1", s.y + ny * rS)
+                        .attr("x2", t.x - nx * rT).attr("y2", t.y - ny * rT)
+                        .attr("opacity", 0.7);
+                } else { d3.select(this).attr("opacity", 0); }
+            });
+
+            allN.attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+        sim.force("link").links(viewLinks);
+    }
+
+    function magneticGrid(alpha) {
+        if (!isGrid) return;
+        const strength = 0.4 * alpha; 
+        viewNodes.forEach(d => {
+            if (d.fx || d.fy) return; 
+            d.x += (Math.round(d.x/GRID_SIZE)*GRID_SIZE - d.x) * strength;
+            d.y += (Math.round(d.y/GRID_SIZE)*GRID_SIZE - d.y) * strength;
         });
     }
-
-    function toggleGrid() {
-        isGridEnabled = !isGridEnabled;
-        document.body.classList.toggle('grid-active', isGridEnabled);
-        document.getElementById('grid-btn').classList.toggle('active', isGridEnabled);
-        if (isGridEnabled) simulation.alpha(0.3).restart();
-    }
-
-    // === STABLE IO (BLOB BASED) ===
-    function downloadData() {
-        try {
-            const cleanNodes = nodes.map(n => ({ id:n.id, label:n.label, x:n.x, y:n.y, type:n.type||'default' }));
-            const cleanLinks = links.map(l => ({ source:l.source.id||l.source, target:l.target.id||l.target }));
-            
-            const blob = new Blob([JSON.stringify({nodes: cleanNodes, links: cleanLinks})], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "hrain_memory.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } catch(e) {
-            showAlert("Save Error: " + e.message);
-        }
-    }
-
-    function takeSnapshot() {
-        try {
-            const svgNode = document.querySelector('svg');
-            const clone = svgNode.cloneNode(true);
-            const style = document.createElement('style');
-            style.textContent = document.getElementById('main-styles').textContent;
-            clone.insertBefore(style, clone.firstChild);
-            
-            const svgString = new XMLSerializer().serializeToString(clone);
-            const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
-            const url = URL.createObjectURL(blob);
-            
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = "#030508";
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0);
-                
-                const pngUrl = canvas.toDataURL("image/png");
-                const a = document.createElement('a');
-                a.download = 'hrain_snap.png';
-                a.href = pngUrl;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-            img.src = url;
-        } catch(e) {
-            showAlert("Snap Error: " + e.message);
-        }
-    }
-
-    function triggerUpload() { document.getElementById('file-input').click(); }
-
-    function uploadData(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const json = JSON.parse(e.target.result);
-                if(json.nodes && json.links) {
-                    nodes = json.nodes; links = json.links;
-                    updateTopology();
-                    simulation.nodes(nodes); simulation.force("link").links(links); simulation.alpha(1).restart();
-                    saveData();
-                    showAlert("MEMORY LOADED");
-                }
-            } catch(err) { showAlert("FILE CORRUPTED"); }
-        };
-        reader.readAsText(file);
-        input.value = '';
-    }
-
-    // MODALS
-    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function showAlert(msg) { document.getElementById('alert-msg').innerText = msg; showModal('alert-modal'); }
-    
-    function showWipeModal() { showModal('wipe-modal'); }
-    function confirmWipe() {
-        closeModal('wipe-modal');
-        d3.selectAll(".node-group").transition().duration(500)
-            .attr("transform", d => `translate(${d.x},${d.y}) scale(0)`).style("opacity", 0)
-            .on("end", () => {
-                localStorage.removeItem('hrain_v5_pro');
-                nodes = [{ id: Date.now(), label: "Core", x: width/2, y: height/2, type:"default" }];
-                links = []; selectedNode = null;
-                updateButtonState(); updateTopology(); saveData();
-            });
-    }
-
-    // NODE EDITING
-    let tempColor = 'default';
-    function selectColor(type) {
-        tempColor = type;
-        document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
-        const el = document.querySelector(`.color-opt[data-type="${type}"]`);
-        if(el) el.classList.add('selected');
-        const inp = document.getElementById('rename-input');
-        inp.style.color = COLORS[type]; inp.style.borderColor = COLORS[type];
-    }
-
-    function openRename() {
-        if(!selectedNode) return;
-        const inp = document.getElementById('rename-input');
-        inp.value = selectedNode.label === "Idea" ? "" : selectedNode.label;
-        inp.placeholder = selectedNode.label;
-        selectColor(selectedNode.type || 'default');
-        showModal('rename-modal');
-        setTimeout(() => inp.focus(), 50);
-    }
-    function saveRename() { 
-        if(selectedNode) { 
-            selectedNode.label = document.getElementById('rename-input').value.trim() || selectedNode.label; 
-            selectedNode.type = tempColor; 
-            updateTopology(); saveData(); 
-        } 
-        closeModal('rename-modal'); 
-    }
-    document.getElementById('rename-input').addEventListener("keypress", (e) => { if(e.key === "Enter") saveRename(); });
-
-    // INTERACTION
-    const mainBtn = document.getElementById('main-btn');
-    const deleteHint = document.getElementById('delete-hint');
-    let pressTimer, isLongPress = false;
-    let actionCooldown = false;
-
-    function handleBtnStart(e) {
-        if (actionCooldown) return;
-        if (e.target.closest('.ui-group')) return; 
-        
-        if (selectedNode) {
-            isLongPress = false;
-            mainBtn.classList.add('holding-delete');
-            deleteHint.classList.add('visible');
-            if(navigator.vibrate) navigator.vibrate(50);
-            
-            pressTimer = setTimeout(() => { 
-                isLongPress = true; 
-                actionCooldown = true;
-                deleteSelectedNode(); 
-                if(navigator.vibrate) navigator.vibrate([50,50]);
-                setTimeout(() => { actionCooldown = false; }, 500);
-            }, 800);
-        } else {
-            mainBtn.style.transform = "translateX(-50%) scale(0.9)";
-        }
-    }
-
-    function handleBtnEnd(e) {
-        e.preventDefault();
-        clearTimeout(pressTimer);
-        
-        mainBtn.classList.remove('holding-delete'); 
-        deleteHint.classList.remove('visible'); 
-        mainBtn.style.transform = "";
-
-        if (actionCooldown || isLongPress) { 
-            isLongPress = false; 
-            return; 
-        }
-
-        selectedNode ? openRename() : createNewNode();
-    }
-
-    mainBtn.addEventListener('mousedown', handleBtnStart); 
-    mainBtn.addEventListener('touchstart', handleBtnStart, {passive: false});
-    mainBtn.addEventListener('mouseup', handleBtnEnd); 
-    mainBtn.addEventListener('touchend', handleBtnEnd);
-
-    function createNewNode() {
-        const t = d3.zoomTransform(svg.node());
-        let x, y;
-        if (isGridEnabled && selectedNode) {
-            const dir = [[0,-1],[1,0],[0,1],[-1,0]][Math.floor(Math.random()*4)];
-            x = selectedNode.x + dir[0]*GRID_SIZE*2; y = selectedNode.y + dir[1]*GRID_SIZE*2;
-        } else if (selectedNode) {
-            const a = Math.random()*6.28; x = selectedNode.x+Math.cos(a)*80; y = selectedNode.y+Math.sin(a)*80;
-        } else { x = (width/2-t.x)/t.k; y = (height/2-t.y)/t.k; }
-
-        const newNode = { id: Date.now(), label: "Idea", x, y, type: selectedNode ? selectedNode.type : 'default' }; 
-        nodes.push(newNode);
-        if (selectedNode) { 
-            links.push({ source: selectedNode.id, target: newNode.id }); 
-            animateImpulse(selectedNode, newNode); 
-        }
-        selectedNode = newNode; updateButtonState(); updateTopology(0.3); saveData(); setTimeout(openRename, 50);
-    }
-
-    function deleteSelectedNode() {
-        if(!selectedNode) return;
-        nodes = nodes.filter(n => n.id !== selectedNode.id);
-        links = links.filter(l => l.source.id !== selectedNode.id && l.target.id !== selectedNode.id);
-        selectedNode = null; updateButtonState(); updateTopology(); saveData();
-    }
-
-    function handleNodeClick(event, d) {
-        if (event.defaultPrevented) return;
-        if (!selectedNode) { selectedNode = d; }
-        else if (selectedNode === d) { selectedNode = null; }
-        else {
-            const exists = links.some(l => (l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id));
-            if(!exists) { 
-                links.push({ source: selectedNode.id, target: d.id }); 
-                animateImpulse(selectedNode, d); 
-            }
-            else { links = links.filter(l => !((l.source.id===selectedNode.id && l.target.id===d.id) || (l.source.id===d.id && l.target.id===selectedNode.id))); }
-            selectedNode = null; saveData();
-        }
-        updateButtonState(); updateTopology();
-    }
-
-    function updateButtonState() { 
-        mainBtn.className = "ui-element " + (selectedNode ? "mode-edit" : "mode-add"); 
-        if(selectedNode) {
-            const c = COLORS[selectedNode.type || 'default'];
-            mainBtn.style.boxShadow = `0 0 0 1px ${c}, 0 0 30px ${c}40`;
-        } else { mainBtn.style.boxShadow = ""; }
-    }
-    function deselectNode() { selectedNode = null; updateButtonState(); updateTopology(); }
 
     function animateImpulse(source, target) {
-        const color = COLORS[source.type || 'default'];
-        const impulse = impulseGroup.append("circle").attr("class", "impulse")
-            .attr("r", 4).attr("cx", source.x).attr("cy", source.y)
-            .style("fill", color).style("color", color);
-        impulse.transition().duration(600).ease(d3.easeQuadInOut)
-            .attr("cx", target.x).attr("cy", target.y).on("end", function() { d3.select(this).remove(); });
+        if(isNaN(source.x) || isNaN(target.x)) return;
+        let t = source.type || 'default';
+        if(!VALID_TYPES.includes(t)) t = 'default';
+        const color = `var(--c-${t})`;
+        
+        const spark = impulseG.append("circle").attr("class", "impulse").attr("r", 4).attr("cx", source.x).attr("cy", source.y).style("fill", "#fff").style("color", color);
+        spark.transition().duration(800).ease(d3.easeQuadIn).attr("cx", target.x).attr("cy", target.y).style("fill", color).on("end", function() { d3.select(this).remove(); });
     }
 
-    function updateTopology(alpha=0.5) {
-        nodes.forEach(n => {
-            const c = links.filter(l => (l.source.id||l.source)===n.id || (l.target.id||l.target)===n.id).length;
-            n.coreRadius = (8 + c * 1.5) * PHYS.nodeScale;
-            n.auraRadius = (22 + c * 3.5) * PHYS.nodeScale;
+    let lastDominantType = 'default';
+    function updateAtmosphere() {
+        if(!viewNodes.length) return;
+        
+        const counts = { default: 0, danger: 0, warn: 0, info: 0 };
+        viewNodes.forEach(n => {
+            let t = n.type || 'default';
+            if(!counts[t]) counts[t] = 0; // handle dirty data
+            counts[t]++;
         });
 
-        const link = linkGroup.selectAll("line").data(links, d => (d.source.id||d.source)+"-"+(d.target.id||d.target));
-        link.exit().remove(); link.enter().append("line").attr("class", "link").merge(link);
+        // Find dominant
+        let max = -1;
+        let dom = 'default';
+        for(let t in counts) {
+            if(counts[t] > max) { max = counts[t]; dom = t; }
+        }
 
-        const node = nodeGroup.selectAll("g").data(nodes, d => d.id);
-        node.exit().transition().duration(300).style("opacity", 0).remove();
-        const nodeEnter = node.enter().append("g")
-            .call(d3.drag().on("start", (e,d)=>{if(!e.active)simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y})
-            .on("drag", (e,d)=>{d.fx=e.x; d.fy=e.y})
-            .on("end", (e,d)=>{if(!e.active)simulation.alphaTarget(0); if(isGridEnabled){d.fx=Math.round(e.x/GRID_SIZE)*GRID_SIZE; d.fy=Math.round(e.y/GRID_SIZE)*GRID_SIZE;}else{d.fx=null; d.fy=null;} saveData();}))
-            .on("click", handleNodeClick);
+        if(dom !== lastDominantType) {
+            lastDominantType = dom;
+            const colorMap = {
+                default: '#00ffa3',
+                danger: '#ff2a6d',
+                warn: '#ffc107',
+                info: '#d300ff'
+            };
+            const c = colorMap[dom] || '#00ffa3';
+            
+            // Update CSS variable for particles
+            document.documentElement.style.setProperty('--c-ambient', c);
+            
+            // Update grid color manually (gradient hack)
+            const rgb = hexToRgb(c);
+            if(rgb) {
+                document.getElementById('grid-bg').style.backgroundImage = 
+                    `linear-gradient(rgba(${rgb}, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(${rgb}, 0.08) 1px, transparent 1px)`;
+            }
+        }
+    }
 
-        nodeEnter.append("circle").attr("class", "hitbox");
-        nodeEnter.append("circle").attr("class", "neuron-aura");
-        nodeEnter.append("circle").attr("class", "neuron-core").attr("cx", 0).attr("cy", 0);
-        nodeEnter.append("text").attr("class", "label").attr("dy", 0).style("font-size", isMobile?"11px":"14px");
-
-        const allNodes = nodeEnter.merge(node);
-        allNodes.attr("class", d => `node-group type-${d.type || 'default'} ${d===selectedNode ? 'selected' : ''}`);
-        allNodes.select("text").text(d => d.label);
-        allNodes.select(".neuron-core").transition().duration(300).attr("r", d => d.coreRadius);
-        allNodes.select(".neuron-aura").transition().duration(300).attr("r", d => d.auraRadius);
-        allNodes.select(".hitbox").attr("r", d => Math.max(40, d.auraRadius + 15));
-        allNodes.select("text.label").transition().duration(300).attr("dy", d => d.auraRadius + (isMobile ? 12 : 18));
-
-        simulation.nodes(nodes).on("tick", () => {
-            magneticForce(simulation.alpha());
-            linkGroup.selectAll("line").attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-            allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
-        });
-        simulation.force("link").links(links);
-        simulation.alpha(alpha).restart();
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
     }
 
     function animateVisuals() {
-        if(links.length > 0 && Math.random() > 0.92) {
-            const l = links[Math.floor(Math.random()*links.length)];
+        if(Math.random() > 0.95) updateAtmosphere(); 
+
+        if(viewLinks.length > 0 && Math.random() > 0.85) {
+            const l = viewLinks[Math.floor(Math.random()*viewLinks.length)];
             if(l.source.x && l.target.x) animateImpulse(l.source, l.target);
         }
         requestAnimationFrame(animateVisuals);
     }
-    animateVisuals();
 
-    function saveData() {
-        const cl = nodes.map(n => ({ id:n.id, label:n.label, x:n.x, y:n.y, type:n.type||'default' }));
-        const ln = links.map(l => ({ source:l.source.id||l.source, target:l.target.id||l.target }));
-        localStorage.setItem('hrain_v5_pro', JSON.stringify({ nodes:cl, links:ln }));
+    function clickNode(e, d) {
+        if(e.defaultPrevented) return;
+        if(selectedNode === d) { deselect(); } 
+        else if(!selectedNode) { selectedNode = d; } 
+        else {
+            const s=selectedNode.id, t=d.id;
+            const idx = globalLinks.findIndex(l => { const ls = l.source.id||l.source; const lt = l.target.id||l.target; return (ls===s && lt===t) || (ls===t && lt===s); });
+            if(idx > -1) globalLinks.splice(idx, 1);
+            else globalLinks.push({source:s, target:t});
+            animateImpulse(selectedNode, d); selectedNode = d; updateView(); saveData();
+        }
+        updateButtons(); render();
     }
 
-    updateButtonState(); updateTopology();
+    function createNode() {
+        const t = d3.zoomTransform(svg.node());
+        let x, y;
+        const currentParentId = getCurrentRoot();
+        if(selectedNode) {
+            const a = Math.random()*6.28; x = selectedNode.x + Math.cos(a)*100; y = selectedNode.y + Math.sin(a)*100;
+        } else {
+            x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
+        }
+        if(isGrid) { x = Math.round(x/GRID_SIZE)*GRID_SIZE; y = Math.round(y/GRID_SIZE)*GRID_SIZE; }
+        const newNode = {
+            id: Date.now(), label: "Void", emoji: "🌀", type: "default", x, y, parentId: currentParentId, isNew: true, chatHistory: []
+        };
+        globalNodes.push(newNode);
+        if(selectedNode) globalLinks.push({source:selectedNode.id, target:newNode.id});
+        else if(currentParentId) globalLinks.push({source:currentParentId, target:newNode.id});
+        updateView();
+        selectedNode = viewNodes.find(n=>n.id===newNode.id);
+        updateButtons(); render(); saveData();
+        setTimeout(openRename, 50);
+        if(navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function deleteNode() {
+        if(!selectedNode || selectedNode.id === getCurrentRoot()) return;
+        const toDelete = new Set([selectedNode.id]);
+        let changed = true;
+        while(changed) {
+            changed = false;
+            globalNodes.forEach(n => {
+                if(!toDelete.has(n.id) && toDelete.has(n.parentId)) { toDelete.add(n.id); changed = true; }
+            });
+        }
+        globalNodes = globalNodes.filter(n => !toDelete.has(n.id));
+        globalLinks = globalLinks.filter(l => !toDelete.has(l.source.id||l.source) && !toDelete.has(l.target.id||l.target));
+        deselect(); updateView(); saveData();
+        if(navigator.vibrate) navigator.vibrate([30,30]);
+    }
+
+    function deselect() { selectedNode=null; updateButtons(); render(); }
+    function dive() { if(!selectedNode || selectedNode.id === getCurrentRoot()) return; contextStack.push(selectedNode.id); deselect(); updateView(); }
+    function ascend() { if(contextStack.length===0) return; const oldRoot = globalNodes.find(n=>n.id===contextStack.pop()); if(oldRoot) { oldRoot.fx=null; oldRoot.fy=null; } updateView(); }
+
+    const mainBtn = document.getElementById('main-btn');
+    const delHint = document.getElementById('delete-hint');
+    let pressTimer, isLongPress = false;
+
+    function handleStart(e) {
+        if(e.type === 'touchstart') e.stopPropagation();
+        isLongPress = false;
+        if(selectedNode) {
+            mainBtn.classList.add('holding-delete'); delHint.classList.add('visible');
+            pressTimer = setTimeout(() => { isLongPress = true; deleteNode(); }, 800);
+        } else { mainBtn.style.transform = "translateX(-50%) scale(0.9)"; }
+    }
+    function handleEnd(e) {
+        e.preventDefault(); clearTimeout(pressTimer);
+        mainBtn.classList.remove('holding-delete'); delHint.classList.remove('visible'); mainBtn.style.transform = "";
+        if(isLongPress) return;
+        if(selectedNode) openRename(); else createNode();
+    }
+    mainBtn.addEventListener('mousedown', handleStart); mainBtn.addEventListener('touchstart', handleStart);
+    mainBtn.addEventListener('mouseup', handleEnd); mainBtn.addEventListener('touchend', handleEnd);
+
+    function openRename() {
+        document.getElementById('rename-modal').style.display='flex';
+        const inp = document.getElementById('rename-input');
+        if(selectedNode.isNew) { inp.value = ""; delete selectedNode.isNew; } else { inp.value = selectedNode.label; }
+        inp.focus();
+    }
+
+    function confirmRename() {
+        const inp = document.getElementById('rename-input');
+        if(selectedNode && inp.value.trim() !== "") {
+            selectedNode.label = inp.value.trim();
+            selectedNode.emoji = "⏳";
+            render(); saveData();
+            aiAnalyze(selectedNode);
+        }
+        document.getElementById('rename-modal').style.display='none';
+    }
+
+    // --- NOTIFICATIONS ---
+    function showNotification(text, isError = false) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + (isError ? 'error' : '');
+        toast.innerText = text;
+        container.appendChild(toast);
+        
+        requestAnimationFrame(() => toast.classList.add('visible'));
+
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // --- GEMINI PROXY HELPER ---
+    async function callGemini(text) {
+        // 1. Try Local Key
+        if (apiKey) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const body = JSON.stringify({ contents: [{ parts: [{ text: text }] }] });
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+            if (!res.ok) throw new Error("Google API Error");
+            return await res.json();
+        } 
+        
+        // 2. Fallback to Backend Proxy
+        else if (BACKEND_URL) {
+            const url = `${BACKEND_URL}/api/hrain/sync`;
+            const body = JSON.stringify({ text: text });
+            
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+            if (!res.ok) throw new Error("Janus Backend Error");
+            const data = await res.json();
+            
+            if(data.error) throw new Error(data.error);
+            // Backend matches Gemini structure
+            return data;
+        }
+        
+        throw new Error("No Connectivity");
+    }
+
+    async function aiAnalyze(node) {
+        try {
+            const prompt = `Classify: "${node.label}". JSON: {"type": "default|danger|warn|info", "emoji": "single_char"}. Context: Danger=bad/risk, Warn=alert, Info=data, Default=neutral.`;
+            const d = await callGemini(prompt);
+            const json = JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim());
+            
+            node.type = json.type; 
+            node.emoji = json.emoji; 
+            render(); saveData();
+        } catch(e) { 
+            console.error(e);
+            node.emoji = "🔹"; render(); saveData();
+            // Optional: Don't spam toasts on auto-analyze errors
+        }
+    }
+
+    async function synthNode(btn) {
+        if(!selectedNode) return;
+        
+        if(btn) { btn.classList.add('loading'); btn.innerText = "PROCESSING..."; }
+        try {
+            const currentRoot = getCurrentRoot();
+            const currentChildren = viewNodes.filter(n => n.parentId === selectedNode.id || (globalLinks.some(l => (l.source.id===selectedNode.id && l.target.id===n.id) || (l.source.id===n.id && l.target.id===selectedNode.id))));
+            
+            const prompt = `
+            Context: Central Node "${selectedNode.label}".
+            Existing Children: ${currentChildren.map(n=>n.label).join(", ") || "None"}.
+            Goal: Refine this concept cluster.
+            1. RE-EVALUATE PARENT: Provide "parentEmoji" and "parentType" (default/danger/warn/info).
+            2. RE-EVALUATE CHILDREN: Provide "updates" array [{label (to match), emoji, type}].
+            3. CREATE NEW: Provide "newNodes" array [{label, emoji, type}].
+            JSON Only.
+            `;
+            
+            const d = await callGemini(prompt);
+            const raw = d.candidates[0].content.parts[0].text;
+            const json = JSON.parse(raw.substring(raw.indexOf('{'), raw.lastIndexOf('}')+1));
+            
+            if(json.parentEmoji) selectedNode.emoji = json.parentEmoji;
+            if(json.parentType && VALID_TYPES.includes(json.parentType)) selectedNode.type = json.parentType;
+
+            if(json.updates) {
+                json.updates.forEach(u => {
+                    const child = currentChildren.find(c => c.label === u.label);
+                    if(child) {
+                        if(u.emoji) child.emoji = u.emoji;
+                        if(u.type && VALID_TYPES.includes(u.type)) child.type = u.type;
+                    }
+                });
+            }
+
+            if(json.newNodes) {
+                json.newNodes.forEach((n, i) => {
+                    const angle = (Math.PI*2/4)*i;
+                    let nx = selectedNode.x + Math.cos(angle)*120;
+                    let ny = selectedNode.y + Math.sin(angle)*120;
+                    if(isGrid) { nx=Math.round(nx/GRID_SIZE)*GRID_SIZE; ny=Math.round(ny/GRID_SIZE)*GRID_SIZE; }
+                    
+                    const newNode = {
+                        id: Date.now()+i, label: n.label, emoji: n.emoji, type: n.type || 'default',
+                        x: nx, y: ny, parentId: currentRoot, chatHistory: []
+                    };
+                    globalNodes.push(newNode);
+                    globalLinks.push({source:selectedNode.id, target:newNode.id});
+                });
+            }
+
+            updateView(); saveData();
+        } catch(e) { 
+            console.error(e); 
+            showNotification("ИИ не отвечает", true);
+        }
+        if(btn) { btn.classList.remove('loading'); btn.innerText = "SYNTH"; }
+    }
+
+    // --- WORKING CHAT ---
+    function toggleChat() { 
+        document.getElementById('chat-panel').classList.toggle('open'); 
+        if(document.getElementById('chat-panel').classList.contains('open')) renderChat();
+    }
+
+    function renderChat() {
+        const c = document.getElementById('chat-msgs');
+        c.innerHTML = '';
+        if(selectedNode && selectedNode.chatHistory) {
+            if(selectedNode.chatHistory.length === 0) addMsgUI('ai', `Uplink established: ${selectedNode.label}. How can I assist?`);
+            else selectedNode.chatHistory.forEach(m => addMsgUI(m.role, m.text));
+        } else {
+            addMsgUI('ai', "Select a node to connect.");
+        }
+    }
+
+    async function sendChat() {
+        const inp = document.getElementById('chat-in');
+        const txt = inp.value.trim();
+        if(!txt || !selectedNode) return;
+        
+        addMsgUI('user', txt);
+        if(!selectedNode.chatHistory) selectedNode.chatHistory = [];
+        selectedNode.chatHistory.push({role:'user', text:txt});
+        inp.value = '';
+        
+        try {
+            const rootLabel = getCurrentRoot() ? globalNodes.find(n=>n.id===getCurrentRoot()).label : "Root";
+            const prompt = `Role: Neural Interface. Context: Node "${selectedNode.label}" inside "${rootLabel}". User says: "${txt}". Reply briefly in Russian.`;
+            
+            const d = await callGemini(prompt);
+            const reply = d.candidates[0].content.parts[0].text;
+            
+            addMsgUI('ai', reply);
+            selectedNode.chatHistory.push({role:'ai', text:reply});
+            saveData();
+        } catch(e) { 
+            console.error(e); 
+            addMsgUI('ai', "Connection lost.");
+            showNotification("ИИ недоступен", true);
+        }
+    }
+
+    function addMsgUI(role, txt, id) {
+        const d = document.createElement('div');
+        d.className = `msg ${role}`; d.innerText = txt;
+        if(id) d.id = id;
+        const c = document.getElementById('chat-msgs');
+        c.appendChild(d); c.scrollTop = c.scrollHeight;
+    }
+
+    function updateButtons() {
+        mainBtn.className = "ui-interactive " + (selectedNode ? "mode-edit" : "");
+        if(selectedNode) {
+            mainBtn.style.setProperty('--color-target', `var(--c-${selectedNode.type||'default'})`);
+            if(selectedNode.id !== getCurrentRoot()) document.getElementById('btn-dive').classList.add('visible');
+            else document.getElementById('btn-dive').classList.remove('visible');
+        } else {
+            document.getElementById('btn-dive').classList.remove('visible');
+            mainBtn.style.removeProperty('--color-target');
+        }
+    }
+
+    function updateNav() {
+        const c = document.getElementById('nav-context');
+        const b = document.getElementById('breadcrumbs');
+        b.innerHTML = '';
+        if(contextStack.length > 0) {
+            c.classList.add('visible');
+            contextStack.forEach((id, i) => {
+                const n = globalNodes.find(x=>x.id===id);
+                const el = document.createElement('div');
+                el.className = 'crumb ' + (i===contextStack.length-1?'active':'');
+                el.innerText = (n?n.label:'???') + (i<contextStack.length-1?' > ':'');
+                b.appendChild(el);
+            });
+        } else c.classList.remove('visible');
+    }
+
+    function toggleGrid() { 
+        isGrid=!isGrid; 
+        document.body.classList.toggle('grid-active', isGrid); 
+        document.getElementById('btn-grid').classList.toggle('active', isGrid); 
+        sim.alpha(0.5).restart(); 
+    }
+    
+    // --- IO & STORAGE ---
+    function saveData(btn) { 
+        // Auto-save logic (also used by export)
+        localStorage.setItem('hrain_v10_4_restore', JSON.stringify({nodes:globalNodes, links:globalLinks})); 
+        // Only show UI feedback if called via internal logic passed a btn that expects simple "SAVED" text 
+        // (This is mostly legacy support for internal calls, exportData handles its own feedback)
+        if(btn && !btn.id.includes('btn-save')) { 
+            const o=btn.innerText; 
+            btn.classList.add('success'); 
+            btn.innerText="SAVED!"; 
+            setTimeout(()=>{btn.classList.remove('success');btn.innerText=o},1000); 
+        } 
+    }
+
+    function exportData(btn) {
+        saveData(); // Save to local storage first
+        
+        const dataStr = JSON.stringify({nodes:globalNodes, links:globalLinks}, null, 2);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hrain_data_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        if(btn) { 
+            const o=btn.innerText; 
+            btn.classList.add('success'); 
+            btn.innerText = "SAVED ↓"; 
+            setTimeout(()=>{btn.classList.remove('success');btn.innerText=o}, 1500); 
+        } 
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if(!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const json = JSON.parse(e.target.result);
+                if(Array.isArray(json.nodes) && Array.isArray(json.links)) {
+                    globalNodes = json.nodes;
+                    globalLinks = json.links;
+                    
+                    // Sanitize
+                    globalNodes.forEach(n => {
+                        if(n.parentId === undefined) n.parentId = null;
+                        if(!n.chatHistory) n.chatHistory = [];
+                    });
+
+                    // Reset State
+                    selectedNode = null;
+                    contextStack = [];
+                    updateView();
+                    saveData(); // Save loaded data to local storage
+
+                    const btn = document.getElementById('btn-load');
+                    if(btn) {
+                        const o = btn.innerText;
+                        btn.classList.add('success');
+                        btn.innerText = "LOADED";
+                        setTimeout(()=>{btn.classList.remove('success');btn.innerText=o}, 1500);
+                    }
+                } else {
+                    alert("Invalid JSON structure");
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Error parsing file");
+            }
+        };
+        reader.readAsText(file);
+        input.value = ''; // Reset
+    }
+    
+    let wipeTimer = null;
+    function wipeData(btn) { 
+        if(!btn) { localStorage.removeItem('hrain_v10_4_restore'); location.reload(); return; }
+
+        if(btn.dataset.confirm === "true") {
+            // Actual Wipe
+            btn.innerText = "BYE";
+            localStorage.removeItem('hrain_v10_4_restore'); 
+            location.reload();
+        } else {
+            // First Click
+            btn.dataset.confirm = "true";
+            btn.innerText = "SURE?";
+            btn.style.borderColor = "var(--c-danger)"; 
+            btn.style.color = "var(--c-danger)";
+            btn.style.boxShadow = "0 0 15px var(--c-danger)";
+            
+            if(wipeTimer) clearTimeout(wipeTimer);
+            wipeTimer = setTimeout(() => {
+                btn.dataset.confirm = "false";
+                btn.innerText = "WIPE";
+                btn.style.borderColor = ""; 
+                btn.style.color = "";
+                btn.style.boxShadow = "";
+            }, 3000);
+        }
+    }
+    
+    // --- DRAG REVISED ---
+    let dragMoved = false;
+
+    function dragStart(e,d) { 
+        if(!e.active) sim.alphaTarget(0.3).restart(); 
+        d.fx = d.x; d.fy = d.y; 
+        dragMoved = false;
+    }
+    
+    function dragged(e,d) { 
+        d.fx = e.x; d.fy = e.y;
+        dragMoved = true; 
+    }
+    
+    function dragEnd(e,d) { 
+        if(!e.active) sim.alphaTarget(0); 
+        if (d.id === getCurrentRoot()) {
+            d.fx = width/2; d.fy = height/2; 
+        } else {
+            if (isGrid) {
+                d.fx = Math.round(e.x/GRID_SIZE)*GRID_SIZE;
+                d.fy = Math.round(e.y/GRID_SIZE)*GRID_SIZE;
+            } else {
+                if (dragMoved) {
+                    d.fx = null; d.fy = null; 
+                }
+            }
+        }
+        saveData(); 
+    }
+
+    init();
 </script>
 </body>
 </html>
-
-
