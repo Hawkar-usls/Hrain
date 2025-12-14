@@ -117,8 +117,9 @@
             display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s;
         }
         #nav-context.visible { opacity: 1; }
-        .crumb { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 5px; }
-        .crumb.active { color: var(--c-default); font-weight: bold; text-shadow: 0 0 10px rgba(0,255,163,0.4); }
+        .crumb { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .crumb:hover { color: #fff; text-decoration: underline; }
+        .crumb.active { color: var(--c-default); font-weight: bold; text-shadow: 0 0 10px rgba(0,255,163,0.4); cursor: default; text-decoration: none; }
         #btn-ascend {
             padding: 6px 12px; font-size: 0.75rem; 
             border: 1px solid var(--c-default); background: rgba(0,0,0,0.6);
@@ -356,8 +357,8 @@
         animateVisuals();
     }
 
-    const width = window.innerWidth, height = window.innerHeight;
-    const svg = d3.select("#chart").append("svg").attr("width",width).attr("height",height);
+    let width = window.innerWidth, height = window.innerHeight;
+    const svg = d3.select("#chart").append("svg").attr("width","100%").attr("height","100%");
     const g = svg.append("g");
     const linkG = g.append("g").attr("class","links");
     const impulseG = g.append("g").attr("class","impulses");
@@ -380,6 +381,26 @@
         .force("y", d3.forceY(height/2).strength(0.01))
         .velocityDecay(0.6); 
 
+    window.addEventListener('resize', () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        
+        // Update simulation center forces
+        sim.force("x", d3.forceX(width/2).strength(0.01));
+        sim.force("y", d3.forceY(height/2).strength(0.01));
+        
+        // FIX: Update root fx/fy on resize if we are dived
+        const rootId = getCurrentRoot();
+        if(rootId) {
+            const root = globalNodes.find(n => n.id === rootId);
+            if(root) {
+                root.fx = width/2; 
+                root.fy = height/2;
+            }
+        }
+        sim.alpha(0.3).restart();
+    });
+
     function getCurrentRoot() { return contextStack.length > 0 ? contextStack[contextStack.length-1] : null; }
 
     function updateView() {
@@ -397,10 +418,19 @@
         }
 
         const nodeMap = new Set(viewNodes.map(n => n.id));
-        viewLinks = globalLinks.filter(l => {
-            const s = l.source.id||l.source; const t = l.target.id||l.target;
-            return nodeMap.has(s) && nodeMap.has(t);
-        });
+        
+        // --- HARD LINK RESET: CREATE NEW OBJECTS TO FORCE RE-BIND ---
+        viewLinks = globalLinks
+            .filter(l => {
+                const s = l.source.id || l.source;
+                const t = l.target.id || l.target;
+                return nodeMap.has(s) && nodeMap.has(t);
+            })
+            .map(l => ({
+                source: l.source.id || l.source,
+                target: l.target.id || l.target
+            }));
+        // -----------------------------------------------------------
 
         render();
         updateButtons();
@@ -605,8 +635,45 @@
     }
 
     function deselect() { selectedNode=null; updateButtons(); render(); }
-    function dive() { if(!selectedNode || selectedNode.id === getCurrentRoot()) return; contextStack.push(selectedNode.id); deselect(); updateView(); }
-    function ascend() { if(contextStack.length===0) return; const oldRoot = globalNodes.find(n=>n.id===contextStack.pop()); if(oldRoot) { oldRoot.fx=null; oldRoot.fy=null; } updateView(); }
+    
+    function dive() { if(!selectedNode || selectedNode.id === getCurrentRoot()) return; 
+        
+        // --- FORCE SCATTER CHILDREN ON ENTERING ---
+        // Prevents stacking by breaking old constraints and randomizing positions if needed
+        const children = globalNodes.filter(n => n.parentId === selectedNode.id);
+        children.forEach(child => {
+            child.fx = null; child.fy = null; // Release fix
+            child.vx = 0; child.vy = 0; // Reset velocity
+            
+            // If they were saved in a "bad" state (stuck), kick them out
+            // We check if coordinates are "too close" to center or invalid
+            // Since we are shifting center to width/2, height/2, we check relative to that
+            // Actually, best to just give them a tiny random jitter to let physics do the rest
+            child.x = (width/2) + (Math.random() - 0.5) * 50; 
+            child.y = (height/2) + (Math.random() - 0.5) * 50;
+        });
+        
+        contextStack.push(selectedNode.id); 
+        deselect(); 
+        updateView(); 
+    }
+    
+    function ascend() { 
+        if(contextStack.length===0) return; 
+        
+        const oldRootId = contextStack.pop();
+        const oldRoot = globalNodes.find(n=>n.id===oldRootId);
+        
+        if(oldRoot) { 
+            oldRoot.fx = null; 
+            oldRoot.fy = null;
+            // Jitter to avoid stacking on the parent who takes the center spot
+            oldRoot.vx += (Math.random()-0.5) * 2;
+            oldRoot.vy += (Math.random()-0.5) * 2;
+        } 
+        
+        updateView(); 
+    }
 
     const mainBtn = document.getElementById('main-btn');
     const delHint = document.getElementById('delete-hint');
@@ -841,9 +908,23 @@
                 const el = document.createElement('div');
                 el.className = 'crumb ' + (i===contextStack.length-1?'active':'');
                 el.innerText = (n?n.label:'???') + (i<contextStack.length-1?' > ':'');
+                el.onclick = () => jumpToContext(i); // Allow jumping
                 b.appendChild(el);
             });
         } else c.classList.remove('visible');
+    }
+
+    function jumpToContext(index) {
+        while(contextStack.length > index + 1) {
+            const id = contextStack.pop();
+            const n = globalNodes.find(x=>x.id===id);
+            if(n) { 
+                n.fx=null; n.fy=null; 
+                n.x += (Math.random()-0.5) * 50; // Scatter
+                n.y += (Math.random()-0.5) * 50;
+            }
+        }
+        updateView();
     }
 
     function toggleGrid() { 
@@ -856,9 +937,13 @@
     // --- IO & STORAGE ---
     function saveData(btn) { 
         // Auto-save logic (also used by export)
-        localStorage.setItem('hrain_v10_4_restore', JSON.stringify({nodes:globalNodes, links:globalLinks})); 
-        // Only show UI feedback if called via internal logic passed a btn that expects simple "SAVED" text 
-        // (This is mostly legacy support for internal calls, exportData handles its own feedback)
+        const cleanLinks = globalLinks.map(l => ({
+            source: l.source.id || l.source,
+            target: l.target.id || l.target
+        }));
+        
+        localStorage.setItem('hrain_v10_4_restore', JSON.stringify({nodes:globalNodes, links:cleanLinks})); 
+        
         if(btn && !btn.id.includes('btn-save')) { 
             const o=btn.innerText; 
             btn.classList.add('success'); 
@@ -870,7 +955,12 @@
     function exportData(btn) {
         saveData(); // Save to local storage first
         
-        const dataStr = JSON.stringify({nodes:globalNodes, links:globalLinks}, null, 2);
+        const cleanLinks = globalLinks.map(l => ({
+            source: l.source.id || l.source,
+            target: l.target.id || l.target
+        }));
+
+        const dataStr = JSON.stringify({nodes:globalNodes, links:cleanLinks}, null, 2);
         const blob = new Blob([dataStr], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         
