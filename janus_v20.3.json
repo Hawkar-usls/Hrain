@@ -1,0 +1,111 @@
+{
+  "nodes": [
+    { "id": "root", "label": "JANUS v20.3-scientific", "emoji": "🧠", "type": "default", "x": 600, "y": 300, "parentId": null, "chatHistory": [] },
+    
+    { "id": "layer1", "label": "layer_1_facts", "emoji": "🔬", "type": "info", "x": 300, "y": 150, "parentId": "root", "chatHistory": [] },
+    { "id": "layer2", "label": "layer_2_observations", "emoji": "📊", "type": "info", "x": 900, "y": 150, "parentId": "root", "chatHistory": [] },
+    { "id": "layer3", "label": "layer_3_statistics", "emoji": "📐", "type": "info", "x": 600, "y": 450, "parentId": "root", "chatHistory": [] },
+    { "id": "layer4", "label": "layer_4_speculation", "emoji": "🌀", "type": "info", "x": 300, "y": 450, "parentId": "root", "chatHistory": [] },
+
+    { "id": "hardware", "label": "Hardware measurements", "emoji": "⚙️", "type": "default", "x": 150, "y": 50, "parentId": "layer1", "chatHistory": [] },
+    { "id": "pcie", "label": "PCIe bottleneck", "emoji": "🔌", "type": "warn", "x": 50, "y": 0, "parentId": "hardware", "chatHistory": [] },
+    { "id": "amp", "label": "AMP (FP16)", "emoji": "⚡", "type": "default", "x": 250, "y": 0, "parentId": "hardware", "chatHistory": [] },
+
+    { "id": "implemented", "label": "Implemented features", "emoji": "🧩", "type": "default", "x": 150, "y": 100, "parentId": "layer1", "chatHistory": [] },
+    { "id": "millermadow", "label": "Miller-Madow", "emoji": "📉", "type": "default", "x": 50, "y": 150, "parentId": "implemented", "chatHistory": [] },
+    { "id": "aligner", "label": "Architecture Aligner", "emoji": "🔷", "type": "default", "x": 150, "y": 150, "parentId": "implemented", "chatHistory": [] },
+    { "id": "normfirst", "label": "Pre-LayerNorm", "emoji": "📏", "type": "default", "x": 250, "y": 150, "parentId": "implemented", "chatHistory": [] },
+
+    { "id": "metrics", "label": "Confirmed metrics", "emoji": "📈", "type": "default", "x": 150, "y": 200, "parentId": "layer1", "chatHistory": [] },
+    { "id": "composite", "label": "Composite Score", "emoji": "🏆", "type": "default", "x": 50, "y": 250, "parentId": "metrics", "chatHistory": [] },
+    { "id": "gap", "label": "Gap penalty", "emoji": "🕳️", "type": "warn", "x": 150, "y": 250, "parentId": "metrics", "chatHistory": [] },
+    { "id": "diversity", "label": "Diversity index", "emoji": "🔄", "type": "default", "x": 250, "y": 250, "parentId": "metrics", "chatHistory": [] },
+
+    { "id": "params", "label": "Parameters", "emoji": "🔧", "type": "default", "x": 350, "y": 200, "parentId": "layer1", "chatHistory": [] },
+    { "id": "gain", "label": "gain (0.3–2.5)", "emoji": "📣", "type": "default", "x": 300, "y": 250, "parentId": "params", "chatHistory": [] },
+    { "id": "temp", "label": "temperature (0.3–2.0)", "emoji": "🌡️", "type": "default", "x": 400, "y": 250, "parentId": "params", "chatHistory": [] },
+    { "id": "lr", "label": "lr (1e-4–1e-2)", "emoji": "📉", "type": "default", "x": 350, "y": 300, "parentId": "params", "chatHistory": [] },
+    { "id": "nembd", "label": "n_embd (32–128)", "emoji": "📦", "type": "default", "x": 300, "y": 350, "parentId": "params", "chatHistory": [] },
+    { "id": "nhead", "label": "n_head (2–8)", "emoji": "🎯", "type": "default", "x": 400, "y": 350, "parentId": "params", "chatHistory": [] },
+    { "id": "nlayer", "label": "n_layer (1–4)", "emoji": "📚", "type": "default", "x": 350, "y": 400, "parentId": "params", "chatHistory": [] },
+    { "id": "hstates", "label": "hidden_states (2–10)", "emoji": "🧬", "type": "default", "x": 300, "y": 450, "parentId": "params", "chatHistory": [] },
+    { "id": "intra", "label": "intra_cluster_prob", "emoji": "⚛️", "type": "default", "x": 400, "y": 450, "parentId": "params", "chatHistory": [] },
+
+    { "id": "experiment", "label": "TITAN_TENSOR_V6.2.3", "emoji": "🧪", "type": "default", "x": 950, "y": 100, "parentId": "layer2", "chatHistory": [] },
+    { "id": "deadzone", "label": "Dead Zone", "emoji": "💀", "type": "danger", "x": 850, "y": 200, "parentId": "layer2", "chatHistory": [] },
+    { "id": "rewardhack", "label": "Reward Hacking", "emoji": "🎭", "type": "danger", "x": 950, "y": 200, "parentId": "layer2", "chatHistory": [] },
+    { "id": "modecollapse", "label": "Mode Collapse", "emoji": "📉", "type": "warn", "x": 1050, "y": 200, "parentId": "layer2", "chatHistory": [] },
+
+    { "id": "statpre", "label": "Preregistered params", "emoji": "📋", "type": "default", "x": 600, "y": 500, "parentId": "layer3", "chatHistory": [] },
+
+    { "id": "bio", "label": "Biological analogies", "emoji": "🧫", "type": "default", "x": 250, "y": 500, "parentId": "layer4", "chatHistory": [] },
+    { "id": "physarum", "label": "Physarum polycephalum", "emoji": "🦠", "type": "default", "x": 150, "y": 550, "parentId": "bio", "chatHistory": [] },
+    { "id": "quantum", "label": "Quantum inspired", "emoji": "⚛️", "type": "default", "x": 350, "y": 550, "parentId": "layer4", "chatHistory": [] },
+    { "id": "sota", "label": "SOTA methods", "emoji": "🏅", "type": "default", "x": 250, "y": 600, "parentId": "layer4", "chatHistory": [] },
+    { "id": "poet", "label": "POET", "emoji": "🌐", "type": "default", "x": 150, "y": 650, "parentId": "sota", "chatHistory": [] },
+    { "id": "pbt", "label": "PBT", "emoji": "🧬", "type": "default", "x": 250, "y": 650, "parentId": "sota", "chatHistory": [] },
+
+    { "id": "hyp1", "label": "HYP_PCIE_BOTTLENECK", "emoji": "🔌", "type": "info", "x": 450, "y": 550, "parentId": "layer4", "chatHistory": [] },
+    { "id": "hyp2", "label": "HYP_TRUE_BASELINE", "emoji": "📏", "type": "default", "x": 550, "y": 550, "parentId": "layer4", "chatHistory": [] },
+    { "id": "hyp3", "label": "HYP_SENSITIVITY_DRIVEN", "emoji": "🧭", "type": "warn", "x": 450, "y": 600, "parentId": "layer4", "chatHistory": [] },
+    { "id": "hyp4", "label": "HYP_TOPOLOGICAL_RESONANCE", "emoji": "🎵", "type": "warn", "x": 550, "y": 600, "parentId": "layer4", "chatHistory": [] }
+  ],
+
+  "links": [
+    { "source": "root", "target": "layer1" },
+    { "source": "root", "target": "layer2" },
+    { "source": "root", "target": "layer3" },
+    { "source": "root", "target": "layer4" },
+
+    { "source": "layer1", "target": "hardware" },
+    { "source": "layer1", "target": "implemented" },
+    { "source": "layer1", "target": "metrics" },
+    { "source": "layer1", "target": "params" },
+
+    { "source": "hardware", "target": "pcie" },
+    { "source": "hardware", "target": "amp" },
+    { "source": "implemented", "target": "millermadow" },
+    { "source": "implemented", "target": "aligner" },
+    { "source": "implemented", "target": "normfirst" },
+    { "source": "metrics", "target": "composite" },
+    { "source": "metrics", "target": "gap" },
+    { "source": "metrics", "target": "diversity" },
+
+    { "source": "gain", "target": "diversity" },
+    { "source": "temp", "target": "diversity" },
+    { "source": "gain", "target": "rewardhack" },
+    { "source": "temp", "target": "rewardhack" },
+    { "source": "lr", "target": "experiment" },
+    { "source": "nembd", "target": "millermadow" },
+    { "source": "nhead", "target": "millermadow" },
+    { "source": "nlayer", "target": "millermadow" },
+    { "source": "hstates", "target": "experiment" },
+    { "source": "intra", "target": "experiment" },
+
+    { "source": "layer2", "target": "experiment" },
+    { "source": "layer2", "target": "deadzone" },
+    { "source": "layer2", "target": "rewardhack" },
+    { "source": "layer2", "target": "modecollapse" },
+
+    { "source": "deadzone", "target": "hyp2" },
+    { "source": "hyp2", "target": "experiment" },
+    { "source": "hyp3", "target": "millermadow" },
+    { "source": "hyp4", "target": "nembd" },
+    { "source": "hyp4", "target": "nhead" },
+    { "source": "hyp4", "target": "nlayer" },
+
+    { "source": "layer4", "target": "bio" },
+    { "source": "layer4", "target": "quantum" },
+    { "source": "layer4", "target": "sota" },
+    { "source": "bio", "target": "physarum" },
+    { "source": "sota", "target": "poet" },
+    { "source": "sota", "target": "pbt" },
+    { "source": "layer4", "target": "hyp1" },
+    { "source": "layer4", "target": "hyp2" },
+    { "source": "layer4", "target": "hyp3" },
+    { "source": "layer4", "target": "hyp4" },
+
+    { "source": "pcie", "target": "hyp1" },
+    { "source": "hyp1", "target": "experiment" }
+  ]
+}
