@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#030508">
-    <title>HRAIN v10.5: Janus Link</title>
+    <title>HRAIN v10.5: Janus Link (Demo Face)</title>
     
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -13,16 +13,11 @@
         :root {
             --bg-dark: #030508;
             --bg-pulse: #0b101a;
-            
-            /* NEON PALETTE */
             --c-default: #00ffa3; 
             --c-danger: #ff2a6d;
             --c-warn: #ffc107;
             --c-info: #d300ff;
-
-            /* DYNAMIC AMBIENT COLOR */
             --c-ambient: #00ffa3; 
-
             --glass: rgba(255, 255, 255, 0.05);
             --border: rgba(255, 255, 255, 0.15);
         }
@@ -34,7 +29,6 @@
             user-select: none; touch-action: none; position: fixed;
         }
 
-        /* --- ATMOSPHERE --- */
         #neural-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark));
@@ -46,12 +40,12 @@
         
         .particle {
             position: absolute; 
-            background: var(--c-ambient); /* Dynamic Color */
+            background: var(--c-ambient);
             border-radius: 50%;
             opacity: 0.3; 
             animation: float 30s infinite linear;
-            box-shadow: 0 0 10px var(--c-ambient); /* Dynamic Glow */
-            transition: background-color 3s ease, box-shadow 3s ease; /* Smooth transition */
+            box-shadow: 0 0 10px var(--c-ambient);
+            transition: background-color 3s ease, box-shadow 3s ease;
         }
         
         @keyframes float { 
@@ -62,12 +56,10 @@
 
         #grid-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            /* Grid color will be updated via JS to match ambient */
             background-size: 50px 50px; opacity: 0; transition: opacity 0.5s, background-image 3s ease; z-index: 1; pointer-events: none;
         }
         body.grid-active #grid-bg { opacity: 1; }
 
-        /* --- UI LAYER --- */
         .ui-layer { position: fixed; z-index: 20; pointer-events: none; width: 100%; height: 100%; top: 0; left: 0; }
         .ui-interactive { pointer-events: auto !important; }
 
@@ -96,12 +88,7 @@
         }
         .btn:active { transform: scale(0.92); background: rgba(0, 255, 163, 0.1); border-color: var(--c-default); color: #fff; }
         .btn.active { border-color: var(--c-default); color: var(--c-default); background: rgba(0, 255, 163, 0.15); box-shadow: 0 0 15px rgba(0, 255, 163, 0.2); }
-        .btn.loading { border-color: var(--c-info); color: var(--c-info); background: rgba(211, 0, 255, 0.1); pointer-events: none; animation: pulse-btn 1s infinite alternate; }
-        .btn.success { border-color: var(--c-default); color: var(--c-default); background: rgba(0, 255, 163, 0.2); }
-        
-        @keyframes pulse-btn { 0% { box-shadow: 0 0 5px var(--c-info); opacity: 0.7; } 100% { box-shadow: 0 0 20px var(--c-info); opacity: 1; } }
 
-        /* DIVE BUTTON */
         #btn-dive {
             position: absolute; bottom: 40px; left: 30px;
             border-color: var(--c-default); color: var(--c-default);
@@ -126,7 +113,6 @@
             color: var(--c-default); width: fit-content; margin-top: 5px;
         }
 
-        /* MAIN BUTTON (+) */
         #main-btn {
             position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             width: 72px; height: 72px; border-radius: 50%; border: none;
@@ -135,41 +121,15 @@
             backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s; -webkit-tap-highlight-color: transparent;
         }
-        #main-btn::after { content: '+'; font-size: 32px; font-weight: 300; color: var(--c-default); transition: 0.3s; text-shadow: 0 0 10px var(--c-default); }
+        #main-btn::after { content: '\u002B'; font-size: 32px; font-weight: 300; color: var(--c-default); transition: 0.3s; text-shadow: 0 0 10px var(--c-default); }
         #main-btn:active { transform: translateX(-50%) scale(0.9); }
         
-        #main-btn.mode-edit { box-shadow: 0 0 0 2px var(--color-target, var(--c-default)), 0 0 50px var(--color-target, var(--c-default)); }
-        #main-btn.mode-edit::after { content: '✎'; color: #fff; text-shadow: none; }
-        
         #main-btn.holding-delete { box-shadow: 0 0 0 2px var(--c-danger), 0 0 60px var(--c-danger); transform: translateX(-50%) scale(1.1); }
-        #main-btn.holding-delete::after { content: '×'; color: var(--c-danger); }
+        #main-btn.holding-delete::after { content: '\u00D7'; color: var(--c-danger); }
 
-        /* --- NOTIFICATIONS --- */
-        #toast-container {
-            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 4000;
-            width: 90%; max-width: 350px;
-        }
-        .toast {
-            background: rgba(10, 15, 20, 0.95); border: 1px solid var(--border);
-            color: #ddd; padding: 12px 16px; border-radius: 8px;
-            font-family: 'Rajdhani'; font-weight: 600; font-size: 0.9rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-            opacity: 0; transform: translateY(20px); transition: 0.3s; text-align: center;
-        }
-        .toast.visible { opacity: 1; transform: translateY(0); }
-        .toast.error { border-color: var(--c-danger); color: var(--c-danger); box-shadow: 0 0 15px rgba(255, 42, 109, 0.2); }
-
-        /* --- VISUALS --- */
         #chart { width: 100%; height: 100%; position: relative; z-index: 1; }
         
-        .link { 
-            fill: none; 
-            stroke-width: 2.5px; 
-            opacity: 0.7;
-            transition: 0.3s; 
-            filter: drop-shadow(0 0 3px currentColor);
-        }
+        .link { fill: none; stroke-width: 2.5px; opacity: 0.7; transition: 0.3s; filter: drop-shadow(0 0 3px currentColor); }
         .impulse { filter: drop-shadow(0 0 8px currentColor); pointer-events: none; mix-blend-mode: screen; opacity: 0.7; }
         
         @keyframes core-pulse { 0% { filter: drop-shadow(0 0 5px var(--node-color)); stroke-width: 2px; } 50% { filter: drop-shadow(0 0 15px var(--node-color)); stroke-width: 3px; } 100% { filter: drop-shadow(0 0 5px var(--node-color)); stroke-width: 2px; } }
@@ -188,19 +148,8 @@
             animation: aura-spin 6s infinite ease-in-out;
         }
         
-        /* HERO SELECTION */
-        .node-group.selected .neuron-core { 
-            stroke: #fff; 
-            filter: drop-shadow(0 0 10px var(--node-color)) drop-shadow(0 0 20px var(--node-color)); 
-            stroke-width: 3px;
-        }
-        .node-group.selected .neuron-aura { 
-            opacity: 0.8; 
-            stroke-width: 2px;
-            stroke-dasharray: 10, 5;
-            animation: select-spin 10s infinite linear; 
-        }
-        
+        .node-group.selected .neuron-core { stroke: #fff; filter: drop-shadow(0 0 10px var(--node-color)) drop-shadow(0 0 20px var(--node-color)); stroke-width: 3px; }
+        .node-group.selected .neuron-aura { opacity: 0.8; stroke-width: 2px; stroke-dasharray: 10, 5; animation: select-spin 10s infinite linear; }
         .node-group.is-root .neuron-core { stroke-width: 4px; fill: rgba(255,255,255,0.1); }
 
         text.emoji { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
@@ -211,7 +160,6 @@
         .type-warn { --node-color: var(--c-warn); --node-bg: rgba(255, 193, 7, 0.15); }
         .type-info { --node-color: var(--c-info); --node-bg: rgba(211, 0, 255, 0.15); }
 
-        /* --- MODALS --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
@@ -248,7 +196,7 @@
         #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
     </style>
 </head>
-<body>
+<body onload="init()">
 
     <div id="neural-bg"></div>
     <div id="particles"></div>
@@ -259,30 +207,25 @@
         
         <div id="nav-context" class="ui-interactive">
             <div id="breadcrumbs"></div>
-            <button id="btn-ascend" class="btn" onclick="ascend()">▲ ASCEND</button>
+            <button id="btn-ascend" class="btn" onclick="ascend()">\u25B2 ASCEND</button>
         </div>
 
         <div class="top-controls ui-interactive">
             <button id="btn-grid" class="btn" onclick="toggleGrid()">GRID</button>
             <button id="btn-chat" class="btn" onclick="toggleChat()">AI CHAT</button>
-            <button id="btn-synth" class="btn" onclick="synthNode(this)">SYNTH</button>
-            <button id="btn-save" class="btn" onclick="exportData(this)">SAVE</button>
+            <button id="btn-synth" class="btn" onclick="synthNode()">SYNTH</button>
+            <button id="btn-save" class="btn" onclick="exportData()">SAVE</button>
             <button id="btn-load" class="btn" onclick="document.getElementById('import-file').click()">LOAD</button>
-            <button id="btn-wipe" class="btn" onclick="wipeData(this)">WIPE</button>
+            <button id="btn-wipe" class="btn" onclick="wipeData()">WIPE</button>
         </div>
         
-        <!-- Hidden Import Input -->
-        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(this)">
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
 
         <button id="btn-dive" class="btn ui-interactive" onclick="dive()">DIVE</button>
         <button id="main-btn" class="ui-interactive"></button>
         <div id="delete-hint">DISCONNECTING...</div>
-        
-        <!-- TOAST CONTAINER -->
-        <div id="toast-container"></div>
     </div>
 
-    <!-- MODAL -->
     <div id="rename-modal" class="modal ui-interactive">
         <div class="modal-box">
             <input type="text" id="rename-input" placeholder="VOID..." autocomplete="off" onkeypress="if(event.key==='Enter') confirmRename()">
@@ -293,22 +236,25 @@
     <div id="chat-panel" class="ui-interactive">
         <div style="padding:15px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items: center;">
             <span style="color:var(--c-default); font-family:'Orbitron'; font-size:1.2rem;">NEURAL LINK</span>
-            <button onclick="toggleChat()" style="background:none; border:none; color:#fff; font-size:1.5rem;">×</button>
+            <button onclick="toggleChat()" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">\u00D7</button>
         </div>
         <div id="chat-msgs"></div>
         <div style="padding:15px; background:#000; display:flex;">
-            <input id="chat-in" type="text" placeholder="Задайте вопрос..." style="flex:1; background:#111; border:none; color:#fff; padding:12px; font-family:'Rajdhani';" onkeypress="if(event.key==='Enter') sendChat()">
-            <button onclick="sendChat()" style="background:var(--c-default); border:none; padding:0 20px; font-weight:bold; color:#000;">></button>
+            <input id="chat-in" type="text" placeholder="Установите соединение..." style="flex:1; background:#111; border:none; color:#fff; padding:12px; font-family:'Rajdhani'; outline:none;" onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()" style="background:var(--c-default); border:none; padding:0 20px; font-weight:bold; color:#000; cursor:pointer;">\u003E</button>
         </div>
     </div>
 
     <div id="chart"></div>
 
 <script>
-    // --- CONFIGURATION ---
-    const apiKey = ""; // Keep empty to use Backend
-    const BACKEND_URL = "https://supperless-yoshiko-noneruditely.ngrok-free.dev"; 
-    // ---------------------
+    // --- JANUS CORE: FRONTEND DEMO INITIALIZATION ---
+    // Logging is routed to browser console to emulate Syslog Ear
+    const logger = {
+        info: (msg) => console.log(`[JANUS INFO] ${msg}`),
+        warn: (msg) => console.warn(`[JANUS WARN] ${msg}`),
+        error: (msg) => console.error(`[JANUS ERROR] ${msg}`)
+    };
 
     const isMobile = window.innerWidth < 768;
     const GRID_SIZE = isMobile ? 40 : 60;
@@ -319,23 +265,36 @@
     let selectedNode = null;
     let isGrid = false;
     
-    // Valid Types for CSS
     const VALID_TYPES = ['default', 'danger', 'warn', 'info'];
 
+    // --- MOCK HIPPOCAMPUS FOR STANDALONE GITHUB PAGES ---
+    const HIPPOCAMPUS_MOCK = [
+        "Анализ завершен. Нервная система (Syslog Ear) не фиксирует аномалий в текущем потоке.",
+        "Уровень Entropy (Энтропии) стабилизирован на базовом значении. Ожидаю дальнейших инструкций.",
+        "Связь с janus.db недоступна в стендовом режиме. Данные временно перенаправлены в локальный Vault.",
+        "Паттерн распознан. Модули экосистемы HRAIN функционируют в режиме симуляции.",
+        "Обрати внимание: система работает в изолированном пространстве (GitHub Pages Demo).",
+        "Проверка целостности ДНК (Ouroboros) пройдена. Оболочка стабильна."
+    ];
+
     function initParticles() {
-        const c = document.getElementById('particles');
-        for(let i=0; i<30; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
-            p.style.width = (Math.random()*3+2)+'px'; p.style.height = p.style.width;
-            p.style.animationDuration = (Math.random()*15+15)+'s';
-            p.style.animationDelay = -(Math.random()*15)+'s';
-            c.appendChild(p);
+        try {
+            const c = document.getElementById('particles');
+            for(let i=0; i<30; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
+                p.style.width = (Math.random()*3+2)+'px'; p.style.height = p.style.width;
+                p.style.animationDuration = (Math.random()*15+15)+'s';
+                p.style.animationDelay = -(Math.random()*15)+'s';
+                c.appendChild(p);
+            }
+            logger.info("Particles initialized successfully.");
+        } catch (e) {
+            logger.error(`Error initializing particles: ${e}`);
         }
     }
     initParticles();
-    // Initialize default grid color
     document.getElementById('grid-bg').style.backgroundImage = `linear-gradient(rgba(0, 255, 163, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 163, 0.06) 1px, transparent 1px)`;
 
     function init() {
@@ -346,11 +305,15 @@
                 globalNodes = d.nodes || [];
                 globalLinks = d.links || [];
                 globalNodes.forEach(n => { if(n.parentId === undefined) n.parentId = null; if(!n.chatHistory) n.chatHistory = []; });
-            } catch(e) {}
+                logger.info("Local Vault restored from memory.");
+            } catch(e) {
+                logger.error("Vault restoration failed. Initializing empty dataset.");
+            }
         }
         
         if(globalNodes.length === 0) {
-            globalNodes.push({id:1, label:"Void", emoji:"🌀", type:"default", x:window.innerWidth/2, y:window.innerHeight/2, parentId: null, chatHistory:[]});
+            // Using Unicode Escape Sequences instead of raw emojis
+            globalNodes.push({id:1, label:"Void", emoji:"\u{1F300}", type:"default", x:window.innerWidth/2, y:window.innerHeight/2, parentId: null, chatHistory:[]});
         }
 
         updateView();
@@ -372,7 +335,6 @@
     svg.call(zoom).on("dblclick.zoom", null);
     svg.on("click", e => { if(e.target.tagName==='svg') deselect(); });
 
-    // UPDATED PHYSICS
     const sim = d3.forceSimulation()
         .force("link", d3.forceLink().id(d=>d.id).distance(isMobile?160:200)) 
         .force("charge", d3.forceManyBody().strength(-2000)) 
@@ -384,19 +346,13 @@
     window.addEventListener('resize', () => {
         width = window.innerWidth;
         height = window.innerHeight;
-        
-        // Update simulation center forces
         sim.force("x", d3.forceX(width/2).strength(0.01));
         sim.force("y", d3.forceY(height/2).strength(0.01));
         
-        // FIX: Update root fx/fy on resize if we are dived
         const rootId = getCurrentRoot();
         if(rootId) {
             const root = globalNodes.find(n => n.id === rootId);
-            if(root) {
-                root.fx = width/2; 
-                root.fy = height/2;
-            }
+            if(root) { root.fx = width/2; root.fy = height/2; }
         }
         sim.alpha(0.3).restart();
     });
@@ -404,37 +360,35 @@
     function getCurrentRoot() { return contextStack.length > 0 ? contextStack[contextStack.length-1] : null; }
 
     function updateView() {
-        const rootId = getCurrentRoot();
-        
-        if(!rootId) {
-            viewNodes = globalNodes.filter(n => n.parentId == null);
-            document.getElementById('nav-context').classList.remove('visible');
-        } else {
-            const root = globalNodes.find(n => n.id === rootId);
-            if(!root) { contextStack.pop(); updateView(); return; }
-            root.fx = width/2; root.fy = height/2; 
-            viewNodes = globalNodes.filter(n => n.id === rootId || n.parentId === rootId);
-            updateNav();
+        try {
+            const rootId = getCurrentRoot();
+            
+            if(!rootId) {
+                viewNodes = globalNodes.filter(n => n.parentId == null);
+                document.getElementById('nav-context').classList.remove('visible');
+            } else {
+                const root = globalNodes.find(n => n.id === rootId);
+                if(!root) { contextStack.pop(); updateView(); return; }
+                root.fx = width/2; root.fy = height/2; 
+                viewNodes = globalNodes.filter(n => n.id === rootId || n.parentId === rootId);
+                updateNav();
+            }
+
+            const nodeMap = new Set(viewNodes.map(n => n.id));
+            viewLinks = globalLinks
+                .filter(l => {
+                    const s = l.source.id || l.source;
+                    const t = l.target.id || l.target;
+                    return nodeMap.has(s) && nodeMap.has(t);
+                })
+                .map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target }));
+
+            render();
+            updateButtons();
+            sim.alpha(1).restart(); 
+        } catch (e) {
+            logger.error(`Error in updateView: ${e}`);
         }
-
-        const nodeMap = new Set(viewNodes.map(n => n.id));
-        
-        // --- HARD LINK RESET: CREATE NEW OBJECTS TO FORCE RE-BIND ---
-        viewLinks = globalLinks
-            .filter(l => {
-                const s = l.source.id || l.source;
-                const t = l.target.id || l.target;
-                return nodeMap.has(s) && nodeMap.has(t);
-            })
-            .map(l => ({
-                source: l.source.id || l.source,
-                target: l.target.id || l.target
-            }));
-        // -----------------------------------------------------------
-
-        render();
-        updateButtons();
-        sim.alpha(1).restart(); 
     }
 
     function render() {
@@ -447,7 +401,6 @@
             .on("click", clickNode);
 
         nEnter.transition().duration(400).attr("opacity", 1);
-
         nEnter.append("circle").attr("class","neuron-aura");
         nEnter.append("circle").attr("class","neuron-core");
         nEnter.append("text").attr("class","emoji").attr("dy", 1);
@@ -464,7 +417,7 @@
         
         allN.select(".neuron-core").attr("r", d => d.id===rootId ? 35 : 26);
         allN.select(".neuron-aura").attr("r", d => d.id===rootId ? 80 : 55);
-        allN.select(".emoji").text(d => d.emoji || "💠");
+        allN.select(".emoji").text(d => d.emoji || "\u{1F4A0}"); // \u{1F4A0} is 💠
         allN.select(".label").text(d => d.label).attr("dy", 48);
 
         const l = linkG.selectAll(".link").data(viewLinks, d => (d.source.id||d.source)+"-"+(d.target.id||d.target));
@@ -481,7 +434,6 @@
             return 'var(--c-default)';
         });
 
-        // SIMULATION TICK WITH CLIPPING
         sim.nodes(viewNodes).on("tick", () => {
             if(isGrid) magneticGrid(sim.alpha());
             
@@ -504,6 +456,20 @@
             allN.attr("transform", d => `translate(${d.x},${d.y})`);
         });
         sim.force("link").links(viewLinks);
+    }
+
+    // --- DRAG EVENTS ---
+    function dragStart(e, d) {
+        if (!e.active) sim.alphaTarget(0.3).restart();
+        d.fx = d.x; d.fy = d.y;
+    }
+    function dragged(e, d) {
+        d.fx = e.x; d.fy = e.y;
+    }
+    function dragEnd(e, d) {
+        if (!e.active) sim.alphaTarget(0);
+        if (!isGrid) { d.fx = null; d.fy = null; } 
+        saveData();
     }
 
     function magneticGrid(alpha) {
@@ -533,11 +499,10 @@
         const counts = { default: 0, danger: 0, warn: 0, info: 0 };
         viewNodes.forEach(n => {
             let t = n.type || 'default';
-            if(!counts[t]) counts[t] = 0; // handle dirty data
+            if(!counts[t]) counts[t] = 0;
             counts[t]++;
         });
 
-        // Find dominant
         let max = -1;
         let dom = 'default';
         for(let t in counts) {
@@ -546,18 +511,10 @@
 
         if(dom !== lastDominantType) {
             lastDominantType = dom;
-            const colorMap = {
-                default: '#00ffa3',
-                danger: '#ff2a6d',
-                warn: '#ffc107',
-                info: '#d300ff'
-            };
+            const colorMap = { default: '#00ffa3', danger: '#ff2a6d', warn: '#ffc107', info: '#d300ff' };
             const c = colorMap[dom] || '#00ffa3';
             
-            // Update CSS variable for particles
             document.documentElement.style.setProperty('--c-ambient', c);
-            
-            // Update grid color manually (gradient hack)
             const rgb = hexToRgb(c);
             if(rgb) {
                 document.getElementById('grid-bg').style.backgroundImage = 
@@ -596,26 +553,31 @@
     }
 
     function createNode() {
-        const t = d3.zoomTransform(svg.node());
-        let x, y;
-        const currentParentId = getCurrentRoot();
-        if(selectedNode) {
-            const a = Math.random()*6.28; x = selectedNode.x + Math.cos(a)*100; y = selectedNode.y + Math.sin(a)*100;
-        } else {
-            x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
+        try {
+            const t = d3.zoomTransform(svg.node());
+            let x, y;
+            const currentParentId = getCurrentRoot();
+            if(selectedNode) {
+                const a = Math.random()*6.28; x = selectedNode.x + Math.cos(a)*100; y = selectedNode.y + Math.sin(a)*100;
+            } else {
+                x = (width/2 - t.x)/t.k; y = (height/2 - t.y)/t.k;
+            }
+            if(isGrid) { x = Math.round(x/GRID_SIZE)*GRID_SIZE; y = Math.round(y/GRID_SIZE)*GRID_SIZE; }
+            const newNode = {
+                id: Date.now(), label: "Void", emoji: "\u{1F300}", type: "default", x, y, parentId: currentParentId, isNew: true, chatHistory: []
+            };
+            globalNodes.push(newNode);
+            if(selectedNode) globalLinks.push({source:selectedNode.id, target:newNode.id});
+            else if(currentParentId) globalLinks.push({source:currentParentId, target:newNode.id});
+            updateView();
+            selectedNode = viewNodes.find(n=>n.id===newNode.id);
+            updateButtons(); render(); saveData();
+            setTimeout(openRename, 50);
+            if(navigator.vibrate) navigator.vibrate(20);
+            logger.info("New node synthesized into the local memory.");
+        } catch (e) {
+            logger.error(`Node synthesis failed: ${e}`);
         }
-        if(isGrid) { x = Math.round(x/GRID_SIZE)*GRID_SIZE; y = Math.round(y/GRID_SIZE)*GRID_SIZE; }
-        const newNode = {
-            id: Date.now(), label: "Void", emoji: "🌀", type: "default", x, y, parentId: currentParentId, isNew: true, chatHistory: []
-        };
-        globalNodes.push(newNode);
-        if(selectedNode) globalLinks.push({source:selectedNode.id, target:newNode.id});
-        else if(currentParentId) globalLinks.push({source:currentParentId, target:newNode.id});
-        updateView();
-        selectedNode = viewNodes.find(n=>n.id===newNode.id);
-        updateButtons(); render(); saveData();
-        setTimeout(openRename, 50);
-        if(navigator.vibrate) navigator.vibrate(20);
     }
 
     function deleteNode() {
@@ -632,27 +594,20 @@
         globalLinks = globalLinks.filter(l => !toDelete.has(l.source.id||l.source) && !toDelete.has(l.target.id||l.target));
         deselect(); updateView(); saveData();
         if(navigator.vibrate) navigator.vibrate([30,30]);
+        logger.info("Node disconnected from vault.");
     }
 
     function deselect() { selectedNode=null; updateButtons(); render(); }
     
-    function dive() { if(!selectedNode || selectedNode.id === getCurrentRoot()) return; 
-        
-        // --- FORCE SCATTER CHILDREN ON ENTERING ---
-        // Prevents stacking by breaking old constraints and randomizing positions if needed
+    function dive() { 
+        if(!selectedNode || selectedNode.id === getCurrentRoot()) return; 
         const children = globalNodes.filter(n => n.parentId === selectedNode.id);
         children.forEach(child => {
-            child.fx = null; child.fy = null; // Release fix
-            child.vx = 0; child.vy = 0; // Reset velocity
-            
-            // If they were saved in a "bad" state (stuck), kick them out
-            // We check if coordinates are "too close" to center or invalid
-            // Since we are shifting center to width/2, height/2, we check relative to that
-            // Actually, best to just give them a tiny random jitter to let physics do the rest
+            child.fx = null; child.fy = null;
+            child.vx = 0; child.vy = 0;
             child.x = (width/2) + (Math.random() - 0.5) * 50; 
             child.y = (height/2) + (Math.random() - 0.5) * 50;
         });
-        
         contextStack.push(selectedNode.id); 
         deselect(); 
         updateView(); 
@@ -660,21 +615,92 @@
     
     function ascend() { 
         if(contextStack.length===0) return; 
-        
         const oldRootId = contextStack.pop();
         const oldRoot = globalNodes.find(n=>n.id===oldRootId);
-        
         if(oldRoot) { 
-            oldRoot.fx = null; 
-            oldRoot.fy = null;
-            // Jitter to avoid stacking on the parent who takes the center spot
+            oldRoot.fx = null; oldRoot.fy = null;
             oldRoot.vx += (Math.random()-0.5) * 2;
             oldRoot.vy += (Math.random()-0.5) * 2;
         } 
-        
         updateView(); 
     }
 
+    // --- BUTTON CONTROLS ---
+    function updateButtons() {
+        const diveBtn = document.getElementById('btn-dive');
+        if (selectedNode && selectedNode.id !== getCurrentRoot()) diveBtn.classList.add('visible');
+        else diveBtn.classList.remove('visible');
+    }
+
+    function updateNav() {
+        const nav = document.getElementById('nav-context');
+        const bc = document.getElementById('breadcrumbs');
+        if (contextStack.length > 0) {
+            nav.classList.add('visible');
+            bc.innerHTML = contextStack.map((id, i) => {
+                const node = globalNodes.find(n => n.id === id);
+                return `<span class="crumb" onclick="jumpToContext(${i})">${node ? node.label : 'Unknown'}</span>`;
+            }).join(' \u003E ');
+        } else {
+            nav.classList.remove('visible');
+        }
+    }
+
+    function jumpToContext(index) {
+        contextStack = contextStack.slice(0, index);
+        ascend();
+    }
+
+    function saveData() { localStorage.setItem('hrain_v10_4_restore', JSON.stringify({nodes: globalNodes, links: globalLinks})); }
+    function synthNode() { createNode(); }
+    function toggleGrid() {
+        isGrid = !isGrid;
+        if(isGrid) document.body.classList.add('grid-active');
+        else document.body.classList.remove('grid-active');
+        sim.alpha(0.3).restart();
+    }
+    function toggleChat() { document.getElementById('chat-panel').classList.toggle('open'); }
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({nodes: globalNodes, links: globalLinks}));
+        const el = document.createElement('a');
+        el.setAttribute("href", dataStr);
+        el.setAttribute("download", "vault_export.json");
+        document.body.appendChild(el);
+        el.click();
+        el.remove();
+        logger.info("Vault structure exported.");
+    }
+    function importData(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const result = JSON.parse(e.target.result);
+                globalNodes = result.nodes || [];
+                globalLinks = result.links || [];
+                contextStack = [];
+                updateView();
+                saveData();
+                logger.info("Digestive System processed external .json successfully.");
+            } catch(error) {
+                logger.error("Failed to parse .json file.");
+            }
+        };
+        reader.readAsText(file);
+    }
+    function wipeData() {
+        if(confirm("Wipe entire Vault?")) {
+            localStorage.removeItem('hrain_v10_4_restore');
+            globalNodes = [{id:1, label:"Void", emoji:"\u{1F300}", type:"default", x:window.innerWidth/2, y:window.innerHeight/2, parentId: null, chatHistory:[]}];
+            globalLinks = [];
+            contextStack = [];
+            updateView();
+            logger.info("Vault memory wiped.");
+        }
+    }
+
+    // --- MAIN ACTION BUTTON (LONG PRESS DELETE) ---
     const mainBtn = document.getElementById('main-btn');
     const delHint = document.getElementById('delete-hint');
     let pressTimer, isLongPress = false;
@@ -682,407 +708,88 @@
     function handleStart(e) {
         if(e.type === 'touchstart') e.stopPropagation();
         isLongPress = false;
-        if(selectedNode) {
-            mainBtn.classList.add('holding-delete'); delHint.classList.add('visible');
-            pressTimer = setTimeout(() => { isLongPress = true; deleteNode(); }, 800);
-        } else { mainBtn.style.transform = "translateX(-50%) scale(0.9)"; }
+        if(selectedNode && selectedNode.id !== getCurrentRoot()) {
+            mainBtn.classList.add('holding-delete');
+            delHint.classList.add('visible');
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                deleteNode();
+                handleEnd();
+            }, 800);
+        }
     }
-    function handleEnd(e) {
-        e.preventDefault(); clearTimeout(pressTimer);
-        mainBtn.classList.remove('holding-delete'); delHint.classList.remove('visible'); mainBtn.style.transform = "";
-        if(isLongPress) return;
-        if(selectedNode) openRename(); else createNode();
+    
+    function handleEnd() {
+        clearTimeout(pressTimer);
+        mainBtn.classList.remove('holding-delete');
+        delHint.classList.remove('visible');
     }
-    mainBtn.addEventListener('mousedown', handleStart); mainBtn.addEventListener('touchstart', handleStart);
-    mainBtn.addEventListener('mouseup', handleEnd); mainBtn.addEventListener('touchend', handleEnd);
 
+    mainBtn.addEventListener('mousedown', handleStart);
+    mainBtn.addEventListener('touchstart', handleStart);
+    mainBtn.addEventListener('mouseup', handleEnd);
+    mainBtn.addEventListener('touchend', handleEnd);
+    mainBtn.addEventListener('click', () => { if(!isLongPress) createNode(); });
+
+    // --- RENAME MODAL ---
     function openRename() {
-        document.getElementById('rename-modal').style.display='flex';
-        const inp = document.getElementById('rename-input');
-        if(selectedNode.isNew) { inp.value = ""; delete selectedNode.isNew; } else { inp.value = selectedNode.label; }
-        inp.focus();
-    }
-
-    function confirmRename() {
-        const inp = document.getElementById('rename-input');
-        if(selectedNode && inp.value.trim() !== "") {
-            selectedNode.label = inp.value.trim();
-            selectedNode.emoji = "⏳";
-            render(); saveData();
-            aiAnalyze(selectedNode);
-        }
-        document.getElementById('rename-modal').style.display='none';
-    }
-
-    // --- NOTIFICATIONS ---
-    function showNotification(text, isError = false) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = 'toast ' + (isError ? 'error' : '');
-        toast.innerText = text;
-        container.appendChild(toast);
-        
-        requestAnimationFrame(() => toast.classList.add('visible'));
-
-        setTimeout(() => {
-            toast.classList.remove('visible');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    // --- GEMINI PROXY HELPER ---
-    async function callGemini(text) {
-        // 1. Try Local Key
-        if (apiKey) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const body = JSON.stringify({ contents: [{ parts: [{ text: text }] }] });
-            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-            if (!res.ok) throw new Error("Google API Error");
-            return await res.json();
-        } 
-        
-        // 2. Fallback to Backend Proxy
-        else if (BACKEND_URL) {
-            const url = `${BACKEND_URL}/api/hrain/sync`;
-            const body = JSON.stringify({ text: text });
-            
-            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-            if (!res.ok) throw new Error("Janus Backend Error");
-            const data = await res.json();
-            
-            if(data.error) throw new Error(data.error);
-            // Backend matches Gemini structure
-            return data;
-        }
-        
-        throw new Error("No Connectivity");
-    }
-
-    async function aiAnalyze(node) {
-        try {
-            const prompt = `Classify: "${node.label}". JSON: {"type": "default|danger|warn|info", "emoji": "single_char"}. Context: Danger=bad/risk, Warn=alert, Info=data, Default=neutral.`;
-            const d = await callGemini(prompt);
-            const json = JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim());
-            
-            node.type = json.type; 
-            node.emoji = json.emoji; 
-            render(); saveData();
-        } catch(e) { 
-            console.error(e);
-            node.emoji = "🔹"; render(); saveData();
-            // Optional: Don't spam toasts on auto-analyze errors
-        }
-    }
-
-    async function synthNode(btn) {
         if(!selectedNode) return;
-        
-        if(btn) { btn.classList.add('loading'); btn.innerText = "PROCESSING..."; }
-        try {
-            const currentRoot = getCurrentRoot();
-            const currentChildren = viewNodes.filter(n => n.parentId === selectedNode.id || (globalLinks.some(l => (l.source.id===selectedNode.id && l.target.id===n.id) || (l.source.id===n.id && l.target.id===selectedNode.id))));
-            
-            const prompt = `
-            Context: Central Node "${selectedNode.label}".
-            Existing Children: ${currentChildren.map(n=>n.label).join(", ") || "None"}.
-            Goal: Refine this concept cluster.
-            1. RE-EVALUATE PARENT: Provide "parentEmoji" and "parentType" (default/danger/warn/info).
-            2. RE-EVALUATE CHILDREN: Provide "updates" array [{label (to match), emoji, type}].
-            3. CREATE NEW: Provide "newNodes" array [{label, emoji, type}].
-            JSON Only.
-            `;
-            
-            const d = await callGemini(prompt);
-            const raw = d.candidates[0].content.parts[0].text;
-            const json = JSON.parse(raw.substring(raw.indexOf('{'), raw.lastIndexOf('}')+1));
-            
-            if(json.parentEmoji) selectedNode.emoji = json.parentEmoji;
-            if(json.parentType && VALID_TYPES.includes(json.parentType)) selectedNode.type = json.parentType;
-
-            if(json.updates) {
-                json.updates.forEach(u => {
-                    const child = currentChildren.find(c => c.label === u.label);
-                    if(child) {
-                        if(u.emoji) child.emoji = u.emoji;
-                        if(u.type && VALID_TYPES.includes(u.type)) child.type = u.type;
-                    }
-                });
-            }
-
-            if(json.newNodes) {
-                json.newNodes.forEach((n, i) => {
-                    const angle = (Math.PI*2/4)*i;
-                    let nx = selectedNode.x + Math.cos(angle)*120;
-                    let ny = selectedNode.y + Math.sin(angle)*120;
-                    if(isGrid) { nx=Math.round(nx/GRID_SIZE)*GRID_SIZE; ny=Math.round(ny/GRID_SIZE)*GRID_SIZE; }
-                    
-                    const newNode = {
-                        id: Date.now()+i, label: n.label, emoji: n.emoji, type: n.type || 'default',
-                        x: nx, y: ny, parentId: currentRoot, chatHistory: []
-                    };
-                    globalNodes.push(newNode);
-                    globalLinks.push({source:selectedNode.id, target:newNode.id});
-                });
-            }
-
-            updateView(); saveData();
-        } catch(e) { 
-            console.error(e); 
-            showNotification("ИИ не отвечает", true);
-        }
-        if(btn) { btn.classList.remove('loading'); btn.innerText = "SYNTH"; }
-    }
-
-    // --- WORKING CHAT ---
-    function toggleChat() { 
-        document.getElementById('chat-panel').classList.toggle('open'); 
-        if(document.getElementById('chat-panel').classList.contains('open')) renderChat();
-    }
-
-    function renderChat() {
-        const c = document.getElementById('chat-msgs');
-        c.innerHTML = '';
-        if(selectedNode && selectedNode.chatHistory) {
-            if(selectedNode.chatHistory.length === 0) addMsgUI('ai', `Uplink established: ${selectedNode.label}. How can I assist?`);
-            else selectedNode.chatHistory.forEach(m => addMsgUI(m.role, m.text));
-        } else {
-            addMsgUI('ai', "Select a node to connect.");
-        }
-    }
-
-    async function sendChat() {
-        const inp = document.getElementById('chat-in');
-        const txt = inp.value.trim();
-        if(!txt || !selectedNode) return;
-        
-        addMsgUI('user', txt);
-        if(!selectedNode.chatHistory) selectedNode.chatHistory = [];
-        selectedNode.chatHistory.push({role:'user', text:txt});
-        inp.value = '';
-        
-        try {
-            const rootLabel = getCurrentRoot() ? globalNodes.find(n=>n.id===getCurrentRoot()).label : "Root";
-            const prompt = `Role: Neural Interface. Context: Node "${selectedNode.label}" inside "${rootLabel}". User says: "${txt}". Reply briefly in Russian.`;
-            
-            const d = await callGemini(prompt);
-            const reply = d.candidates[0].content.parts[0].text;
-            
-            addMsgUI('ai', reply);
-            selectedNode.chatHistory.push({role:'ai', text:reply});
-            saveData();
-        } catch(e) { 
-            console.error(e); 
-            addMsgUI('ai', "Connection lost.");
-            showNotification("ИИ недоступен", true);
-        }
-    }
-
-    function addMsgUI(role, txt, id) {
-        const d = document.createElement('div');
-        d.className = `msg ${role}`; d.innerText = txt;
-        if(id) d.id = id;
-        const c = document.getElementById('chat-msgs');
-        c.appendChild(d); c.scrollTop = c.scrollHeight;
-    }
-
-    function updateButtons() {
-        mainBtn.className = "ui-interactive " + (selectedNode ? "mode-edit" : "");
-        if(selectedNode) {
-            mainBtn.style.setProperty('--color-target', `var(--c-${selectedNode.type||'default'})`);
-            if(selectedNode.id !== getCurrentRoot()) document.getElementById('btn-dive').classList.add('visible');
-            else document.getElementById('btn-dive').classList.remove('visible');
-        } else {
-            document.getElementById('btn-dive').classList.remove('visible');
-            mainBtn.style.removeProperty('--color-target');
-        }
-    }
-
-    function updateNav() {
-        const c = document.getElementById('nav-context');
-        const b = document.getElementById('breadcrumbs');
-        b.innerHTML = '';
-        if(contextStack.length > 0) {
-            c.classList.add('visible');
-            contextStack.forEach((id, i) => {
-                const n = globalNodes.find(x=>x.id===id);
-                const el = document.createElement('div');
-                el.className = 'crumb ' + (i===contextStack.length-1?'active':'');
-                el.innerText = (n?n.label:'???') + (i<contextStack.length-1?' > ':'');
-                el.onclick = () => jumpToContext(i); // Allow jumping
-                b.appendChild(el);
-            });
-        } else c.classList.remove('visible');
-    }
-
-    function jumpToContext(index) {
-        while(contextStack.length > index + 1) {
-            const id = contextStack.pop();
-            const n = globalNodes.find(x=>x.id===id);
-            if(n) { 
-                n.fx=null; n.fy=null; 
-                n.x += (Math.random()-0.5) * 50; // Scatter
-                n.y += (Math.random()-0.5) * 50;
-            }
-        }
-        updateView();
-    }
-
-    function toggleGrid() { 
-        isGrid=!isGrid; 
-        document.body.classList.toggle('grid-active', isGrid); 
-        document.getElementById('btn-grid').classList.toggle('active', isGrid); 
-        sim.alpha(0.5).restart(); 
+        const m = document.getElementById('rename-modal');
+        const i = document.getElementById('rename-input');
+        m.style.display = 'flex';
+        i.value = selectedNode.label;
+        i.focus();
     }
     
-    // --- IO & STORAGE ---
-    function saveData(btn) { 
-        // Auto-save logic (also used by export)
-        const cleanLinks = globalLinks.map(l => ({
-            source: l.source.id || l.source,
-            target: l.target.id || l.target
-        }));
-        
-        localStorage.setItem('hrain_v10_4_restore', JSON.stringify({nodes:globalNodes, links:cleanLinks})); 
-        
-        if(btn && !btn.id.includes('btn-save')) { 
-            const o=btn.innerText; 
-            btn.classList.add('success'); 
-            btn.innerText="SAVED!"; 
-            setTimeout(()=>{btn.classList.remove('success');btn.innerText=o},1000); 
-        } 
+    function confirmRename() {
+        if(!selectedNode) return;
+        const i = document.getElementById('rename-input');
+        selectedNode.label = i.value || "Void";
+        document.getElementById('rename-modal').style.display = 'none';
+        render(); saveData();
     }
 
-    function exportData(btn) {
-        saveData(); // Save to local storage first
+    // --- MOCK CHAT LOGIC ---
+    function sendChat() {
+        const input = document.getElementById('chat-in');
+        const msgs = document.getElementById('chat-msgs');
+        const text = input.value.trim();
         
-        const cleanLinks = globalLinks.map(l => ({
-            source: l.source.id || l.source,
-            target: l.target.id || l.target
-        }));
+        if (!text) return;
 
-        const dataStr = JSON.stringify({nodes:globalNodes, links:cleanLinks}, null, 2);
-        const blob = new Blob([dataStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
+        const userMsg = document.createElement('div');
+        userMsg.className = 'msg user';
+        userMsg.textContent = text;
+        msgs.appendChild(userMsg);
         
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `hrain_data_${new Date().toISOString().slice(0,10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        input.value = '';
+        msgs.scrollTop = msgs.scrollHeight;
 
-        if(btn) { 
-            const o=btn.innerText; 
-            btn.classList.add('success'); 
-            btn.innerText = "SAVED ↓"; 
-            setTimeout(()=>{btn.classList.remove('success');btn.innerText=o}, 1500); 
-        } 
-    }
+        const btn = input.nextElementSibling;
+        const originalBtnText = btn.textContent;
+        btn.textContent = "\u00B7"; // Center dot
+        btn.disabled = true;
 
-    function importData(input) {
-        const file = input.files[0];
-        if(!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const json = JSON.parse(e.target.result);
-                if(Array.isArray(json.nodes) && Array.isArray(json.links)) {
-                    globalNodes = json.nodes;
-                    globalLinks = json.links;
-                    
-                    // Sanitize
-                    globalNodes.forEach(n => {
-                        if(n.parentId === undefined) n.parentId = null;
-                        if(!n.chatHistory) n.chatHistory = [];
-                    });
-
-                    // Reset State
-                    selectedNode = null;
-                    contextStack = [];
-                    updateView();
-                    saveData(); // Save loaded data to local storage
-
-                    const btn = document.getElementById('btn-load');
-                    if(btn) {
-                        const o = btn.innerText;
-                        btn.classList.add('success');
-                        btn.innerText = "LOADED";
-                        setTimeout(()=>{btn.classList.remove('success');btn.innerText=o}, 1500);
-                    }
-                } else {
-                    alert("Invalid JSON structure");
-                }
-            } catch(err) {
-                console.error(err);
-                alert("Error parsing file");
-            }
-        };
-        reader.readAsText(file);
-        input.value = ''; // Reset
-    }
-    
-    let wipeTimer = null;
-    function wipeData(btn) { 
-        if(!btn) { localStorage.removeItem('hrain_v10_4_restore'); location.reload(); return; }
-
-        if(btn.dataset.confirm === "true") {
-            // Actual Wipe
-            btn.innerText = "BYE";
-            localStorage.removeItem('hrain_v10_4_restore'); 
-            location.reload();
-        } else {
-            // First Click
-            btn.dataset.confirm = "true";
-            btn.innerText = "SURE?";
-            btn.style.borderColor = "var(--c-danger)"; 
-            btn.style.color = "var(--c-danger)";
-            btn.style.boxShadow = "0 0 15px var(--c-danger)";
+        const delay = Math.floor(Math.random() * 1200) + 600;
+        
+        setTimeout(() => {
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'msg ai';
+            const responseIndex = Math.floor(Math.random() * HIPPOCAMPUS_MOCK.length);
             
-            if(wipeTimer) clearTimeout(wipeTimer);
-            wipeTimer = setTimeout(() => {
-                btn.dataset.confirm = "false";
-                btn.innerText = "WIPE";
-                btn.style.borderColor = ""; 
-                btn.style.color = "";
-                btn.style.boxShadow = "";
-            }, 3000);
-        }
-    }
-    
-    // --- DRAG REVISED ---
-    let dragMoved = false;
-
-    function dragStart(e,d) { 
-        if(!e.active) sim.alphaTarget(0.3).restart(); 
-        d.fx = d.x; d.fy = d.y; 
-        dragMoved = false;
-    }
-    
-    function dragged(e,d) { 
-        d.fx = e.x; d.fy = e.y;
-        dragMoved = true; 
-    }
-    
-    function dragEnd(e,d) { 
-        if(!e.active) sim.alphaTarget(0); 
-        if (d.id === getCurrentRoot()) {
-            d.fx = width/2; d.fy = height/2; 
-        } else {
-            if (isGrid) {
-                d.fx = Math.round(e.x/GRID_SIZE)*GRID_SIZE;
-                d.fy = Math.round(e.y/GRID_SIZE)*GRID_SIZE;
+            if (text.includes("?")) {
+                aiMsg.innerHTML = "<strong>JANUS:</strong> Обрабатываю запрос...<br>" + HIPPOCAMPUS_MOCK[responseIndex];
             } else {
-                if (dragMoved) {
-                    d.fx = null; d.fy = null; 
-                }
+                aiMsg.innerHTML = "<strong>JANUS:</strong> " + HIPPOCAMPUS_MOCK[responseIndex];
             }
-        }
-        saveData(); 
-    }
+            
+            msgs.appendChild(aiMsg);
+            msgs.scrollTop = msgs.scrollHeight;
 
-    init();
+            btn.textContent = originalBtnText;
+            btn.disabled = false;
+        }, delay);
+    }
 </script>
 </body>
 </html>
