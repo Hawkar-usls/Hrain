@@ -1,70 +1,67 @@
-# 🌀 HRain v10.5: Janus Link
+# HRain — Local-First Cognitive Graph Workspace
 
-**Hybrid Offline/Online Neural Mind-Mapping Engine** *Cyberpunk UI • Force Graph • BCI-Ready • Privacy-First*
+**HRain** is a browser-based visual workspace for turning notes, ideas, and short inputs into an explorable graph.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Live Demo](https://img.shields.io/badge/Demo-Live_Now-00ffa3.svg)](https://hawkar-usls.github.io/Hrain/)
+It combines a D3.js force-directed interface with optional AI-assisted expansion, per-node context, JSON import/export, and a local-first operating mode.
 
-HRain transforms a single thought into a full cognitive neural graph. Built on D3.js force-directed physics with a breathing cyberpunk neon interface featuring dynamic particles, impulses, ambient colors, and a glassmorphism UI.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-00ffa3.svg)](https://hawkar-usls.github.io/Hrain/)
 
-**Core Philosophy:** Fully offline by default. All data stays in your browser's `localStorage`. No mandatory external calls, no data leakage.
+## What it is
 
----
+HRain is an **interaction and visualization project**. It is useful as a mind-mapping interface, an experimental low-bandwidth input workspace, and a front end for local or self-hosted language-model workflows.
 
-## ⚙️ Operation Modes
+The project does not claim to decode neural activity, provide a clinically validated BCI interface, or satisfy medical/regulatory compliance requirements by itself.
 
-| Mode | Internet Required | API Key Location | AI Features (Synth, Chat) | Privacy Level |
-| :--- | :---: | :--- | :--- | :--- |
-| **Pure Offline** *(default)* | ❌ No | None | Disabled | **Maximum (100% local)** |
-| **Direct Gemini** | ✅ Yes | Client-side (`apiKey` var) | Full | Depends on Google |
-| **Janus Proxy** *(recommended)*| ✅ Yes | Server-side (your Janus) | Full | **Under your control (self-hosted)** |
+## Operating modes
 
-> **⚕️ BCI & Compliance Note:** For true BCI applications (Neuralink, Synchron, etc.), use the **Pure Offline** mode or a self-hosted **Janus** backend with local models to ensure HIPAA/GDPR compliance.
+| Mode | Network | Model access | Data path |
+| --- | --- | --- | --- |
+| **Pure Offline** | Not required | AI disabled | Browser-local state |
+| **Direct Model Provider** | Required | User-configured provider | Depends on provider |
+| **Self-Hosted Proxy** | Depends on deployment | Local/self-hosted or routed models | Under operator control |
 
----
+Local operation can reduce unnecessary data exposure, but privacy and compliance depend on the complete deployment, configuration, provider, logging, and organizational controls.
 
-## ✨ Epic Features
+## Features
 
-* **Neural Physics:** Force simulation with a magnetic GRID mode for perfect node alignment.
-* **DIVE / ASCEND:** Hierarchical immersion into idea clusters (BCI-inspired navigation).
-* **AI Synth:** LLM-generated node suggestions, re-evaluation, and cluster expansion (optional).
-* **Per-Node Neural Chat:** Context-aware conversation linked directly to any specific node.
-* **Dynamic Atmosphere:** Ambient colors, particles, grids, and glows shift automatically based on dominant node types (*default/neutral, danger/risk, warn/alert, info/data*).
-* **Impulse Visuals:** Energy pulses visually travel along connections upon interaction.
-* **Export / Import:** Seamless JSON support for local backups or sharing vaults.
-* **Responsive Design:** Touch & Mouse optimized for fluid control on both mobile and desktop.
+- **Force-directed graph workspace** with draggable nodes and links.
+- **DIVE / ASCEND navigation** for moving through idea clusters.
+- **Optional AI suggestions** for node expansion and synthesis.
+- **Per-node context** for focused exploration.
+- **Dynamic visualization** with particles, impulses, grids, and semantic status cues.
+- **JSON export/import** for portable local backups.
+- **Touch and mouse support** for desktop and mobile browsers.
+- **Offline-first mode** with browser-local storage and no mandatory model dependency.
 
----
+## Low-bandwidth / BCI research direction
 
-## 🚀 Quick Start (Pure Offline)
+HRain can be used to prototype workflows in which a small number of symbols or short decoded messages are expanded into a richer graph that the user can inspect and edit.
 
-1. Clone or download the repository.
-2. Open `index.html` in any modern web browser.
-3. Ensure the configuration variables are set for local execution:
-   ```javascript
-   const apiKey = ""; 
-   const BACKEND_URL = ""; 
-Result: Zero network activity guaranteed.
+That is a **research direction**, not an established performance claim. The repository currently does not establish:
 
-🌐 Try the Live Demo (Offline mode works instantly. Enable AI via your own key or a Janus backend for next-level semantics.)
+```text
+NEURAL_DECODING = NOT_IMPLEMENTED
+CLINICAL_BCI_VALIDATION = NOT_PERFORMED
+MEDICAL_DEVICE_STATUS = NOT_CLAIMED
+REGULATORY_COMPLIANCE = DEPLOYMENT_DEPENDENT_NOT_CLAIMED_BY_REPOSITORY
+MEASURED_COMMUNICATION_GAIN = NOT_ESTABLISHED
+```
 
-👨‍💻 Author & Ecosystem
-Alexander Agapov (Oleksandr Ahapov) 📍 Ukraine, 2025
+## Quick start
 
-💬 Telegram: @Hawkar_lol
+Clone the repository and open `index.html` in a modern browser.
 
-✉️ Email: hawkarlol@gmail.com
+For pure offline use, leave external model configuration empty. If AI features are enabled, configure the selected provider or self-hosted endpoint and keep credentials out of committed source files.
 
-Part of the JANUS Ecosystem — a self-hosted LLM gateway with true offline failover.
+## Related project
 
-Open to collaborations, BCI patient pilots, integrations, partnerships, or relocation.
+[iNaiHR](https://github.com/Hawkar-usls/iNaiHR) explores AI-assisted semantic expansion for short user inputs. HRain remains the cleaner local-first visualization surface.
 
-📜 License
-MIT License — Fork, modify, and deploy freely.
+## Author
 
-⭐ Star this repo if it resonates with you. It helps connect with other builders who need resilient, private cognitive tools.
+Oleksandr Ahapov (Hawkar) — Ukraine
 
-Dive deep. 🌀
+## License
 
-
-Этот Markdown создаст красивые бейджи, аккуратную таблицу с режимами работы, выделенные цит
+MIT License. See `LICENSE`.
