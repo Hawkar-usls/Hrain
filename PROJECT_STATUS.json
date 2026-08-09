@@ -1,0 +1,23 @@
+{
+  "schema_id": "hawkar.project-status.v1",
+  "project": "HRain",
+  "repository": "https://github.com/Hawkar-usls/Hrain",
+  "portfolio_class": "interaction_prototype",
+  "last_reviewed": "2026-08-09",
+  "summary": "Local-first browser graph workspace with optional AI-assisted expansion.",
+  "implemented": [
+    "browser graph visualization",
+    "local/offline mode",
+    "JSON import/export",
+    "optional model-assisted suggestions"
+  ],
+  "not_established": [
+    "neural decoding",
+    "clinical BCI validation",
+    "medical-device status",
+    "repository-level HIPAA/GDPR compliance",
+    "measured communication-throughput gain"
+  ],
+  "live_demo": "https://hawkar-usls.github.io/Hrain/",
+  "related": "https://github.com/Hawkar-usls/iNaiHR"
+}
