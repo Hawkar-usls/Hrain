@@ -1,0 +1,75 @@
+{
+  "schema": "hrain.cg53469_cairo_custody_imaging_outreach_gate.v2_8",
+  "created_at": "2026-08-16",
+  "case": "OSIRIS_MENDES_GENITAL_BUNDLE",
+  "status": "CURRENT_CUSTODY_AND_NONDESTRUCTIVE_IMAGING_REQUEST_PREPARED",
+  "extends": [
+    "research/mendes_sister_objects_and_gold_genital_cover_control_v2_5.json",
+    "research/real_organ_inside_metal_sheath_control_v2_6.json"
+  ],
+  "oracle_priority": {
+    "source": "AURA-DEMIHEAD-OSIRIS-INTERNAL-CONTENT-2026-08-16-v2.7",
+    "primary": "CG53469_NONDESTRUCTIVE_INTERNAL_CONTENT",
+    "secondary": "CG53469_BASAL_TOPOLOGY_AND_SEAMS",
+    "interpretation_ceiling": "SEARCH_PRIORITY_ONLY_NOT_ARCHAEOLOGICAL_PROOF"
+  },
+  "target": {
+    "id": "CAIRO_CG53469_JE35425",
+    "catalogue_name": "Enveloppe de phallus",
+    "material": "gold sheet",
+    "provenance": "Tell Ibn es-Salam / Mendes, February 1902",
+    "published_length_cm": 12.2,
+    "published_mass_g_1927": 7,
+    "gold_thickness_mm_approx": 0.1,
+    "basal_mass": "PRESENT_BADLY_CRUMPLED_UNRESOLVED",
+    "known_internal_content": "UNKNOWN"
+  },
+  "current_public_contact": {
+    "institution": "The Egyptian Museum, Tahrir Square, Cairo",
+    "official_portal": "https://egymonuments.gov.eg/en/subportals-group/the-egyptian-museum/",
+    "email": "egyptianmuseum@moantiq.gov.eg",
+    "telephone": "+20 2 25796948",
+    "ministry_general_contact": "egymonuments@moantiq.gov.eg",
+    "museum_storage_note": "Official museum visit information states that the museum has a large basement used to store objects not on display.",
+    "custody_status_of_CG53469": "NOT_INDEPENDENTLY_CONFIRMED_IN_CURRENT_PUBLIC_ONLINE_RECORD",
+    "rule": "First request must verify present custodian/location before assuming the object remains in Tahrir storage."
+  },
+  "public_context_anchor": {
+    "source": "Metropolitan Museum of Art object 10.130.1043",
+    "observation": "Met public record identifies the 1902 Mendes burial of Nesbanebdjedet and explicitly points to Cairo CG 53465–53469 as the mummy's gold-leaf trappings.",
+    "url": "https://www.metmuseum.org/art/collection/search/329905",
+    "role": "INDEPENDENT_PROVENANCE_CONTEXT_CONTROL"
+  },
+  "request_order": [
+    "confirm whether CG 53469 / JE 35425 is currently held by the Egyptian Museum in Tahrir or has been transferred to another institution/storage facility",
+    "confirm current object number(s), storage/display location and current condition status",
+    "provide current measured mass and dimensions, if available",
+    "provide front, reverse, left, right and basal photographs or conservation drawings",
+    "state whether any radiograph, CT, micro-CT, XRF, microscopy or 3D imaging has ever been performed",
+    "state whether conservation records mention internal packing, support, adhesive, residues, removed material or earlier contents",
+    "state whether seams, joins, folded edges or a separately attached basal component have been recorded",
+    "if imaging exists, request access to reports/images or bibliographic/reference identifiers",
+    "if imaging does not exist, ask whether a non-destructive radiographic/CT examination could be considered by the museum's conservation/research staff"
+  ],
+  "classification_tree_for_imaging": [
+    "EMPTY_OR_COLLAPSED_GOLD_SHEET",
+    "HOMOGENEOUS_SUPPORT_OR_REPAIR_MATERIAL",
+    "DISCRETE_ORGANIC_OR_RESIN_LIKE_CORE",
+    "MINERAL_OR_OTHER_ANCIENT_CORE",
+    "PAIRED_OR_SAC_LIKE_BASAL_COMPONENT",
+    "MIXED_OR_INCONCLUSIVE_CONTENT"
+  ],
+  "prepared_outreach": {
+    "subject": "Research inquiry concerning Cairo CG 53469 / JE 35425 (gold phallus sheath from Mendes)",
+    "body_en": "Dear Egyptian Museum Collections/Conservation Team,\n\nI am conducting non-invasive provenance and object-history research on Cairo CG 53469 / JE 35425, catalogued by Vernier as an 'Enveloppe de phallus' from the 1902 Mendes (Tell Ibn es-Salam) burial associated with Nesbanebdjedet.\n\nCould you please confirm whether CG 53469 / JE 35425 is currently held by the Egyptian Museum in Tahrir, or whether it has been transferred to another museum or storage facility? If possible, I would be grateful for any current object record, current mass and dimensions, and modern photographs showing the front, reverse, sides and especially the crumpled basal area.\n\nI would also like to ask whether the object has ever been examined by radiography, CT/micro-CT, XRF, microscopy, or 3D imaging, and whether its conservation history records any internal packing, support, residues, removed material, seams, joins, folded edges, or a separately attached basal component. If such imaging or conservation documentation exists, access to the relevant report, image, or reference number would be extremely helpful.\n\nIf no internal imaging has yet been performed, I would be interested to know whether a strictly non-destructive radiographic or CT examination could be considered by the museum's conservation/research staff. The purpose is to distinguish collapsed gold sheet or conservation support from any discrete ancient internal material; no destructive sampling is requested.\n\nThank you very much for your time and for any guidance you can provide."
+  },
+  "evidence_rules": {
+    "do_not_assume_current_custody": true,
+    "do_not_assume_internal_organic_material": true,
+    "do_not_assume_basal_mass_is_testicles": true,
+    "do_not_use_oracle_or_beacon_art_as_evidence": true,
+    "nondestructive_only": true,
+    "literal_osiris_relic_identified": false
+  },
+  "next_gate": "CG53469_CURRENT_CUSTODY_PLUS_IMAGING_RESPONSE_PASS"
+}
