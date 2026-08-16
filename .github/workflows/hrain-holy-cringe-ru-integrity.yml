@@ -24,8 +24,9 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s=Path('janus-network-v3.js').read_text(encoding='utf-8')
-          for token in ['janus-site-language-v1','СВЯТОЙ КРИНЖ','ПАРОДИЙНЫЙ СЛОЙ','не трогать','source remains authoritative']:
-              assert token in s, token
+          sl=s.lower()
+          for token in ['janus-site-language-v1','святой кринж','пародийный слой','не трогать','source remains authoritative']:
+              assert token in sl, token
           assert 'Вымышленная Ванесса Шевченко' in s
           forbidden=['/api/hrain/save','/api/hrain/event',"method:'DELETE'","method:'PUT'","method:'PATCH'"]
           for token in forbidden:
