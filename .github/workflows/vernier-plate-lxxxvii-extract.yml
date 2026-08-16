@@ -1,0 +1,33 @@
+name: Vernier plate LXXXVII extract
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/vernier_plate_lxxxvii_extract.py'
+      - '.github/workflows/vernier-plate-lxxxvii-extract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Extract Plate LXXXVII from Vernier Tome II
+        run: python tools/vernier_plate_lxxxvii_extract.py
+      - name: Remove large source PDF before artifact upload
+        run: rm -f /tmp/vernier-lxxxvii/VernierBijouxII.pdf /tmp/vernier-lxxxvii/all.txt
+      - name: Upload plate candidates and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernier-plate-lxxxvii-extract
+          path: /tmp/vernier-lxxxvii/
+          if-no-files-found: error
+          retention-days: 3
