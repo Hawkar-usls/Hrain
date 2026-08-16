@@ -24,7 +24,29 @@ HRain turns notes, ideas, and short inputs into an editable visual graph. It is 
 - JSON import/export;
 - touch/mouse interaction;
 - browser-local/offline mode;
-- optional model-assisted suggestions.
+- optional model-assisted suggestions;
+- dedicated read-only JANUS Meta Registry graph viewer.
+
+## JANUS Meta Registry bridge
+
+`janus.html` is a separate **read-only Registry Mode**. It consumes the automatically generated index published by [`Hawkar-usls/janus-meta-registry`](https://github.com/Hawkar-usls/janus-meta-registry) and renders the active registry projection as:
+
+```text
+JANUS Meta Registry
+→ research surfaces
+→ versioned registry objects
+→ authoritative source URL
+```
+
+Live Registry Mode: https://hawkar-usls.github.io/Hrain/janus.html
+
+The ordinary HRain workspace remains separate and editable. Registry Mode does not write back to the Meta Registry and does not replace source JSON, current-authority records, receipts or code.
+
+```text
+HRAIN_GRAPH != REGISTRY_AUTHORITY
+REGISTRY_INDEX != SOURCE_OBJECT
+READ_ONLY_PRESENTATION != WRITE_AUTHORITY
+```
 
 ## Boundary
 
@@ -42,6 +64,7 @@ Local operation can reduce unnecessary data exposure, but privacy/compliance dep
 ## Review / run
 
 - Live demo: https://hawkar-usls.github.io/Hrain/
+- JANUS Registry Mode: https://hawkar-usls.github.io/Hrain/janus.html
 - Machine-readable project status: [`PROJECT_STATUS.json`](PROJECT_STATUS.json)
 - Related prototype: [iNaiHR](https://github.com/Hawkar-usls/iNaiHR)
 - Portfolio maturity/visibility: [`portfolio-visibility.json`](https://github.com/Hawkar-usls/Janus/blob/main/portfolio-visibility.json)
