@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Validate read-only Registry Mode contract
+      - name: Validate living read-only Registry Mode contract
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -37,14 +37,36 @@ jobs:
               'HRAIN_GRAPH != REGISTRY_AUTHORITY',
               'REGISTRY MODE',
               'READ ONLY',
+              'APPEND-ONLY SOURCE',
+              'WIPE LOCAL DESK',
+              'LOCAL DESK CLEARED · JANUS REGISTRY UNTOUCHED',
               "janus.hrain.registry_graph_index.v1_0",
+              'd3.forceManyBody()',
+              '.velocityDecay(.58)',
+              'organicPath',
+              'animateImpulse',
+              'neuron-membrane',
+              'link-tendon',
+              'DIVE',
+              'ASCEND',
+              'cloneRuntime()',
+              'wipeLocalDesk',
           ]
           for marker in required:
               assert marker in html, marker
 
-          assert 'contenteditable' not in html.lower()
-          assert 'localStorage.setItem' not in html
+          # Registry Mode is a GET-only projection. It has no persistence or mutation channel.
+          lowered = html.lower()
+          assert 'contenteditable' not in lowered
+          assert 'localstorage.' not in lowered
+          assert 'indexeddb' not in lowered
+          assert 'xmlhttprequest' not in lowered
+          assert html.count('fetch(') == 1, 'Registry Mode must have exactly one network fetch'
           assert 'fetch(INDEX_URL' in html
+          assert "method:'POST'" not in html and 'method:"POST"' not in html
+          assert "method:'PUT'" not in html and 'method:"PUT"' not in html
+          assert "method:'PATCH'" not in html and 'method:"PATCH"' not in html
+          assert "method:'DELETE'" not in html and 'method:"DELETE"' not in html
           assert 'OPEN SOURCE' in html
           assert 'janus.html' in readme
           assert 'READ_ONLY_PRESENTATION != WRITE_AUTHORITY' in readme
@@ -54,5 +76,8 @@ jobs:
           Path('/tmp/janus-inline.js').write_text(scripts[-1], encoding='utf-8')
           print('HRAIN_JANUS_REGISTRY_CONTRACT=PASS')
           print('HRAIN_JANUS_REGISTRY_READ_ONLY=TRUE')
+          print('HRAIN_JANUS_REGISTRY_NETWORK_FETCHES=1_GET_ONLY')
+          print('HRAIN_JANUS_REGISTRY_WIPE=LOCAL_RUNTIME_ONLY')
+          print('HRAIN_JANUS_LIVING_PHYSICS=PASS')
           PY
           node --check /tmp/janus-inline.js
