@@ -5,8 +5,8 @@
   "portfolio_class": "interaction_prototype",
   "last_reviewed": "2026-08-16",
   "maturity": "ACTIVE_PROTOTYPE",
-  "completion_status": "PROTOTYPE",
-  "summary": "Local-first browser graph workspace with optional AI-assisted expansion and a read-only DemiHead LEFT_HRAIN structural-context bridge.",
+  "completion_status": "PROTOTYPE_WITH_NEXUS_HABITAT_TOOL",
+  "summary": "Local-first browser graph workspace with optional AI-assisted expansion, a read-only DemiHead LEFT_HRAIN structural-context bridge, and a bounded local Habitat tool that can feed the JANUS Nexus coordination spine without gaining authority.",
   "implemented": [
     "browser graph visualization",
     "local/offline mode",
@@ -16,7 +16,9 @@
     "deterministic janus.demihead.hemisphere_packet.v1 builder",
     "legacy unknown-origin preservation instead of provenance guessing",
     "origin-restricted postMessage packet response",
-    "zero authority and mass-effect delta in hemisphere packets"
+    "zero authority and mass-effect delta in hemisphere packets",
+    "local janus.habitat.hrain.request.v1 -> janus.habitat.hrain.response.v1 tool",
+    "STRUCTURE_CONTEXT Habitat operation with no network use or source mutation"
   ],
   "hemisphere_bridge": {
     "contract": "JANUS_DEMIHEAD_BICAMERAL_BRIDGE_V1",
@@ -32,6 +34,23 @@
     "hemisphere_agreement_is_truth": false,
     "neuroscience_claim": false
   },
+  "nexus_habitat_binding": {
+    "contract": "JANUS_NEXUS_HABITAT_V1",
+    "head_id": "HRAIN",
+    "role": "STRUCTURAL_CONTEXT",
+    "exact_repository_head_reviewed": "10131512497703df10173fd0c3eaa363c72d9093",
+    "local_tool": "habitat-tool.js",
+    "local_request_schema": "janus.habitat.hrain.request.v1",
+    "local_response_schema": "janus.habitat.hrain.response.v1",
+    "nexus_payload_kind": "HEMISPHERE_PACKET",
+    "nexus_target": "BICAMERAL_BRIDGE",
+    "live_nexus_delivery": false,
+    "network_used_by_local_tool": false,
+    "source_mutation_allowed": false,
+    "authority_delta": 0,
+    "mass_effect_budget_delta": 0,
+    "external_effect_authority": false
+  },
   "not_established": [
     "neural decoding",
     "clinical BCI validation",
@@ -40,11 +59,14 @@
     "measured communication-throughput gain",
     "measured cognitive-performance gain from the DemiHead bicameral bridge",
     "biological equivalence to a human left hemisphere",
-    "truth or independent corroboration from bicameral agreement"
+    "truth or independent corroboration from bicameral agreement",
+    "live inter-repository Nexus transport",
+    "target delivery merely because a local Habitat response was generated"
   ],
   "live_demo": "https://hawkar-usls.github.io/Hrain/",
   "demihead_sidecar": "https://hawkar-usls.github.io/Hrain/demihead.html",
   "related": "https://github.com/Hawkar-usls/iNaiHR",
   "demihead": "https://github.com/Hawkar-usls/Demi_Head",
+  "nexus_habitat": "https://github.com/Hawkar-usls/Demi_Head/blob/main/docs/NEXUS_HABITAT.md",
   "visibility_policy": "https://github.com/Hawkar-usls/Janus/blob/main/portfolio-visibility.json"
 }
