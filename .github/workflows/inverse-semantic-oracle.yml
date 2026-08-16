@@ -1,0 +1,30 @@
+name: inverse-semantic-oracle
+
+on:
+  push:
+    paths:
+      - "tools/inverse_semantic_oracle.py"
+      - "research/osiris_custody_graph.json"
+      - "research/osiris_custody_graph.result.json"
+      - ".github/workflows/inverse-semantic-oracle.yml"
+  pull_request:
+    paths:
+      - "tools/inverse_semantic_oracle.py"
+      - "research/osiris_custody_graph.json"
+      - "research/osiris_custody_graph.result.json"
+      - ".github/workflows/inverse-semantic-oracle.yml"
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Replay inverse semantic graph
+        run: |
+          python tools/inverse_semantic_oracle.py research/osiris_custody_graph.json --output /tmp/result.json
+      - name: Compare frozen result
+        run: |
+          diff -u research/osiris_custody_graph.result.json /tmp/result.json
