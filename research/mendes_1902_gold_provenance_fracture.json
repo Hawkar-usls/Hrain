@@ -1,0 +1,141 @@
+{
+  "schema": "hrain.mendes_1902_gold_provenance_fracture.v1",
+  "case_id": "OSIRIS-MENDES-1902-GOLD-PROVENANCE-FRACTURE-001",
+  "created_at": "2026-08-16",
+  "priority": "A1",
+  "extends": "research/mendes_phallus_relic_pass_v1.json",
+  "purpose": "Execute the planned Mendes catalogue pass against the 1902 Nesbanebdjedet burial, reconstruct the documented gold/body-part inventory, identify provenance breaks, triage dispersed museum objects, and determine the next non-destructive archival/imaging gate.",
+  "method_rule": "Catalog/archive/museum/conservation research only. No excavation, acquisition, removal, market pursuit, or handling of antiquities. A funerary phallus-related object is a control unless independent Osirian relic identity is established.",
+  "primary_breakthrough": {
+    "state": "DOCUMENTED_MENDES_GOLD_PHALLUS_SHEATH_CONTROL_FOUND",
+    "source": "J. E. Quibell, Note on a Tomb Found at Tell er Roba, Annales du Service des Antiquités de l'Égypte 3 (1902), pp. 245-249",
+    "source_url": "https://archive.org/download/annalesduservice03egypuoft/annalesduservice03egypuoft_djvu.txt",
+    "finding": "Quibell's primary excavation report states that gold foil in the Nesbanebdjedet burial was used to make rough protective sheaths for the fingers, toes, and phallus of the deceased.",
+    "classification": "MATERIAL_FORM_AND_CONTEXT_CONTROL",
+    "why_it_matters": "It directly establishes a gold phallus-related funerary object class at Mendes inside the exact 1902 assemblage already prioritized by the project.",
+    "why_it_is_not_the_relic": "The report describes funerary gold equipment applied to the human priest Nesbanebdjedet. It does not identify a surviving anatomical organ, a relic of Osiris, or a separate hidden divine object."
+  },
+  "quibell_1902_assemblage_ledger": {
+    "burial": "Nesbanebdjedet / Nes-baneb-Djedet, priestly burial at Tell er-Roba (Mendes), excavated/recovered in 1902",
+    "documented_elements": [
+      "more than 350/approximately 360 faience shabtis plus fragments",
+      "amulets placed above the inner burial slab",
+      "gold-leaf funerary trappings on/around the body below the slab",
+      "sheet-gold representation of Isis with wings",
+      "sheet-gold necklace/girdle/bracelet/anklet-like elements and stamped funerary signs",
+      "gold-foil finger sheaths",
+      "gold-foil toe sheaths",
+      "gold-foil phallus sheath",
+      "gold beads associated with a bead network",
+      "small gold pendant/figure elements including Isis/Horus and feline imagery",
+      "heart scarab and stone/faience amulets"
+    ],
+    "interpretation": "The assemblage is a funerary body-protection/reconstruction kit with multiple body-part-specific gold elements. The phallus sheath is an especially strong analogue for the project's representation-agnostic body-part search, but remains human funerary equipment."
+  },
+  "provenance_fracture": {
+    "state": "DOCUMENTED",
+    "sequence": [
+      "burial discovered/opened at Tell er-Roba",
+      "local workmen removed hundreds of shabtis and probably other objects before inspector Aly Habib secured the find",
+      "part of the removed material was recovered",
+      "Quibell explicitly notes that some expected gold elements had likely already been taken",
+      "an official annual-report summary states that some Mendes gold objects were stolen before Habib rescued the find for the Museum",
+      "museum-held assemblage therefore represents only a surviving subset of the original discovery context"
+    ],
+    "research_consequence": "Treat the 1902 assemblage as an incomplete provenance graph. Trace missing/stolen gold only through historical excavation records, inventories, museum accession registers, publications, correspondence, and lawful institutional provenance research.",
+    "claim_ceiling": "The provenance break does not imply that any missing object was the Osiris relic or that the missing gold included a special phallus object beyond the documented funerary sheath."
+  },
+  "planned_steps_execution": [
+    {
+      "step": 1,
+      "task": "Resolve Cairo CG 53465-53469",
+      "status": "PARTIAL_BLOCKED",
+      "result": "The Met explicitly points to Cairo CG 53465-53469 for related mummy equipment. The numbers fall inside Georges Vernier, Catalogue général du Musée du Caire, Bijoux et orfèvreries, fascicle covering CG 53172-53855 (1927). Public web indexing did not expose the individual five entries, so the exact CG-number-to-object concordance remains unresolved.",
+      "next_action": "Obtain/inspect the Vernier pages surrounding CG 53465-53469 and Egyptian Museum Cairo object cards/conservation records; map each CG number to Quibell's 1902 gold inventory."
+    },
+    {
+      "step": 2,
+      "task": "Identify every amulet/gold/body-part element in the 1902 burial",
+      "status": "PRIMARY_REPORT_PASS_COMPLETE",
+      "result": "Quibell's primary report supplies a detailed gold and amulet ledger and explicitly documents a gold-foil phallus sheath, plus finger/toe sheaths and other gold body/funerary elements.",
+      "next_action": "Concord Quibell's descriptions with Cairo CG 53465-53469, photographs, drawings, current accession numbers, and any surviving conservation descriptions."
+    },
+    {
+      "step": 3,
+      "task": "Reconstruct dispersed sister objects from the Nesbanebdjedet assemblage",
+      "status": "FIRST_PASS_COMPLETE",
+      "official_network": [
+        "The Metropolitan Museum of Art: multiple Nesbanebdjedet shabtis and the 1902 burial provenance narrative",
+        "British Museum EA54532: Nesbanebdjedet shabti; curator note points to comparable Leiden examples and examples in other collections, including two reported at the Frank H. McClung Museum",
+        "Bowdoin College Museum of Art 1905.25.2: shabti attributed to the 1902 Mendes burial and carrying Nesbanebdjedet's priestly titles",
+        "National Gallery of Victoria D46-1971: Mendes shabti of the same priest/date horizon",
+        "Leiden and McClung remain follow-up nodes through the British Museum bibliography/curator note"
+      ],
+      "control": "Homonyms must not be merged automatically; match mother name, titles, inscription, dimensions, material, and 1902 excavation provenance."
+    },
+    {
+      "step": 4,
+      "task": "Audit the British Museum Tell el-Ruba 15-object place-index set",
+      "status": "FIRST_PASS_COMPLETE",
+      "result": "The indexed set is dominated by ordinary shabtis plus a small number of figures. No sealed/nested/reliquary object or published internal anomaly surfaced in the first-pass place-index audit.",
+      "priority_effect": "LOWER this particular 15-object place-index set for the hidden-container target while retaining individual records as provenance controls. Keep BM EA54532 separately high as a sister-object network anchor."
+    },
+    {
+      "step": 5,
+      "task": "Search published X-ray/CT/radiography/conservation evidence for Mendes/Nesbanebdjedet material",
+      "status": "PUBLIC_HIT_NOT_FOUND_IN_CURRENT_SWEEP",
+      "result": "No publicly indexed X-ray/CT study specific to the 1902 gold assemblage was found in the present sweep. BM EA54532 has a documented conservation treatment, but its public page does not disclose an imaging result.",
+      "next_action": "Prioritize Egyptian Museum Cairo conservation/radiography archives for CG 53465-53469 and institutional conservation files for the dispersed 1902 material. Absence from web search is not evidence that imaging does not exist."
+    }
+  ],
+  "current_candidate_classes": [
+    {
+      "id": "MENDES_1902_GOLD_PHALLUS_SHEATH",
+      "state": "CONFIRMED_CONTROL",
+      "literal_osiris_relic_candidate": false,
+      "value": "Confirms gold + phallus + Mendes + funerary body-part equipment in one securely documented assemblage."
+    },
+    {
+      "id": "MENDES_1902_MISSING_GOLD_SUBSET",
+      "state": "PROVENANCE_TRACE_TARGET",
+      "literal_osiris_relic_candidate": false,
+      "value": "Documented incompleteness makes old inventories and museum correspondence important, but missing-object identity is unknown."
+    },
+    {
+      "id": "CAIRO_CG_53465_53469",
+      "state": "HIGH_PRIORITY_CONCORDANCE_TARGET",
+      "literal_osiris_relic_candidate": false,
+      "value": "Likely key to mapping surviving gold mummy equipment from the 1902 burial to modern museum records."
+    }
+  ],
+  "new_highest_gate": {
+    "id": "MENDES_CG53465_53469_GOLD_PHALLUS_SHEATH_CONCORDANCE_PASS",
+    "goal": "Determine which Cairo CG number corresponds to which Quibell-described gold object, establish whether the documented phallus sheath survives in a museum collection, and locate any published image/conservation/radiography record.",
+    "subtasks": [
+      "retrieve Vernier 1927 entries CG 53465-53469",
+      "map all five entries to Quibell 1902 descriptions",
+      "identify present Egyptian Museum accession/display/storage status if public",
+      "search conservation history and non-destructive imaging",
+      "trace the documented missing-gold subset only through lawful historical provenance records",
+      "keep the human funerary phallus sheath strictly separate from any Osiris-relic claim"
+    ]
+  },
+  "sources": [
+    "https://archive.org/download/annalesduservice03egypuoft/annalesduservice03egypuoft_djvu.txt",
+    "https://www.metmuseum.org/art/collection/search/329905",
+    "https://www.metmuseum.org/art/collection/search/574065",
+    "https://www.britishmuseum.org/collection/term/x30367",
+    "https://www.britishmuseum.org/collection/object/Y_EA54532"
+  ],
+  "claim_ceiling": {
+    "banana_found": false,
+    "literal_osiris_phallus_identified": false,
+    "documented_gold_phallus_sheath_at_mendes_found": true,
+    "gold_phallus_sheath_belongs_to_nesbanebdjedet_funerary_equipment": true,
+    "specific_missing_gold_objects_identified": false,
+    "exact_cg_53465_53469_mapping_resolved": false,
+    "public_mendes_specific_xray_ct_hit_found": false,
+    "onsite_search_recommended": false
+  },
+  "current_verdict": "MENDES_REMAINS_A1. THE SEARCH HAS ADVANCED FROM A GENERAL GOLD/PHALLUS HYPOTHESIS TO A PRIMARY-SOURCE-DOCUMENTED GOLD PHALLUS SHEATH IN THE EXACT 1902 MENDES ASSEMBLAGE, PLUS A DOCUMENTED PROVENANCE FRACTURE. THIS IS A CONTROL AND ARCHIVAL LEAD, NOT THE OSIRIS RELIC."
+}
