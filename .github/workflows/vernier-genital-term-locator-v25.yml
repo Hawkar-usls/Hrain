@@ -1,0 +1,31 @@
+name: Vernier genital term locator v2.5
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/vernier_genital_term_locator_v25.py'
+      - '.github/workflows/vernier-genital-term-locator-v25.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Resolve historical genital terms in Vernier
+        run: python tools/vernier_genital_term_locator_v25.py
+      - name: Upload terminology corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernier-genital-term-locator-v25
+          path: /tmp/vernier-genital-terms-v25/
+          if-no-files-found: error
+          retention-days: 3
