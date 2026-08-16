@@ -1,0 +1,137 @@
+{
+  "schema_id": "hrain.osiris.mendes_cg_exact_mapping.v2.1",
+  "artifact_id": "MENDES-CG53465-53469-EXACT-MAPPING-2026-08-16-v2.1",
+  "date": "2026-08-16",
+  "status": "EXACT_CATALOGUE_MAPPING_RESOLVED",
+  "trigger": "AURA_INFORMED_PASS__RESOLVE_CG53465_53469_OBJECT_BY_OBJECT_WITHOUT_REQUIRING_PHALLUS_LABEL",
+  "source": {
+    "author": "Emile Vernier",
+    "title": "Catalogue general du Musee du Caire: Bijoux et orfevreries",
+    "fascicule": 4,
+    "year": 1927,
+    "catalogue_range": "CG 53172-53855",
+    "gallica_ark": "bpt6k5774000v",
+    "gallica_pages": [82, 83, 84],
+    "printed_pages": [457, 458, 459],
+    "extraction": {
+      "method": "Gallica ContentSearch exact-number mapping + ALTO OCR",
+      "workflow_run": 31943947467,
+      "artifact_id": 9262768878,
+      "artifact_digest": "sha256:e1e039fe71c81c03106c3da9e31efd273d1cf829f268f3e818e5b4b7972dacb4"
+    }
+  },
+  "objects": [
+    {
+      "cg": "CG 53465",
+      "journal_entree_normalized": "JE 35421",
+      "catalogue_name": "Collier",
+      "material": "gold",
+      "findspot": "Tell Ibn es-Salam (Mendes)",
+      "find_date": "1902-02",
+      "dimensions_m": {"horizontal_width": 0.255, "vertical_width": 0.110},
+      "weight_g": 39,
+      "gold_thickness_mm": 0.095238,
+      "plate": "LXXXVII",
+      "manufacture": "Stamped in a mould, probably plaster; some incised details added afterwards while supported on a resistant substrate.",
+      "attachment": "Four nail holes",
+      "aura_relevance": ["NONLITERAL_GOLD_OBJECT", "MOULD_TECHNOLOGY", "PRIESTLY_ASSEMBLAGE"]
+    },
+    {
+      "cg": "CG 53466",
+      "journal_entree": "JE 35420",
+      "catalogue_name": "Grand ornement de poitrine",
+      "material": "gold",
+      "findspot": "Tell Ibn es-Salam (Mendes)",
+      "find_date": "1902-02",
+      "dimensions_m": {"length": 0.423, "width": 0.134, "width_at_figure": 0.205},
+      "weight_g": 36,
+      "gold_thickness_mm": "<0.1",
+      "plate": "LXXXVII",
+      "manufacture": "Pushed into a hollow/recess, probably plaster; details added afterwards.",
+      "attachment": "At least five nail holes",
+      "placement": "Below CG 53465 on mummy/sarcophagus assemblage",
+      "aura_relevance": ["NONLITERAL_GOLD_OBJECT", "MOULD_TECHNOLOGY", "PRIESTLY_ASSEMBLAGE"]
+    },
+    {
+      "cg": "CG 53467",
+      "journal_entree": "JE 35424",
+      "catalogue_name": "Bande",
+      "material": "gold",
+      "findspot": "Tell Ibn es-Salam (Mendes)",
+      "find_date": "1902-02",
+      "dimensions_m": {"length": 0.910, "width": 0.007},
+      "weight_g": 8,
+      "gold_thickness_mm": 0.1,
+      "plate": "LXXXVII",
+      "placement": "On CG 53466",
+      "attachment": "Small hole near each end",
+      "aura_relevance": ["NONLITERAL_GOLD_OBJECT", "ASSEMBLAGE_ATTACHMENT"]
+    },
+    {
+      "cg": "CG 53468 / CG 53468bis",
+      "journal_entree": "JE 35422",
+      "catalogue_name": "Sandales",
+      "material": "gold",
+      "findspot": "Tell Ibn es-Salam (Mendes)",
+      "find_date": "1902-02",
+      "dimensions_m": {"length": 0.206, "width": 0.067},
+      "weights_g": [10.30, 13.50],
+      "plate": "LXXXVII",
+      "manufacture": "Thin cut gold sheets with incised lines",
+      "attachment": "One sandal retains a gold-wire strap; corresponding holes survive on the other.",
+      "aura_relevance": ["NONLITERAL_GOLD_OBJECT", "BODY_EQUIPMENT", "PRIESTLY_ASSEMBLAGE"]
+    },
+    {
+      "cg": "CG 53469",
+      "journal_entree_normalized": "JE 35425",
+      "catalogue_name": "Enveloppe de phallus",
+      "material": "gold",
+      "findspot": "Tell Ibn es-Salam (Mendes)",
+      "find_date": "1902-02",
+      "length_m": 0.122,
+      "length_cm": 12.2,
+      "weight_g": 7,
+      "gold_thickness_mm": 0.1,
+      "condition_1927": "very poor",
+      "plate": "LXXXVII",
+      "catalogue_statement": "Gold phallus envelope/sheath; excessively thin gold, about 0.1 mm.",
+      "aura_relevance": ["EXACT_PHALLUS_SHEATH_MAPPING", "GOLD_BODY_PART_EQUIPMENT", "PRIMARY_A1_OBJECT"]
+    }
+  ],
+  "critical_result": {
+    "exact_phallus_sheath_cg": "CG 53469",
+    "exact_phallus_sheath_je": "JE 35425",
+    "length_cm": 12.2,
+    "weight_g": 7,
+    "gold_thickness_mm": 0.1,
+    "condition_1927": "very poor",
+    "plate": "LXXXVII",
+    "mapping_blocker": "RESOLVED"
+  },
+  "manufacturing_signal": {
+    "statement": "The same Mendes gold body-equipment assemblage contains at least two large items explicitly formed against probable plaster moulds/recesses (CG 53465 and CG 53466).",
+    "next_test": "Inspect plate LXXXVII and conservation records for whether CG 53469 preserves seams, folds, negative-impression geometry or support/mould traces that can be compared with other phallic envelopes."
+  },
+  "next_gates": [
+    "CG53469_PLATE_LXXXVII_IMAGE_PASS",
+    "JE35425_CURRENT_OBJECT_STATUS_PASS",
+    "CG53469_CONSERVATION_AND_IMAGING_PASS",
+    "CG53469_PHALLIC_ENVELOPE_MORPHOMETRY_PASS",
+    "CG53465_53469_FULL_ASSEMBLAGE_MOULD_FORENSICS_PASS"
+  ],
+  "search_terms_next": [
+    "CG 53469",
+    "JE 35425",
+    "Enveloppe de phallus",
+    "Tell Ibn es-Salam Mendes 1902",
+    "Vernier plate LXXXVII",
+    "Nesbanebdjedet gold mummy trappings",
+    "conservation radiography X-ray CT Cairo Museum CG 53469"
+  ],
+  "boundary": {
+    "archive_catalogue_conservation_only": true,
+    "onsite_search": false,
+    "object_handling": false,
+    "literal_osiris_relic_identified": false
+  }
+}
