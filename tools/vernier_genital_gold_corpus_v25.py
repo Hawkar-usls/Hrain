@@ -56,19 +56,17 @@ def main():
     for je in JE_TERMS:
         result['je_neighborhood'][je]=clean(first_context(text,je,800))
 
-    # Explicitly preserve the two strongest sex-cover controls if present.
     for num in ['53469','53745']:
         result['explicit_controls'][num]=clean(first_context(text,num,1800))
 
-    # Compact automated observations from exact OCR strings.
     tnorm=re.sub(r'\s+',' ',text)
-    if re.search(r'53745.{0,120}Cache sexe.{0,80}f[ée]minin.{0,80}or',tnorm,re.I):
+    if re.search(r'53745.{0,160}Cache sexe.{0,100}f[ée]minin.{0,100}or',tnorm,re.I):
         result['derived_findings'].append({
           'id':'CG53745_GOLD_FEMALE_GENITAL_COVER',
           'status':'OCR_SUPPORTED',
           'statement':'CG 53745 is indexed as a gold female genital cover/cache-sexe from Saqqara.'
         })
-    if re.search(r'53469.{0,160}Enveloppe.{0,80}phall',tnorm,re.I):
+    if re.search(r'53469.{0,200}Enveloppe.{0,100}phall',tnorm,re.I):
         result['derived_findings'].append({
           'id':'CG53469_GOLD_PHALLUS_SHEATH',
           'status':'OCR_SUPPORTED',
@@ -81,10 +79,6 @@ def main():
     })
 
     (OUT/'VERNIER_GENITAL_GOLD_CORPUS_v2_5.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    # Human-readable grep deck.
-    lines=[]
-    for k,v in result['derived_findings']:
-        pass
     with (OUT/'MENDES_SISTER_OBJECT_CONTEXTS.txt').open('w',encoding='utf-8') as f:
         for n,c in result['mendes_53464_53475'].items():
             f.write(f'===== CG {n} =====\n{c or "NOT FOUND"}\n\n')
