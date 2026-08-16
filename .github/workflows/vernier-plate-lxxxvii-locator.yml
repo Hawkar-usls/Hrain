@@ -1,0 +1,31 @@
+name: Vernier plate LXXXVII locator
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/vernier_plate_lxxxvii_locator.py'
+      - '.github/workflows/vernier-plate-lxxxvii-locator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Locate digital copies containing plate LXXXVII
+        run: python tools/vernier_plate_lxxxvii_locator.py
+      - name: Upload locator artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernier-plate-lxxxvii-locator
+          path: /tmp/vernier-plate-locator/
+          if-no-files-found: error
+          retention-days: 3
