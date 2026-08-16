@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#030508">
+  <title>HRaiN · JANUS Meta Registry</title>
+  <meta name="description" content="Read-only HRaiN graph view of the active JANUS Meta Registry projection.">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#030508;--bg2:#07111b;--cyan:#00ffa3;--blue:#39c6ff;--violet:#d300ff;--gold:#c8a96b;--text:#e7f2f8;--muted:#8da9b8;--line:rgba(122,231,255,.18);--panel:rgba(5,13,20,.92)}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Rajdhani,system-ui,sans-serif}
+    body{background:radial-gradient(circle at 50% 20%,rgba(57,198,255,.09),transparent 34%),linear-gradient(180deg,#030508,#07111b 48%,#020408)}
+    #grid{position:fixed;inset:0;pointer-events:none;opacity:.34;background-image:linear-gradient(rgba(57,198,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(57,198,255,.04) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg,#000,transparent 92%)}
+    #chart{position:fixed;inset:0;z-index:1}
+    .network{position:fixed;left:0;right:0;top:0;z-index:30;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:68px;padding:10px 24px;background:linear-gradient(180deg,rgba(2,7,12,.96),rgba(4,13,20,.84));border-bottom:1px solid rgba(57,198,255,.22);backdrop-filter:blur(16px)}
+    .network a{text-decoration:none;color:#b9cedb;letter-spacing:.08em;font-weight:700}.network-left{justify-self:start}.network-center{justify-self:center;font-family:Orbitron,sans-serif;font-size:clamp(1.45rem,3vw,2rem);color:#f3fbff!important;text-shadow:0 0 24px rgba(57,198,255,.28)}.network-center strong{color:var(--blue);font-size:.74em}.network-right{justify-self:end;font-family:Orbitron,sans-serif}.network-right strong{color:var(--blue)}
+    .mode{position:fixed;top:78px;left:24px;z-index:25;display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid rgba(0,255,163,.2);border-radius:999px;background:rgba(2,10,14,.72);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}.mode b{color:#7cf0ca}.mode span{color:#718b98}
+    .breadcrumbs{position:fixed;top:122px;left:24px;z-index:25;display:flex;gap:6px;align-items:center;max-width:min(70vw,900px);flex-wrap:wrap}.crumb{border:0;background:rgba(4,13,20,.72);color:#8ba9ba;border:1px solid rgba(57,198,255,.14);border-radius:999px;padding:5px 9px;cursor:pointer;font:700 .75rem Rajdhani}.crumb.active{color:#7ae7ff;border-color:rgba(122,231,255,.35)}
+    .stats{position:fixed;right:24px;top:82px;z-index:25;text-align:right;color:#738b99;font-size:.72rem;line-height:1.35}.stats strong{display:block;color:#a8c9d8;font-family:Orbitron;font-size:.72rem}
+    .panel{position:fixed;right:18px;bottom:18px;z-index:35;width:min(430px,calc(100vw - 36px));max-height:58vh;overflow:auto;padding:18px;border:1px solid rgba(57,198,255,.24);border-radius:16px;background:linear-gradient(150deg,rgba(8,22,33,.96),rgba(2,8,13,.96));box-shadow:0 18px 70px rgba(0,0,0,.5),0 0 36px rgba(57,198,255,.06);backdrop-filter:blur(14px);transform:translateY(calc(100% + 28px));opacity:0;transition:.22s ease}.panel.open{transform:translateY(0);opacity:1}.panel-close{float:right;border:0;background:transparent;color:#8198a5;font-size:1.4rem;cursor:pointer}.panel-kicker{color:#7ae7ff;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}.panel h2{margin:.35rem 0 .7rem;font-family:Orbitron;font-size:1.05rem;line-height:1.35}.panel p{color:#a7c1d0;font-size:.88rem;line-height:1.5}.meta{display:grid;gap:6px;margin:.8rem 0}.meta div{padding:7px 8px;border-left:2px solid rgba(200,169,107,.45);background:rgba(255,255,255,.025);font-size:.75rem;overflow-wrap:anywhere}.meta b{color:#d3e6ef}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 11px;border:1px solid rgba(57,198,255,.26);border-radius:8px;background:rgba(7,31,45,.7);color:#8fe5ff;text-decoration:none;font-weight:800;font-size:.78rem;letter-spacing:.04em}.btn.gold{border-color:rgba(200,169,107,.36);color:#ddc995}.boundary{position:fixed;left:24px;bottom:18px;z-index:20;max-width:min(620px,calc(100vw - 48px));color:#66818f;font-size:.7rem;line-height:1.35}.boundary b{color:#9bb5c2}
+    .node circle.core{stroke-width:2;transition:.18s}.node circle.aura{fill:none;stroke-width:1;opacity:.26}.node text.icon{font-size:22px;text-anchor:middle;dominant-baseline:central;pointer-events:none}.node text.label{font-size:12px;font-weight:700;fill:#e2edf3;text-anchor:middle;pointer-events:none;text-shadow:0 2px 5px #000}.node.root circle.core{fill:rgba(211,0,255,.16);stroke:#d300ff;filter:drop-shadow(0 0 11px rgba(211,0,255,.5))}.node.surface circle.core{fill:rgba(57,198,255,.13);stroke:#39c6ff;filter:drop-shadow(0 0 9px rgba(57,198,255,.42))}.node.object circle.core{fill:rgba(0,255,163,.10);stroke:#00ffa3;filter:drop-shadow(0 0 7px rgba(0,255,163,.28))}.node:hover circle.core{stroke:#fff;stroke-width:3}.link{stroke:rgba(122,231,255,.28);stroke-width:1.4}.loading{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#030508;font-family:Orbitron;color:#7ae7ff;letter-spacing:.12em}.loading.hidden{display:none}.error{color:#ff6577}
+    @media(max-width:720px){.network{padding:8px 12px;min-height:62px}.network-left{font-size:.72rem}.network-center{font-size:1.15rem}.network-right{font-size:.72rem}.mode{left:12px;top:70px}.stats{right:12px;top:72px}.breadcrumbs{left:12px;top:112px;max-width:calc(100vw - 24px)}.boundary{left:12px;bottom:10px;max-width:calc(100vw - 24px)}.panel{right:10px;bottom:10px;width:calc(100vw - 20px);max-height:52vh}}
+  </style>
+</head>
+<body>
+  <div id="grid"></div>
+  <header class="network">
+    <a class="network-left" href="https://hawkar-usls.github.io/janus-meta-registry/">JANUS Meta Registry</a>
+    <a class="network-center" href="./">HR<strong>ai</strong>N</a>
+    <a class="network-right" href="https://hawkar-usls.github.io/iNaiHR/">iN<strong>ai</strong>HR</a>
+  </header>
+  <div class="mode"><b>REGISTRY MODE</b><span>READ ONLY</span></div>
+  <div class="stats"><strong id="source-state">JANUS UPLINK</strong><span id="stats-text">loading…</span></div>
+  <div class="breadcrumbs" id="breadcrumbs"></div>
+  <div id="chart"></div>
+  <aside class="panel" id="panel"><button class="panel-close" id="panel-close" aria-label="Close">×</button><span class="panel-kicker" id="panel-kicker">registry object</span><h2 id="panel-title"></h2><p id="panel-summary"></p><div class="meta" id="panel-meta"></div><div class="buttons" id="panel-buttons"></div></aside>
+  <div class="boundary"><b>HRAIN_GRAPH != REGISTRY_AUTHORITY.</b> This view is an automatically generated read-only navigation projection. Source JSON, code, receipts and current-authority objects remain authoritative.</div>
+  <div class="loading" id="loading">CONNECTING TO JANUS META REGISTRY…</div>
+<script>
+(() => {
+  'use strict';
+  const INDEX_URL = 'https://hawkar-usls.github.io/janus-meta-registry/assets/hrain-registry-index.json';
+  const META_HOME = 'https://hawkar-usls.github.io/janus-meta-registry/';
+  let index = null;
+  let nodes = [], links = [], context = [];
+  let width = innerWidth, height = innerHeight;
+
+  const svg = d3.select('#chart').append('svg').attr('width','100%').attr('height','100%');
+  const g = svg.append('g');
+  const linkLayer = g.append('g');
+  const nodeLayer = g.append('g');
+  const zoom = d3.zoom().scaleExtent([.18,3]).on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
+
+  const sim = d3.forceSimulation().force('link', d3.forceLink().id(d=>d.id).distance(d=>d.source.kind==='root'?190:155)).force('charge',d3.forceManyBody().strength(-900)).force('collide',d3.forceCollide().radius(72).strength(1)).force('x',d3.forceX(()=>width/2).strength(.025)).force('y',d3.forceY(()=>height/2).strength(.025)).velocityDecay(.52);
+
+  function currentRoot(){ return context.length ? context[context.length-1] : null; }
+  function childrenOf(id){ return nodes.filter(n => n.parentId === id); }
+  function hasChildren(node){ return childrenOf(node.id).length > 0; }
+  function nodeKind(n){ if(n.id==='registry:janus-meta-registry') return 'root'; if(String(n.id).startsWith('surface:')) return 'surface'; return 'object'; }
+
+  function updateBreadcrumbs(){
+    const box=document.getElementById('breadcrumbs'); box.innerHTML='';
+    const rootButton=document.createElement('button'); rootButton.className='crumb'; rootButton.textContent='JANUS'; rootButton.onclick=()=>{context=[]; updateView();}; box.appendChild(rootButton);
+    context.forEach((id,i)=>{ const n=nodes.find(x=>x.id===id); if(!n)return; const b=document.createElement('button'); b.className='crumb '+(i===context.length-1?'active':''); b.textContent=n.label; b.onclick=()=>{context=context.slice(0,i+1);updateView();}; box.appendChild(b); });
+  }
+
+  function updateView(){
+    const root=currentRoot();
+    let visible;
+    if(!root) visible=nodes.filter(n=>n.parentId==null);
+    else visible=nodes.filter(n=>n.id===root || n.parentId===root);
+    const ids=new Set(visible.map(n=>n.id));
+    const visibleLinks=links.filter(l=>ids.has(l.source.id||l.source)&&ids.has(l.target.id||l.target)).map(l=>({source:l.source.id||l.source,target:l.target.id||l.target}));
+    render(visible,visibleLinks); updateBreadcrumbs();
+  }
+
+  function render(viewNodes,viewLinks){
+    const l=linkLayer.selectAll('line').data(viewLinks,d=>(d.source.id||d.source)+'-'+(d.target.id||d.target)); l.exit().remove(); const allL=l.enter().append('line').attr('class','link').merge(l);
+    const n=nodeLayer.selectAll('g.node').data(viewNodes,d=>d.id); n.exit().remove();
+    const enter=n.enter().append('g').attr('class',d=>'node '+nodeKind(d)).style('cursor','pointer').on('click',(e,d)=>handleNode(d));
+    enter.append('circle').attr('class','aura'); enter.append('circle').attr('class','core'); enter.append('text').attr('class','icon'); enter.append('text').attr('class','label');
+    const allN=enter.merge(n).attr('class',d=>'node '+nodeKind(d));
+    allN.select('circle.core').attr('r',d=>nodeKind(d)==='root'?36:nodeKind(d)==='surface'?29:23);
+    allN.select('circle.aura').attr('r',d=>nodeKind(d)==='root'?62:nodeKind(d)==='surface'?48:36).attr('stroke',d=>nodeKind(d)==='root'?'#d300ff':nodeKind(d)==='surface'?'#39c6ff':'#00ffa3');
+    allN.select('text.icon').text(d=>d.emoji||'◈');
+    allN.select('text.label').text(d=>String(d.label||'').length>38?String(d.label).slice(0,35)+'…':d.label).attr('dy',d=>nodeKind(d)==='root'?58:45);
+    sim.nodes(viewNodes).on('tick',()=>{allL.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);allN.attr('transform',d=>`translate(${d.x},${d.y})`);}); sim.force('link').links(viewLinks); sim.alpha(1).restart();
+    setTimeout(()=>{try{const bounds=g.node().getBBox();const scale=Math.min(1.15,.82/Math.max(bounds.width/width,bounds.height/height));const tx=width/2-scale*(bounds.x+bounds.width/2),ty=height/2-scale*(bounds.y+bounds.height/2);svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(Math.max(.35,scale)));}catch(_){ }},220);
+  }
+
+  function handleNode(node){ if(hasChildren(node)){ context.push(node.id); closePanel(); updateView(); } else openPanel(node); }
+  function closePanel(){document.getElementById('panel').classList.remove('open');}
+  document.getElementById('panel-close').onclick=closePanel;
+
+  function openPanel(node){
+    document.getElementById('panel-kicker').textContent=node.surface||'registry object'; document.getElementById('panel-title').textContent=node.label||node.path||'Object'; document.getElementById('panel-summary').textContent=node.summary||'No compact summary is stored in the graph index. Open the source object for the authoritative record.';
+    const meta=document.getElementById('panel-meta'); meta.innerHTML='';
+    [['Status',node.status],['Gate',node.gate],['Path',node.path],['Modified',node.modifiedAt],['Lineage',node.lineageKey],['SHA-256',node.sourceSha256]].forEach(([k,v])=>{if(!v)return;const d=document.createElement('div');d.innerHTML=`<b>${k}:</b> ${escapeHtml(String(v))}`;meta.appendChild(d);});
+    const buttons=document.getElementById('panel-buttons');buttons.innerHTML='';
+    if(node.sourceUrl){const a=document.createElement('a');a.className='btn';a.href=node.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='OPEN SOURCE ↗';buttons.appendChild(a);} if(node.surfaceUrl){const a=document.createElement('a');a.className='btn gold';a.href=node.surfaceUrl;a.textContent='OPEN SURFACE';buttons.appendChild(a);} const m=document.createElement('a');m.className='btn';m.href=META_HOME;m.textContent='META REGISTRY';buttons.appendChild(m);
+    document.getElementById('panel').classList.add('open');
+  }
+  function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+  async function boot(){
+    try{const res=await fetch(INDEX_URL,{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)throw new Error(`HTTP ${res.status}`);index=await res.json();if(index.schema!=='janus.hrain.registry_graph_index.v1_0')throw new Error('Unexpected registry schema');nodes=(index.nodes||[]).map(n=>({...n,kind:nodeKind(n)}));links=(index.links||[]).map(l=>({...l}));document.getElementById('stats-text').textContent=`${index.objectCount} objects · ${String(index.sourceCommit||'').slice(0,10)}`;document.getElementById('loading').classList.add('hidden');const root=nodes.find(n=>n.id==='registry:janus-meta-registry');if(root){context=[root.id];}updateView();}
+    catch(err){const loading=document.getElementById('loading');loading.classList.add('error');loading.innerHTML=`JANUS UPLINK FAILED · ${escapeHtml(err.message)}<br><a style="color:#7ae7ff" href="${META_HOME}">OPEN META REGISTRY</a>`;}
+  }
+
+  addEventListener('resize',()=>{width=innerWidth;height=innerHeight;sim.force('x',d3.forceX(()=>width/2).strength(.025));sim.force('y',d3.forceY(()=>height/2).strength(.025));sim.alpha(.4).restart();});
+  boot();
+})();
+</script>
+</body>
+</html>
