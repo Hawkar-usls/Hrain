@@ -1,0 +1,101 @@
+{
+  "schema": "hrain.mendes_sister_objects_gold_genital_cover_control.v2_5",
+  "created_at": "2026-08-16",
+  "case": "OSIRIS_MENDES_GENITAL_BUNDLE",
+  "priority": "A1",
+  "parent_gate": "CG53469_BASAL_MASS_AND_MENDES_SISTER_OBJECTS_PASS",
+  "status": "SISTER_SEQUENCE_AUDITED__DUAL_SEX_GOLD_COVER_CONTROL_FOUND__SCROTAL_ID_UNRESOLVED",
+  "primary_object": {
+    "cg": "CG 53469",
+    "je": "JE 35425",
+    "catalogue_name": "Enveloppe de phallus",
+    "material": "gold",
+    "provenance": "Tell Ibn es-Salam (Mendes), February 1902",
+    "length_cm": 12.2,
+    "weight_g": 7,
+    "gold_thickness_mm_approx": 0.1,
+    "plate": "Vernier Plate LXXXVII",
+    "observed_basal_mass": "PRESENT_BUT_BADLY_CRUMPLED",
+    "basal_mass_identity": "UNRESOLVED"
+  },
+  "immediate_mendes_sister_sequence": [
+    {"cg":"CG 53470","je":"JE 35423","type":"gold band","dimensions":"33.8 x 1.8 cm","weight_g":6.5,"attachment":"semicircular end tabs with holes"},
+    {"cg":"CG 53471/53471bis","je":"JE 35423","type":"two gold bands","dimensions":"24.8 x 1.2 cm each","weight_g_reported":2.3,"attachment":"square end tabs"},
+    {"cg":"CG 53472/53472bis","je":"JE 35423","type":"two gold bands","dimensions":"22.6 x 1.1 cm","weight_g_reported":2.3},
+    {"cg":"CG 53473","je":"JE 35423","type":"gold band","dimensions":"14.3 x 1.1 cm","weight_g":1.7},
+    {"cg":"CG 53474/53474bis","je":"JE 35426","type":"cut gold sheets: kneeling Isis and Nephthys","dimensions":"10.4 x 5.3 cm","weight_g_ensemble":4,"manufacture":"extremely thin gold pushed into a recess probably plaster; probably glued"},
+    {"cg":"CG 53475/53475bis","je":"JE 35427","type":"cut gold sheets: monkey and falcon, symbolic sheath-like figures","dimensions":"11.5 x 2.8 cm","weight_g_ensemble":2.4,"attachment":"small holes top and bottom for nailing"}
+  ],
+  "sister_sequence_result": {
+    "separately_named_scrotal_or_testicular_cover_in_CG53470_53475": false,
+    "interpretation": "The immediately adjacent catalogue sequence is ordinary funerary gold bands and symbolic/deity sheets, so a separately catalogued scrotal/testicular element is not visible in this narrow neighborhood.",
+    "remaining_branches": [
+      "basal mass is part of CG 53469 itself",
+      "companion element received a non-adjacent CG/JE number",
+      "companion element was lost in the documented 1902 provenance fracture",
+      "CG 53469 was a phallus-only cover without a scrotal component"
+    ]
+  },
+  "gold_female_genital_cover_control": {
+    "cg": "CG 53745",
+    "journal_entree": "JE 39984 (OCR renders 3998/1; catalogue context must be checked against JE card)",
+    "catalogue_name": "Plaque (cache-sexe féminin?)",
+    "material": "gold",
+    "provenance": "Saqqara",
+    "period": "Saite",
+    "height_cm": 7.0,
+    "width_cm": 8.2,
+    "weight_g": 3,
+    "description": "Very thin gold sheet forming a slightly curvilinear triangle with point downward; a central groove divides the triangle vertically; small dots appear to evoke pubic hair; crumpled edges; no fixation holes observed.",
+    "importance": "Positive control that Vernier's Cairo gold corpus includes a separately catalogued anatomically gendered genital cover, not merely generic amulets. It does not identify any Osiris object and does not imply hidden female identity."
+  },
+  "male_genital_bundle_positive_controls": [
+    {
+      "id": "KHM_INV_10077",
+      "type": "Osiris statuette",
+      "observation": "Official KHM description says penis together with testicles was separately formed and inserted into an oval recess.",
+      "source": "https://www.khm.at/kunstwerke/osirismumie-mit-erigiertem-phallus-316238"
+    },
+    {
+      "id": "MORIMOTO_1989_QURNA",
+      "type": "mummy genital prosthesis",
+      "observation": "A gilded resin model of penis and scrotum was laid below intact true external genitals in one adult mummy; elongated penises could also be supported/covered by deformed scrotum.",
+      "source": "https://www.jstage.jst.go.jp/article/ase1911/97/2/97_2_169/_article/-char/en"
+    }
+  ],
+  "basal_mass_hypotheses": [
+    {"id":"H1_SCROTAL_COMPONENT","status":"OPEN","prediction":"multi-view/conservation record shows deliberate bilateral or sac-like genital morphology continuous with or attached to the sheath"},
+    {"id":"H2_COLLAPSED_SHEATH_BASE","status":"OPEN","prediction":"reverse/side view shows only folded or crushed continuation of the same 0.1 mm gold sheet without separate genital shaping"},
+    {"id":"H3_SUPPORT_OR_REPAIR_RESIDUE","status":"OPEN","prediction":"conservation record or imaging identifies modern/ancient support, packing, adhesive or unrelated material"},
+    {"id":"H4_SEPARATE_COMPANION_LOST","status":"OPEN","prediction":"1902 JE/object records or excavation notes identify another genital piece no longer physically attached or presently missing"}
+  ],
+  "methodological_advance": "The search for 'eggs' should not require the catalogue words scrotum/testicles. Compare morphology and attachment technology against known penis+testicle/scrotum modules, and search neutral gold-sheet labels and JE provenance.",
+  "next_gate": "CG53469_BASAL_MASS_VS_GENITAL_BUNDLE_CONTROLS_PASS",
+  "next_tests": [
+    "obtain front/back/side/base modern images or conservation drawings of CG 53469",
+    "determine whether basal mass is continuous sheet, separate attached element, support or residue",
+    "compare CG 53469 attachment geometry with KHM INV 10077 penis+testicles module",
+    "compare gold-cover construction principles CG 53469 vs CG 53745",
+    "search all Vernier/JE terms including testicule, scrotum, bourse, parties genitales, cache-sexe and neutral plaque/feuille/revetement/enveloppe",
+    "reconstruct non-adjacent Mendes 1902 JE 354xx objects and documented missing-gold provenance"
+  ],
+  "execution_receipts": {
+    "exact_sister_extractor_commit": "ccb3bb6f44d70bfd86a976b1d161bdbb4cba03d4",
+    "exact_sister_workflow_commit": "1b24a99dc0b8083190c370b18a1fb7311962f4d4",
+    "exact_sister_run": 31945215830,
+    "exact_sister_artifact": 9263086520,
+    "exact_sister_artifact_digest": "sha256:e9f41b47efc8dc621785fad3aebf9c640c90c3480cebff49721b82704bdf2e63",
+    "paced_retry_commit": "1b712f32d837072bc6b66fbda2c3b544646e3b6a",
+    "paced_retry_run": 31945284901,
+    "paced_retry_artifact": 9263107764,
+    "paced_retry_digest": "sha256:3b449be5171fddb3c40c7ae9173c56979c3d33222c4ece5f8819ecc02e74470f"
+  },
+  "claim_ceiling": {
+    "cg53469_basal_mass_is_testicles": false,
+    "separate_mendes_scrotal_cover_found": false,
+    "gold_genital_cover_technology_supported": true,
+    "penis_plus_testicles_or_scrotum_modular_prostheses_supported_by_controls": true,
+    "literal_osiris_relic_identified": false
+  },
+  "safety": "ARCHIVE_CATALOGUE_CONSERVATION_AND_NONDESTRUCTIVE_IMAGING_ONLY"
+}
