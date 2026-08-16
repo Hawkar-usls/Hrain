@@ -268,7 +268,7 @@
             <button id="btn-synth" class="btn" onclick="synthNode(this)">SYNTH</button>
             <button id="btn-save" class="btn" onclick="exportData(this)">SAVE</button>
             <button id="btn-load" class="btn" onclick="document.getElementById('import-file').click()">LOAD</button>
-            <button id="btn-wipe" class="btn" onclick="wipeData(this)">WIPE</button>
+            <button id="btn-wipe" class="btn" onclick="wipeData(this)" title="Clears only this browser workspace. JANUS Registry is untouched.">WIPE LOCAL DESK</button>
         </div>
         
         <!-- Hidden Import Input -->
@@ -1029,7 +1029,7 @@
 
         if(btn.dataset.confirm === "true") {
             // Actual Wipe
-            btn.innerText = "BYE";
+            btn.innerText = "LOCAL CLEARED";
             localStorage.removeItem('hrain_v10_4_restore'); 
             location.reload();
         } else {
@@ -1043,7 +1043,7 @@
             if(wipeTimer) clearTimeout(wipeTimer);
             wipeTimer = setTimeout(() => {
                 btn.dataset.confirm = "false";
-                btn.innerText = "WIPE";
+                btn.innerText = "WIPE LOCAL DESK";
                 btn.style.borderColor = ""; 
                 btn.style.color = "";
                 btn.style.boxShadow = "";
