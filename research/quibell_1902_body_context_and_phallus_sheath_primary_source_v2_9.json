@@ -1,0 +1,152 @@
+{
+  "schema": "hrain.quibell_1902_body_context_phallus_sheath_primary_source.v2_9",
+  "created_at": "2026-08-16",
+  "case": "OSIRIS_MENDES_GENITAL_BUNDLE",
+  "status": "PRIMARY_EXCAVATION_REPORT_ESTABLISHES_GOLD_ON_BODY_AND_PHALLUS_COVERING",
+  "extends": [
+    "research/mendes_sister_objects_and_gold_genital_cover_control_v2_5.json",
+    "research/real_organ_inside_metal_sheath_control_v2_6.json",
+    "research/cg53469_cairo_custody_imaging_outreach_gate_v2_8.json"
+  ],
+  "primary_source": {
+    "author": "J. E. Quibell",
+    "title": "Note on a Tomb Found at Tell er Roba",
+    "journal": "Annales du Service des Antiquites de l'Egypte",
+    "volume": 3,
+    "year": 1902,
+    "pages": "245-249",
+    "open_text": "https://archive.org/download/annalesduservice03egypuoft/annalesduservice03egypuoft_djvu.txt",
+    "open_library_record": "https://openlibrary.org/books/OL13518571M/Annales_du_Service_des_Antiquites_de_l_Egypte",
+    "source_class": "CONTEMPORARY_EXCAVATION_REPORT"
+  },
+  "primary_source_observations": {
+    "pre_inspector_provenance_fracture": {
+      "established": true,
+      "observation": "Local workmen had removed more than 350 faience ushabtis and probably other unknown objects before inspector Aly Effendi Habib intervened and recovered the ushabtis.",
+      "implication": "A missing or privately removed companion object remains historically possible, but no particular missing genital element is established."
+    },
+    "burial_architecture": {
+      "established": true,
+      "observation": "The protected burial was beneath a limestone slab; the ushabtis and amulets were on top of the slab, while the gold was on the body below."
+    },
+    "gold_body_trappings": {
+      "established": true,
+      "examples": [
+        "gold foil sheet from the front of the body",
+        "gold foil necklace representation",
+        "gold sandals",
+        "gold strips representing girdle/necklace/bracelets/anklets",
+        "stamped gold-foil deities and symbols"
+      ]
+    },
+    "phallus_sheath_function": {
+      "established": true,
+      "observation": "Quibell explicitly reports that gold foil was used to make rough sheaths covering the fingers, toes and phallus.",
+      "importance": "This is direct primary excavation evidence that the phallus sheath belonged to the mummy's body-covering funerary gold technology rather than being identified in the excavation report as a detached Osirian reliquary."
+    },
+    "additional_loss_signal": {
+      "established": true,
+      "observation": "Quibell judged that some small gold necklace figures were probably taken by the workmen.",
+      "implication": "The assemblage was not recovered with perfect completeness."
+    }
+  },
+  "independent_modern_corroboration": {
+    "institution": "The Metropolitan Museum of Art",
+    "object": "2021.41.126 — Shabti inscribed for Nesbanebdjedet",
+    "source": "https://www.metmuseum.org/art/collection/search/329905",
+    "observation": "The Met states that beneath the slab was a mummy adorned with gold-leaf trappings and explicitly points to Cairo CG 53465-53469.",
+    "role": "INDEPENDENT_MUSEUM_CORROBORATION_OF_CG53465_53469_AS_MUMMY_TRAPPINGS"
+  },
+  "epistemic_update_for_CG53469": {
+    "cg53469_is_body_trapping_context": "STRONGLY_SUPPORTED_BY_PRIMARY_SOURCE_PLUS_MET_CORROBORATION",
+    "empty_sheath_today": "UNKNOWN",
+    "original_tissue_under_sheath": "NOT_DIRECTLY_REPORTED",
+    "original_organic_core_possible": true,
+    "separate_literal_osiris_relic_prior": "LOWERED_RELATIVE_TO_DECEASED_BODY_COVERING_INTERPRETATION",
+    "reason": "The primary excavation report places the gold on the deceased's body and describes the phallus piece as one of a suite of rough gold-foil sheaths covering body parts. Therefore, if ancient organic tissue/resin is found within CG 53469, the first parsimonious interpretation must be tissue or embalming/funerary material associated with the deceased Nesbanebdjedet, unless independent evidence establishes a different identity/function.",
+    "literal_osiris_identity_if_organic_core_found": false
+  },
+  "why_CT_remains_high_value": {
+    "status": "STRENGTHENED_NOT_WEAKENED",
+    "question": "What physically remains inside or attached to the detached gold sheath today?",
+    "decision_classes": [
+      "EMPTY_OR_COLLAPSED_GOLD_SHEET",
+      "HOMOGENEOUS_SUPPORT_OR_REPAIR_MATERIAL",
+      "DISCRETE_DESICCATED_ORGANIC_CORE",
+      "RESIN_OR_EMBALMING_MATERIAL_CORE",
+      "MINERAL_OR_OTHER_ANCIENT_CORE",
+      "PAIRED_OR_SAC_LIKE_BASAL_COMPONENT",
+      "MIXED_OR_INCONCLUSIVE_CONTENT"
+    ],
+    "identity_rule": "A positive organic-density result establishes material content only; it does not establish identity as Osiris or any other named person/deity."
+  },
+  "comparative_corpus_expansion": [
+    {
+      "id": "PADOUNEIT_SAQQARA_GOLD_PHALLUS_34716",
+      "source_class": "PRIMARY_EXCAVATION_REPORT_REPRODUCTION",
+      "source": "https://fr.scribd.com/document/494491980/Annales-du-Service-des-antiquites-Egypte-Service-bpt6k5724454d",
+      "observation": "A small gold phallus was reported between the legs of Padouneit's mummy, while other gold objects were distributed on the body.",
+      "caution": "This is a small gold phallus/simulacrum, not demonstrated to be a hollow sheath like CG 53469."
+    },
+    {
+      "id": "DIGITAL_GIZA_EMC_JE_56967",
+      "institution": "Egyptian Museum Cairo / Harvard Digital Giza index",
+      "catalogue_label": "Gold foil amulet of phallus",
+      "source": "https://giza.fas.harvard.edu/institutions/2138/full/",
+      "role": "GOLD_FOIL_PHALLUS_CORPUS_LEAD"
+    },
+    {
+      "id": "DIGITAL_GIZA_EMC_JE_56935",
+      "institution": "Egyptian Museum Cairo / Harvard Digital Giza index",
+      "catalogue_label": "Gold sheet amulet of penis",
+      "source": "https://giza.fas.harvard.edu/institutions/2138/full/",
+      "role": "GOLD_SHEET_PENIS_CORPUS_LEAD"
+    },
+    {
+      "id": "DIGITAL_GIZA_EMC_JE_54104_TO_54127_SERIES",
+      "institution": "Egyptian Museum Cairo / Harvard Digital Giza index",
+      "catalogue_label": "Gold foil finger or toe sheath",
+      "source": "https://giza.fas.harvard.edu/institutions/2138/full/",
+      "role": "BODY_PART_SHEATH_TECHNOLOGY_CORPUS"
+    },
+    {
+      "id": "CAIRO_GOLDEN_BOY_CT_PRECEDENT",
+      "publication": "Saleem et al., Frontiers in Medicine 2023, doi:10.3389/fmed.2022.1028377",
+      "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9902354/",
+      "observation": "A mummy stored in the Egyptian Museum Cairo basement was moved to the museum garden and scanned non-destructively with a truck-mounted CT scanner. CT distinguished soft tissue, resin, linen packs, gilded materials and preserved male genitalia; the penis was seen within a linen sheath.",
+      "role": "OPERATIONAL_PRECEDENT_FOR_ONSITE_NONDESTRUCTIVE_CT_AT_THE_EGYPTIAN_MUSEUM",
+      "caution": "This does not establish that CG 53469 has been scanned or that the museum will approve a scan."
+    }
+  ],
+  "open_source_negative_result": {
+    "searched_for": [
+      "modern radiography/CT/micro-CT of CG 53469 or JE 35425",
+      "modern XRF/microscopy of CG 53469",
+      "current measured mass of CG 53469",
+      "current multi-view photographs of CG 53469",
+      "published conservation treatment record for CG 53469",
+      "public current storage location or transfer record for CG 53469"
+    ],
+    "result": "NO_INDEXED_OPEN_WEB_RECORD_FOUND_YET",
+    "caution": "Absence from indexed web search does not establish that such records or imaging do not exist in museum files."
+  },
+  "revised_search_priority": [
+    "CG53469_CURRENT_CUSTODY_PLUS_IMAGING_RESPONSE_PASS",
+    "CG53469_CT_OR_RADIOGRAPHY_INTERNAL_CLASSIFICATION",
+    "CG53469_CURRENT_MASS_VS_VERNIER_7G",
+    "CG53469_REVERSE_SIDE_BASE_SEAM_TOPOLOGY",
+    "JE35425_CONSERVATION_AND_TREATMENT_HISTORY",
+    "MENDES_1902_NONADJACENT_OR_LOST_GOLD_COMPANION_RECORDS",
+    "DIGITAL_GIZA_JE56967_JE56935_PROVENANCE_AND_DIMENSIONS"
+  ],
+  "claim_ceiling": {
+    "cg53469_originally_functioned_as_body_part_gold_sheath": true,
+    "gold_was_on_mummy_body_below_slab": true,
+    "phallus_was_covered_by_gold_foil_sheath_in_quibell_report": true,
+    "cg53469_contains_organic_core_today": false,
+    "cg53469_basal_mass_is_scrotum_or_testicles": false,
+    "cg53469_contains_literal_osiris_relic": false,
+    "current_custody_verified": false
+  },
+  "safety": "ARCHIVE_CATALOGUE_CONSERVATION_AND_NONDESTRUCTIVE_IMAGING_ONLY"
+}
