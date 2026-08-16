@@ -1,0 +1,86 @@
+{
+  "schema": "hrain.mendes_cg_concordance.v1",
+  "case_id": "OSIRIS-MENDES-CG53465-53469-CONCORDANCE-001",
+  "created_at": "2026-08-16",
+  "priority": "A1",
+  "extends": "research/mendes_1902_gold_provenance_fracture.json",
+  "status": "PUBLIC_CONCORDANCE_PARTIAL_BLOCK",
+  "purpose": "Resolve Cairo CG 53465-53469 against the 1902 Nesbanebdjedet burial at Mendes, identify the documented gold phallus sheath among the surviving museum records if possible, and tighten the Osirian contextual link without promoting a human funerary object to a divine relic.",
+  "direct_context_upgrade": {
+    "person": "Nesbanebdjed / Nesbanebdjedet, born to Shentyt",
+    "burial": "1902 Egyptian Antiquities Service excavation, Tell el-Roba / Mendes",
+    "independent_museum_inscription_witnesses": [
+      {
+        "institution": "Bowdoin College Museum of Art",
+        "object": "1905.25.2",
+        "fact": "The shabti inscription identifies Nesbanebdjed as Prophet of Osiris in Anpet, overseer of wab-priests of Sekhmet in Mendes, and Prophet of the Ram Lord of Mendes, born to Shentyt.",
+        "url": "https://bcma.bowdoin.edu/antiquity/objects/1905-25-2/"
+      },
+      {
+        "institution": "National Gallery of Victoria",
+        "object": "D46-1971",
+        "fact": "The inscription independently gives prophet of Osiris in Anpet (Thmuis), Mendes/Sekhmet office, prophet of Banebdjed, Nesbanebdjed born to Shentyt.",
+        "url": "https://www.ngv.vic.gov.au/explore/collection/work/1310/"
+      }
+    ],
+    "classification_before": "MENDES_GOLD_PHALLUS_HUMAN_FUNERARY_CONTROL",
+    "classification_after": "OSIRIAN_ASSOCIATED_MENDES_GOLD_PHALLUS_HUMAN_FUNERARY_CONTROL",
+    "interpretation": "The owner of the exact 1902 assemblage containing the documented gold phallus sheath held an explicit Osiris priestly title in addition to Mendes/Banebdjedet offices. This strengthens context, not identity.",
+    "hard_caveat": "A priestly title of Osiris does not transform the deceased priest's personal gold phallus sheath into a relic of Osiris."
+  },
+  "met_group_binding": {
+    "source": "https://www.metmuseum.org/art/collection/search/329905",
+    "fact": "The Met records the 1902 Mendes burial with more than 360 shabtis, fragments and amulets above the chamber, and a mummy below adorned with gold-leaf trappings, explicitly referring to Cairo CG 53465-53469.",
+    "group": ["CG 53465", "CG 53466", "CG 53467", "CG 53468", "CG 53469"]
+  },
+  "vernier_catalogue": {
+    "author": "Émile Vernier",
+    "title": "Catalogue général des antiquités égyptiennes du Musée du Caire: Bijoux et orfèvreries",
+    "fascicle": 4,
+    "year": 1927,
+    "cg_range": "53172-53855",
+    "gallica_ark": "bpt6k5774000v",
+    "gallica_url": "https://gallica.bnf.fr/ark:/12148/bpt6k5774000v",
+    "ocr_capability": "BnF documents Gallica ContentSearch, texteBrut and ALTO OCR services for ARK documents.",
+    "current_access_result": "Exact public OCR hits for CG 53465-53469 were not exposed by the present indexed search/tool route; no mapping is guessed."
+  },
+  "cg_records": [
+    {"cg":"53465","public_mapping_status":"UNRESOLVED_IN_PUBLIC_INDEX","target_fields":["French title/description","JE cross-reference","material","dimensions","provenance","Quibell concordance","current museum status","image","conservation","radiography/CT"]},
+    {"cg":"53466","public_mapping_status":"UNRESOLVED_IN_PUBLIC_INDEX","target_fields":["French title/description","JE cross-reference","material","dimensions","provenance","Quibell concordance","current museum status","image","conservation","radiography/CT"]},
+    {"cg":"53467","public_mapping_status":"UNRESOLVED_IN_PUBLIC_INDEX","target_fields":["French title/description","JE cross-reference","material","dimensions","provenance","Quibell concordance","current museum status","image","conservation","radiography/CT"]},
+    {"cg":"53468","public_mapping_status":"UNRESOLVED_IN_PUBLIC_INDEX","target_fields":["French title/description","JE cross-reference","material","dimensions","provenance","Quibell concordance","current museum status","image","conservation","radiography/CT"]},
+    {"cg":"53469","public_mapping_status":"UNRESOLVED_IN_PUBLIC_INDEX","target_fields":["French title/description","JE cross-reference","material","dimensions","provenance","Quibell concordance","current museum status","image","conservation","radiography/CT"]}
+  ],
+  "identity_control": {
+    "target_person_key": "NESBANEBDJEDET_BORN_SHENTYT_DYNASTY30_MENDES_1902",
+    "rule": "Do not merge same-name Nesbanebdjed individuals unless mother name, titles, chronology and excavation provenance match."
+  },
+  "institutional_resolution_package": {
+    "target": "Egyptian Museum Cairo object-card / conservation archive",
+    "request_scope": [
+      "catalogue/object-card descriptions for CG 53465-53469",
+      "Journal d'Entrée cross-references",
+      "historic or current photographs",
+      "present display/storage status if releasable",
+      "conservation treatment records",
+      "X-radiography, CT or other non-destructive imaging references if any",
+      "cross-reference to Quibell 1902 Tell er-Roba burial"
+    ],
+    "status": "REQUEST_PACKAGE_READY_NOT_SENT"
+  },
+  "next_gate": {
+    "id": "CG53465_53469_OBJECT_CARD_OR_OCR_EXTRACTION_PASS",
+    "success_condition": "At least one CG number is securely mapped to a Quibell-described gold object, ideally identifying the gold phallus sheath and its current museum identity.",
+    "fallback": "If public OCR remains blocked, resolve through published catalogue page images or authorized museum correspondence."
+  },
+  "claim_ceiling": {
+    "banana_found": false,
+    "literal_osiris_relic_identified": false,
+    "gold_phallus_sheath_documented": true,
+    "gold_phallus_sheath_exact_cg_number_known": false,
+    "burial_owner_explicit_osiris_priestly_title": true,
+    "osirian_context_strengthened": true,
+    "human_funerary_control_remains_human": true,
+    "onsite_search_recommended": false
+  }
+}
