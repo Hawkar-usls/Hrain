@@ -1,0 +1,144 @@
+{
+  "schema": "hrain.osiris_phallus_template_and_female_control_pass.v1",
+  "case_id": "OSIRIS-PHALLUS-TEMPLATE-FEMALE-CONTROL-001",
+  "created_at": "2026-08-16",
+  "purpose": "Test two new branches without collapsing speculation into evidence: (A) whether repeated Egyptian gold phallic sheaths/amulets could share a workshop template or mandrel, and (B) whether a female-genital/fertility object branch changes the Osiris/Seth search graph.",
+  "core_rules": [
+    "SAME_SIZE != SAME_MOLD",
+    "SAME_MOLD != CAST_FROM_OSIRIS",
+    "RITUAL_REPLICA != ANATOMICAL_ORIGINAL",
+    "MALE_FEMALE_ROLE_COMPLEXITY != SECRET_FEMALE_ANATOMY",
+    "SOURCE_ROLE != MODERN_GENDER_IDENTITY"
+  ],
+  "branch_A_template_test": {
+    "hypothesis": "Some gold phallic funerary objects may have been produced from reusable workshop forms, mandrels or templates.",
+    "what_would_support_shared_tooling": [
+      "same 3D geometry after scale-normalization and in absolute dimensions",
+      "matching seam/fold topology",
+      "matching edge finishing and foil thickness",
+      "repeated tool or die marks in homologous positions",
+      "matching construction sequence visible by microscopy or radiography",
+      "same workshop/provenance horizon"
+    ],
+    "what_would_not_be_enough": [
+      "length alone",
+      "gold alone",
+      "phallic shape alone",
+      "same cemetery or nome alone"
+    ],
+    "critical_inference_limit": "Even a proven common mandrel would estimate a workshop standard, not the anatomical size of Osiris. To infer a divine original, an independent text/object would have to state that the form was copied directly from the relic.",
+    "comparison_corpus": [
+      {
+        "id": "MENDES_1902_NESBANEB-DJEDET_GOLD_PHALLUS_SHEATH",
+        "class": "GOLD_FOIL_FUNERARY_SHEATH",
+        "state": "DOCUMENTED_PRIMARY_SOURCE_DIMENSIONS_PENDING",
+        "context": "Mendes 1902 burial of Nesbanebdjedet; human funerary equipment; owner independently attested as Prophet of Osiris in Anpet."
+      },
+      {
+        "id": "EMC_JE_56935",
+        "class": "GOLD_SHEET_PENIS_AMULET",
+        "state": "CATALOG_OBJECT_CONFIRMED_DIMENSIONS_PENDING",
+        "source": "Digital Giza / Egyptian Museum Cairo"
+      },
+      {
+        "id": "EMC_JE_56967",
+        "class": "GOLD_FOIL_PHALLUS_AMULET",
+        "state": "CATALOG_OBJECT_CONFIRMED_DIMENSIONS_PENDING",
+        "source": "Digital Giza / Egyptian Museum Cairo"
+      },
+      {
+        "id": "MET_23.10.23",
+        "class": "GOLD_SHEET_PHALLUS_AMULET",
+        "dimensions_cm": [1.1, 0.9],
+        "state": "DIMENSIONED_CONTROL",
+        "context": "Late Period, Saqqara/Memphite Region"
+      },
+      {
+        "id": "QURNA_GILDED_RESIN_PENIS_SCROTUM_MODEL",
+        "class": "GILDED_RESIN_PROSTHETIC_MODEL",
+        "state": "PUBLISHED_CONTROL",
+        "context": "Morimoto 1989 reports a gilded resin penis-and-scrotum model placed below intact male genitalia in an Egyptian mummy."
+      }
+    ],
+    "highest_priority_measurement_gate": "MENDES_PHALLIC_OBJECT_METROLOGY_PASS"
+  },
+  "branch_B_female_genital_control": {
+    "hypothesis": "Search bias toward phallic objects may miss female-genital or fertility-symbol objects that occupy equivalent ritual/protective roles.",
+    "supported_object_classes": [
+      "COWRIE_OR_COWROID_WITH_VULVA_ASSOCIATION",
+      "PUBIC_TRIANGLE_FERTILITY_FIGURINE",
+      "PADDLE_DOLL_WITH_EXPLICIT_FEMALE_GENITAL_MARKING",
+      "NUDE_FEMALE_FERTILITY_FIGURINE",
+      "MOLD_MADE_SQUATTING_PREGNANT_FEMALE_AMULET",
+      "GOLD_OR_OTHER_BODY_PART_COVER_USED_ON_FEMALE_MUMMIES"
+    ],
+    "search_terms": [
+      "vulva",
+      "female genitalia",
+      "pubic triangle",
+      "cowrie",
+      "fertility figurine",
+      "female body-part cover",
+      "gold genital covering",
+      "Hathor fertility",
+      "Isis fertility",
+      "Mendes female ritual object",
+      "Banebdjedet female fertility object"
+    ],
+    "source_bound_controls": [
+      "The Met states Egyptian cowries were valued partly because of resemblance to the female vulva and fertility association.",
+      "UCL and Brooklyn document Egyptian female fertility figures with explicit pubic triangles/genital emphasis.",
+      "British Museum documents mold-made Ptolemaic naked pregnant female fertility amulets.",
+      "ROM notes gold protective body covers were used for mummies of both men and women in Ptolemaic/Roman Egypt."
+    ],
+    "search_consequence": "Mirror the Mendes/Osiris catalog pass with female-genital/fertility classes, especially small gold/shell/amuletic objects and body-covering components from the same archaeological contexts."
+  },
+  "osiris_seth_sex_gender_test": {
+    "current_source_state": "SECRET_FEMALE_OSIRIS_OR_SETH_NOT_SUPPORTED",
+    "evidence": [
+      "UCL creation synthesis presents Osiris and Seth as sons/male gods and Isis/Nephthys as goddesses.",
+      "Book of the Dead 42 explicitly identifies the phallus with Osiris and the back with Seth.",
+      "Egyptian myth does permit sexually complex role reversals: Horus/Seth narratives include semen transfer and Seth receiving Horus's semen, but this does not establish female anatomy or female identity.",
+      "Female rulership in historical Egypt demonstrates political gender complexity, not that Osiris or Seth were secretly women."
+    ],
+    "important_material_control": {
+      "id": "KHM_INV_10077",
+      "description": "Ptolemaic Osiris statuette in Vienna has penis and testicles formed separately and inserted into an oval recess; the figure had been linen-wrapped and contained 12 amulets within the mummy wrapping.",
+      "interpretation": "A detachable/artificial Osirian phallus is materially real at the level of ritual statuary. This supports testing modular phallus construction and attachment failure as an object-history question, but does not show that a detached ceremonial phallus generated the ancient myth."
+    }
+  },
+  "new_gates": [
+    {
+      "id": "MENDES_PHALLIC_OBJECT_METROLOGY_PASS",
+      "goal": "Collect exact dimensions, foil thickness, seam/fold geometry, tool marks and manufacturing technique for Mendes 1902 gold phallus sheath plus JE 56935, JE 56967 and other secure Egyptian comparanda; compare only like-for-like construction classes."
+    },
+    {
+      "id": "MENDES_FEMALE_GENITAL_MIRROR_PASS",
+      "goal": "Repeat the Mendes provenance sweep for vulva/cowrie/pubis/fertility/female-body-cover objects, preserving their exact archaeological context and avoiding modern projection."
+    },
+    {
+      "id": "OSIRIS_MODULAR_PHALLUS_ATTACHMENT_PASS",
+      "goal": "Catalogue Osiris figures with separately made/inserted phalli, attachment sockets, repairs or missing genital inserts; determine whether modular construction is widespread and whether any examples preserve workshop-standard dimensions."
+    }
+  ],
+  "sources": [
+    "https://www.jstage.jst.go.jp/article/ase1911/97/2/97_2_169/_article",
+    "https://www.khm.at/en/artworks/osirismumie-mit-erigiertem-phallus-316238-1",
+    "https://giza.fas.harvard.edu/institutions/2138/full/",
+    "https://www.metmuseum.org/art/collection/search/561527",
+    "https://www.metmuseum.org/art/collection/search/570235",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/gender/art.html",
+    "https://www.brooklynmuseum.org/objects/3145",
+    "https://www.britishmuseum.org/collection/object/X__2109",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd42.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/gender/literacy.html"
+  ],
+  "claim_ceiling": {
+    "osiris_anatomical_size_inferred": false,
+    "shared_mold_proven": false,
+    "osiris_or_seth_secretly_female": false,
+    "strap_on_cult_hypothesis_supported": false,
+    "female_genital_search_branch_admitted": true,
+    "modular_osiris_phallus_material_control_confirmed": true
+  }
+}
