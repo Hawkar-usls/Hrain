@@ -1,0 +1,144 @@
+{
+  "schema": "hrain.osiris_false_tomb_burial_claim_sweep.v1",
+  "case_id": "OSIRIS-FALSE-TOMB-SWEEP-001",
+  "created_at": "2026-08-16",
+  "purpose": "Audit every named Osiris burial/tomb claim currently identified in the classical source layer, separate whole-body tomb claims from relic-locality claims, and convert intentional multiplicity of tombs into a provenance-search graph.",
+  "observation_marker": {
+    "user_noted_time": "12:12",
+    "evidentiary_weight": "NONE",
+    "note": "Retained only as a narrative timestamp/symmetry marker; it is not used to score evidence."
+  },
+  "core_hypothesis": {
+    "statement": "Plutarch and Diodorus preserve traditions in which Isis intentionally multiplies burial claims/effigies so that Typhon/Seth cannot identify the true tomb. This can create an intentionally forked provenance graph even without any physical violation of causality.",
+    "model": "ONE_ORIGINAL -> MULTIPLE_AUTHENTICITY_CLAIMS -> LATER_SOURCE_CONFLICT",
+    "claim_ceiling": "Intentional information obfuscation in the literary tradition does not prove that any modern archaeological site contains a literal divine body part."
+  },
+  "named_whole_body_or_tomb_claims": [
+    {
+      "rank": 1,
+      "site": "PHILAE_BIGEH_ABATON",
+      "ancient_claim": "Plutarch describes a sacred island by Philae with an Osiris tomb; Diodorus reports a tradition placing the bodies of Osiris and Isis on the sacred island near Philae.",
+      "modern_resolution": "KNOWN_SITE",
+      "modern_location": "Bigeh Island / Abaton, near Philae, Aswan",
+      "archaeological_state": "Osiris temple/Abaton is archaeologically identifiable; published conservation research notes the site is partially submerged and has been studied by XRD/XRF/Raman and microscopy.",
+      "phallus_specific": false,
+      "audit_priority": "VERY_HIGH",
+      "next_action": "Audit excavation, conservation and object-removal records from Bigeh/Abaton for sealed reliquary, shrine, cavity, deposit and body-part-labelled contexts."
+    },
+    {
+      "rank": 2,
+      "site": "ABYDOS",
+      "ancient_claim": "Plutarch says elite Egyptians sought burial at Abydos to share ground with Osiris; later Egyptian tradition treated the tomb of king Djer as one of the tombs of Osiris.",
+      "modern_resolution": "KNOWN_SITE",
+      "modern_location": "Umm el-Qaab / Abydos, Sohag Governorate",
+      "archaeological_state": "Major excavated cult/funerary landscape with Djer tomb and later Osirian reinterpretation.",
+      "phallus_specific": false,
+      "audit_priority": "VERY_HIGH",
+      "next_action": "Separate Djer-tomb, Osireion, temple precinct and later ritual deposit inventories; search hidden/sealed/nested objects and conservation imaging."
+    },
+    {
+      "rank": 3,
+      "site": "BUSIRIS_DJEDU",
+      "ancient_claim": "Eudoxus, quoted by Plutarch, says Osiris's body lies at Busiris; Busiris/Djedu was a major Osiris cult center.",
+      "modern_resolution": "PROBABLE_KNOWN_SITE",
+      "modern_location": "Abu Sir Bana / Djedu, Nile Delta",
+      "archaeological_state": "Cult center historically identified, but the specific alleged divine tomb is not archaeologically verified.",
+      "phallus_specific": false,
+      "audit_priority": "HIGH",
+      "next_action": "Resolve excavation corpus and museum distributions from Djedu/Abu Sir Bana; prioritize Osiris/Djed/Andjety objects with sealed or internal volume."
+    },
+    {
+      "rank": 4,
+      "site": "MEMPHIS",
+      "ancient_claim": "Plutarch says Osiris's body also lies in Memphis; Diodorus preserves Memphis as one side of an alternative burial tradition contrasted with Philae.",
+      "modern_resolution": "KNOWN_REGION_BROAD_CLAIM",
+      "modern_location": "Memphis / Mit Rahina region",
+      "archaeological_state": "Large archaeological zone; claim does not identify one specific tomb.",
+      "phallus_specific": false,
+      "audit_priority": "HIGH_BUT_BROAD",
+      "next_action": "Narrow through Osiris-Apis-Sokar contexts and old excavation object groups before any imaging audit."
+    },
+    {
+      "rank": 5,
+      "site": "TAPHOSIRIS_TAPOSIRIS",
+      "ancient_claim": "Plutarch/Eudoxus associates Taphosiris with the tomb of Osiris by name/etymology.",
+      "modern_resolution": "LIKELY_TAPOSIRIS_MAGNA_WITH_ETYMOLGY_CAVEAT",
+      "modern_location": "Taposiris Magna / Abusir, west of Alexandria",
+      "archaeological_state": "Archaeological site known, but scholarship cautions that the 'tomb of Osiris' etymology may be Greek interpretation rather than proof of an actual Osiris burial.",
+      "phallus_specific": false,
+      "audit_priority": "MEDIUM_HIGH",
+      "next_action": "Audit Osiris/Isis temple deposits and sealed contexts, while keeping the tomb claim tagged as etymological/traditional rather than factual."
+    },
+    {
+      "rank": 6,
+      "site": "DIOCHITES",
+      "ancient_claim": "Plutarch reports that a small town called Diochites was said to contain the true tomb of Osiris.",
+      "modern_resolution": "UNRESOLVED",
+      "modern_location": null,
+      "archaeological_state": "Ancient place identification remains uncertain/unknown in the sources checked.",
+      "phallus_specific": false,
+      "audit_priority": "HIGH_TEXTUAL_LOW_FIELD",
+      "next_action": "Toponym-resolution pass before museum or archaeological search."
+    },
+    {
+      "rank": 7,
+      "site": "NYSA_IN_ARABIA",
+      "ancient_claim": "Diodorus reports some historians placing the tombs of Isis and Osiris at Nysa in Arabia.",
+      "modern_resolution": "UNRESOLVED_OR_MYTHIC_GEOGRAPHY",
+      "modern_location": null,
+      "archaeological_state": "No secure target site established in this pass.",
+      "phallus_specific": false,
+      "audit_priority": "LOW_UNTIL_TOPOLOGY_RESOLVED",
+      "next_action": "Literary-geography resolution only."
+    }
+  ],
+  "distributed_false_tomb_system": {
+    "source": "Diodorus I.21 and Plutarch De Iside 18",
+    "result": "MULTIPLE_LOCAL_AUTHENTICITY_CLAIMS",
+    "description": "Diodorus says Isis privately told separate priestly groups that each alone was entrusted with Osiris's burial; Plutarch preserves a variant in which effigies were distributed among cities so Typhon would be unable to identify the true tomb.",
+    "consequence": "A later map containing contradictory Osiris burial/relic locations is expected under the source model and should not be flattened into one chronology."
+  },
+  "critical_phallus_specific_exception": {
+    "site": "MENDES_DJEDET",
+    "modern_location": "Tell el-Rub'a, Dakahlia Governorate",
+    "status": "TOP_PHALLUS_LOCALITY",
+    "why": [
+      "Late Egyptian Osirian relic lists identify the Mendesian nome as a seat of the phallus and spine.",
+      "An IFAO scholarly synthesis cites Dendera and Brooklyn 47.218.84: the Mendesian Osiris is associated with the male member and spine, and Banebdjedet receives an offering of a vessel containing the sexual organ in Edfu ritual material.",
+      "Papyrus Jumilhac/Khoiak traditions preserve a ritual finding of the phallus, which conflicts with treating Plutarch's fish-consumption branch as the only endpoint.",
+      "Mendes/Tell el-Rub'a is archaeologically identified and has excavation reports, a royal necropolis/object catalogue, museum-distributed finds and ongoing archaeological work."
+    ],
+    "search_consequence": "Mendes outranks the generic Nile/fish branch for a phallus-specific catalogue pass. Search for Banebdjedet/Osiris relic vessels, containers, foundation/temple deposits, gold/gilded small objects, sealed cavities and excavation object groups.",
+    "claim_ceiling": "This does not mean a literal divine phallus has been archaeologically identified at Mendes."
+  },
+  "source_conflict": {
+    "late_greco_roman_branch": "PHALLUS -> THROWN_IN_NILE -> FISH_CONSUMPTION -> REPLICA",
+    "egyptian_ritual_geography_branch": "PHALLUS -> FOUND / LOCALIZED -> MENDESIAN_RELIC_TRADITION",
+    "state": "GENUINE_TRADITION_CONFLICT",
+    "interpretation": "The river story must remain one source branch, not the canonical last-known-location for the relic hunt."
+  },
+  "next_gate": {
+    "id": "ISIS_DECOY_TOMB_SWEEP_PASS",
+    "steps": [
+      "Resolve every named whole-body tomb claim to a modern site or UNRESOLVED state",
+      "Build excavation/museum provenance indexes for each resolved site",
+      "Search sealed, hollow, nested, reliquary, shrine and hidden-chamber object classes",
+      "Keep whole-body tomb claims separate from body-part/relic localities",
+      "Run a dedicated MENDES_PHALLUS_RELIC_PASS in parallel",
+      "Expand the distributed local tomb network using Dendera relic lists and Papyrus Jumilhac religious geography"
+    ]
+  },
+  "sources": [
+    "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Isis_and_Osiris%2A/A.html",
+    "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Isis_and_Osiris%2A/B.html",
+    "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/1A%2A.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/abydos/mk/index.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/ideology/khoiak.html",
+    "https://books.openedition.org/ifao/9993",
+    "https://collections.louvre.fr/ark:/53355/cl010003518",
+    "https://www.sciencedirect.com/science/article/pii/S1296207422001741",
+    "https://www.metmuseum.org/art/collection/search/329905",
+    "https://www.britishmuseum.org/collection/term/x30367",
+    "https://egyptartefacts.griffith.ox.ac.uk/node/1140"
+  ]
+}
