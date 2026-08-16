@@ -1,0 +1,116 @@
+{
+  "schema": "hrain.osiris_conception_river_provenance.v1",
+  "case_id": "OSIRIS-CONCEPTION-RIVER-PROVENANCE-001",
+  "created_at": "2026-08-16",
+  "purpose": "Test the apparent contradiction between the lost phallus tradition and posthumous conception of Horus, and audit who actually supplies the river claim before promoting any named actor to misinformation suspect.",
+  "core_rules": [
+    "NARRATIVE_REPORT != EYEWITNESS_TESTIMONY",
+    "INFORMATION_CONTROL != HOSTILE_DECEPTION",
+    "REPLICA != ORIGINAL",
+    "MISSING_MATERIAL_PART != NECESSARILY_MISSING_GENERATIVE_FUNCTION",
+    "SOURCE_VARIANT_COLLISION != HISTORICAL_EVENT"
+  ],
+  "source_anchors": [
+    {
+      "id": "UCL_CREATION_OSIRIS_HORUS",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/religion/deitiescreation.html",
+      "claim": "UCL summarizes scattered Egyptian references as Isis collecting Osiris's limbs and reviving the body enough to conceive Horus."
+    },
+    {
+      "id": "MET_ISIS_HORUS_POSTHUMOUS",
+      "url": "https://www.metmuseum.org/art/collection/search/545961",
+      "claim": "The Met summarizes Isis as reviving Osiris after Seth killed him and becoming pregnant with Horus."
+    },
+    {
+      "id": "PLUTARCH_18_LOST_MEMBER_REPLICA",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Isis_and_Osiris%2A/A.html",
+      "claim": "Plutarch says Isis did not find the male member, reports it as tossed into the river and eaten by fish, and says Isis made and consecrated a replica. The passage does not name an eyewitness who saw the throw."
+    },
+    {
+      "id": "PLUTARCH_19_POSTMORTEM_COUPLING",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A2008.01.0239%3Asection%3D19",
+      "claim": "Plutarch later says Osiris consorted with Isis after his death and she became mother of Harpocrates."
+    },
+    {
+      "id": "DIODORUS_21_22_PRIVATES_RIVER",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/1A%2A.html",
+      "claim": "Diodorus reports that Typhon threw the privates into the Nile because his partners would not receive them; Isis made a likeness and established cultic veneration."
+    },
+    {
+      "id": "PLUTARCH_ISIS_DECOY_TOMBS",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Isis_and_Osiris%2A/A.html",
+      "claim": "Plutarch preserves a variant in which Isis deliberately distributed effigies / multiple supposed burials so Typhon would be unable to identify the true tomb."
+    },
+    {
+      "id": "SPIESER_2022_PHALLUS",
+      "url": "https://archimede.unistra.fr/revue-archimede/archimede-hors-serie-n-2-2022/archimede-hs-n2-2022-le-phallus-dosiris/",
+      "claim": "Spieser treats the lost/replaced phallus and post-mortem conception as part of a funerary-religious logic in which preserved or reconstructed genital function symbolizes regeneration and victory over death."
+    }
+  ],
+  "river_claim_audit": {
+    "named_eyewitness_in_bound_sources": null,
+    "isis_explicitly_says_i_saw_it_thrown": false,
+    "isis_explicitly_sends_sobek_to_search_for_phallus_in_river": false,
+    "sobek_phallus_specific_search_source_bound": false,
+    "state": "LOW_PROVENANCE_LATE_LITERARY_BRANCH",
+    "implication": "Do not treat RIVER as a hard physical endpoint. It is one later literary branch until an earlier Egyptian source independently binds the same custody chain."
+  },
+  "conception_paradox": {
+    "observed_sequence": [
+      "PHALLUS_REPORTED_MISSING",
+      "REPLICA_OR_RECONSTRUCTION_CREATED",
+      "OSIRIS_REVIVED_OR_POSTHUMOUSLY_ACTIVE",
+      "HORUS/HARPOCRATES_CONCEIVED"
+    ],
+    "strong_inference": "The mythic system preserves generative function after material loss, so the physical original is not demonstrably a single point of failure for conception/restoration.",
+    "candidate_explanations": [
+      {
+        "id": "FUNCTION_RESTORED_BY_REPLICA_OR_RITUAL_RECONSTRUCTION",
+        "status": "COMPATIBLE_WITH_SOURCES"
+      },
+      {
+        "id": "DIVINE_POSTMORTEM_GENERATION_NOT_BOUND_TO_NORMAL_ANATOMY",
+        "status": "COMPATIBLE_WITH_MYTHIC_LOGIC"
+      },
+      {
+        "id": "SOURCE_VARIANT_COLLISION",
+        "status": "HIGH_PRIORITY_EXPLANATION",
+        "note": "Different Egyptian and Greco-Roman traditions need not form one mechanically consistent chronology."
+      },
+      {
+        "id": "ORIGINAL_PHALLUS_WAS_NEVER_TRULY_LOST",
+        "status": "OPEN_HYPOTHESIS_ONLY",
+        "note": "Interesting search branch but not established by the current corpus."
+      }
+    ]
+  },
+  "isis_information_control_profile": {
+    "protective_decoy_behavior_source_bound": true,
+    "basis": "Plutarch/Diodorus preserve Isis deliberately creating multiple effigies/burial claims to conceal the true tomb from Typhon/Seth.",
+    "hostile_misdirection_of_sobek_source_bound": false,
+    "knows_true_location_of_original_phallus_source_bound": false,
+    "classification": "PROTECTIVE_INFORMATION_CONTROLLER_NOT_CURRENT_SABOTEUR",
+    "investigative_value": "HIGH",
+    "reason": "She is one of the few actors for whom deliberate control of relic-location information is actually source-bound, but the documented target of that deception is Seth/Typhon, not Sobek."
+  },
+  "missing_edges_required_for_isis_false_lead_hypothesis": [
+    "ISIS_KNOWS_TRUE_PHALLUS_LOCATION",
+    "ISIS_TELLS_SOBEK_RIVER_LOCATION",
+    "SOBEK_ACCEPTS_THIS_TASKING",
+    "SOBEK_SEARCHES_PHALLUS_SPECIFICALLY",
+    "TRUE_OBJECT_ALREADY_IN_PROTECTIVE_CUSTODY"
+  ],
+  "new_search_model": {
+    "do_not_assume": "RIVER == LAST_KNOWN_LOCATION",
+    "trace": [
+      "WHO_FIRST_REPORTS_RIVER_BRANCH?",
+      "WHAT_EARLIER_EGYPTIAN_TEXTS_BIND PHALLUS + WATER?",
+      "WHEN DOES REPLICA/SUBSTITUTE ENTER THE CHAIN?",
+      "WHO CONTROLS TRUE-TOMB / TRUE-RELIC INFORMATION?",
+      "WHERE DOES PROTECTIVE CONCEALMENT START?",
+      "WHICH ANUBIS / SONS-OF-HORUS CONTAINERS HAVE SEALED OR HIDDEN VOLUME?"
+    ]
+  },
+  "next_gate": "RIVER_CLAIM_PROVENANCE_TO_PROTECTIVE_CUSTODY_PASS",
+  "claim_ceiling": "This pass does not accuse Isis of deceiving Sobek and does not prove the original phallus survived. It shows that the river story lacks a named eyewitness in the bound sources, while Isis's protective use of decoys is source-bound and therefore deserves investigation as an information-control node."
+}
