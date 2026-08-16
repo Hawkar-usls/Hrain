@@ -95,7 +95,7 @@
     <header class="network">
       <a class="network-left" href="https://hawkar-usls.github.io/janus-meta-registry/">JANUS Meta Registry</a>
       <a class="network-center" href="./">HR<span>ai</span>N</a>
-      <a class="network-right" href="https://hawkar-usls.github.io/iNaiHR/">iN<span>ai</span>HR</a>
+      <a class="network-right" href="https://hawkar-usls.github.io/iNaiHR/janus.html">iN<span>ai</span>HR</a>
     </header>
 
     <div class="mode"><b>REGISTRY MODE</b><i>READ ONLY · APPEND-ONLY SOURCE</i></div>
@@ -380,6 +380,12 @@
     if(node.surfaceUrl){
       const a=document.createElement('a');a.href=node.surfaceUrl;a.target='_blank';a.rel='noopener';a.textContent='OPEN SURFACE ↗';buttons.appendChild(a);
     }
+    if(node.path && node.path.endsWith('.json')){
+      const a=document.createElement('a');
+      a.href='https://hawkar-usls.github.io/iNaiHR/janus.html?object='+encodeURIComponent(node.path);
+      a.target='_blank';a.rel='noopener';a.dataset.semanticSynth='true';a.textContent='SYNTH → iNaiHR';
+      buttons.appendChild(a);
+    }
     document.getElementById('panel').classList.add('open');
   }
   function closePanel(){document.getElementById('panel').classList.remove('open');}
@@ -508,5 +514,6 @@
   boot();
 })();
 </script>
+  <script src="./janus-network-v3.js"></script>
 </body>
 </html>
