@@ -1,0 +1,95 @@
+{
+  "schema": "hrain.real_organ_inside_metal_sheath_control.v2_6",
+  "created_at": "2026-08-16",
+  "case": "OSIRIS_MENDES_GENITAL_BUNDLE",
+  "status": "BIOLOGICAL_CONTENT_INSIDE_METAL_COVER_IS_MATERIALLY_ATTESTED_CONTROL",
+  "extends": "research/mendes_sister_objects_and_gold_genital_cover_control_v2_5.json",
+  "primary_target": {
+    "id": "CAIRO_CG53469_JE35425",
+    "catalogue_name": "Enveloppe de phallus",
+    "material": "gold",
+    "length_cm": 12.2,
+    "weight_g": 7,
+    "gold_thickness_mm_approx": 0.1,
+    "basal_mass": "UNRESOLVED",
+    "known_internal_content": "UNKNOWN"
+  },
+  "positive_controls": [
+    {
+      "id": "LOUVRE_E13463_CM445_BN527BIS",
+      "institution": "Musée du Louvre",
+      "catalogue_class": "élément momifié — phallus",
+      "description": "Mummified organic phallus wrapped in a sheet of metal; museum suggests the metal may be silver.",
+      "dimensions_cm": {"length":8.5,"width":2.7,"thickness":2.0},
+      "period": "undetermined",
+      "ancient_findspot": "not established in the public record",
+      "collection_history": "Second Cailliaud collection, purchased in 1824 by the Cabinet des Médailles; transferred to Louvre inventory in 1907.",
+      "source": "https://collections.louvre.fr/en/ark:/53355/cl010085958",
+      "role": "DIRECT_POSITIVE_CONTROL_FOR_BIOLOGICAL_PHALLUS_INSIDE_METAL_SHEET"
+    },
+    {
+      "id": "LOUVRE_E13468_CM450",
+      "institution": "Musée du Louvre",
+      "catalogue_class": "élément momifié — phallus (?)",
+      "description": "Organic possible mummified phallus without a metal wrapping listed in the current public record.",
+      "dimensions_cm": {"length":9.0,"width":4.0,"thickness":2.5},
+      "period": "undetermined",
+      "ancient_findspot": "not established in the public record",
+      "source": "https://collections.louvre.fr/en/ark:/53355/cl010085959",
+      "role": "BIOLOGICAL_PHALLUS_DIMENSION_CONTROL"
+    },
+    {
+      "id": "BM_EA74284",
+      "institution": "British Museum",
+      "catalogue_class": "human mummy — penis",
+      "description": "Penis of an adult mummy with three detached fragments; gilded; circumcised.",
+      "dimensions_cm": {"height_max":6.0,"width_max":3.0,"depth_max":1.5},
+      "weight_g":12,
+      "period": "Roman Period (?)",
+      "source": "https://www.britishmuseum.org/collection/object/Y_EA74284",
+      "role": "DIRECT_POSITIVE_CONTROL_FOR_PRESERVED_AND_GILDED_BIOLOGICAL_PHALLUS"
+    },
+    {
+      "id": "LOUVRE_ME1310",
+      "institution": "Musée du Louvre",
+      "catalogue_class": "mummy fragment — testicle (?)",
+      "description": "A mummy fragment catalogued as possible testicle.",
+      "published_length_cm": 11.0,
+      "acquisition": "at Louvre by 1896; acquisition mode unknown",
+      "source": "https://collections.louvre.fr/en/ark:/53355/cl010338725",
+      "role": "LEXICAL_AND_PHYSICAL_CONTROL_FOR_SEPARATE_TESTICULAR_MUMMY_FRAGMENT",
+      "caution": "Identification is explicitly uncertain; the 11 cm measurement must not be treated as a normal anatomical testicle size or used directly for Osiris metrology."
+    }
+  ],
+  "implications_for_CG53469": {
+    "empty_sheath_assumption_allowed": false,
+    "biological_content_branch": "OPEN",
+    "reason": "An official Louvre object provides a direct precedent for a mummified phallus enclosed by metal sheet. Therefore CG 53469 should be imaged/inspected for internal material rather than assumed empty from its catalogue name.",
+    "dimensional_screen": "NOT_EXCLUDED_BY_SCALE_ALONE",
+    "dimensional_caution": "CG 53469 width is currently only photo-scaled/approximate and the Louvre controls have unrelated provenance. Cross-object dimensional compatibility cannot establish identity."
+  },
+  "required_non_destructive_tests": [
+    "modern front/back/side/base photography of CG 53469",
+    "radiography or CT/micro-CT to distinguish empty folded gold from organic/mineral/support content",
+    "XRF of gold and any exposed/associated material without sampling",
+    "microscopy of seams, folded edges, residues and ancient/modern repair boundaries",
+    "current mass compared with Vernier 1927 mass of 7 g",
+    "conservation record for any material formerly inside or removed from the sheath"
+  ],
+  "decision_tree": [
+    "CG53469 imaging shows air/empty collapse -> EMPTY_OR_COLLAPSED_SHEATH branch",
+    "CG53469 imaging shows homogeneous modern support -> CONSERVATION_SUPPORT branch",
+    "CG53469 imaging shows discrete organic-density core -> BIOLOGICAL_OR_ORGANIC_CONTENT_HIGH_PRIORITY branch",
+    "CG53469 imaging shows separate paired basal bodies -> SCROTAL_TESTICULAR_COMPONENT_HIGH_PRIORITY branch",
+    "CG53469 imaging inconclusive -> preserve unresolved and request historical conservation photographs/notes"
+  ],
+  "next_gate": "CG53469_NONDESTRUCTIVE_INTERNAL_CONTENT_PASS",
+  "claim_ceiling": {
+    "biological_phallus_inside_CG53469": false,
+    "testicles_inside_or_attached_CG53469": false,
+    "biological_phallus_inside_metal_sheet_is_materially_attested_elsewhere": true,
+    "preserved_gilded_biological_phallus_is_materially_attested_elsewhere": true,
+    "literal_osiris_relic_identified": false
+  },
+  "safety": "NONDESTRUCTIVE_MUSEUM_CONSERVATION_RESEARCH_ONLY"
+}
