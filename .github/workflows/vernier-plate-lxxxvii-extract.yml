@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install PDF tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
       - name: Extract Plate LXXXVII from Vernier Tome II
         run: python tools/vernier_plate_lxxxvii_extract.py
       - name: Remove large source PDF before artifact upload
