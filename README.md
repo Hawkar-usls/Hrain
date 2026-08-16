@@ -25,7 +25,8 @@ HRain turns notes, ideas, and short inputs into an editable visual graph. It is 
 - touch/mouse interaction;
 - browser-local/offline mode;
 - optional model-assisted suggestions;
-- dedicated read-only JANUS Meta Registry graph viewer.
+- dedicated read-only JANUS Meta Registry graph viewer;
+- living Registry Mode physics with organic links, impulses, breathing membranes, DIVE/ASCEND navigation and dynamic ambience.
 
 ## JANUS Meta Registry bridge
 
@@ -42,10 +43,15 @@ Live Registry Mode: https://hawkar-usls.github.io/Hrain/janus.html
 
 The ordinary HRain workspace remains separate and editable. Registry Mode does not write back to the Meta Registry and does not replace source JSON, current-authority records, receipts or code.
 
+`WIPE LOCAL DESK` in Registry Mode is deliberately **not a database operation**. It rebuilds only the current browser runtime layout from the already fetched immutable projection. Registry Mode has one network fetch for the read-only index and no persistence, deletion, update or write channel.
+
 ```text
 HRAIN_GRAPH != REGISTRY_AUTHORITY
 REGISTRY_INDEX != SOURCE_OBJECT
 READ_ONLY_PRESENTATION != WRITE_AUTHORITY
+HRAIN_WIPE != REGISTRY_DELETE
+LOCAL_DESK_RESET != SOURCE_MUTATION
+JANUS_META_REGISTRY = APPEND_ONLY_FROM_HRAIN_PERSPECTIVE
 ```
 
 ## Boundary
