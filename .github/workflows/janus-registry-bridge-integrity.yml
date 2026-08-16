@@ -1,0 +1,58 @@
+name: HRaiN JANUS Registry Mode integrity
+
+on:
+  push:
+    paths:
+      - 'janus.html'
+      - 'README.md'
+      - '.github/workflows/janus-registry-bridge-integrity.yml'
+  pull_request:
+    paths:
+      - 'janus.html'
+      - 'README.md'
+      - '.github/workflows/janus-registry-bridge-integrity.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate read-only Registry Mode contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path('janus.html').read_text(encoding='utf-8')
+          readme = Path('README.md').read_text(encoding='utf-8')
+
+          required = [
+              'https://hawkar-usls.github.io/janus-meta-registry/assets/hrain-registry-index.json',
+              'https://hawkar-usls.github.io/janus-meta-registry/',
+              'https://hawkar-usls.github.io/iNaiHR/',
+              'HRAIN_GRAPH != REGISTRY_AUTHORITY',
+              'REGISTRY MODE',
+              'READ ONLY',
+              "janus.hrain.registry_graph_index.v1_0",
+          ]
+          for marker in required:
+              assert marker in html, marker
+
+          assert 'contenteditable' not in html.lower()
+          assert 'localStorage.setItem' not in html
+          assert 'fetch(INDEX_URL' in html
+          assert 'OPEN SOURCE' in html
+          assert 'janus.html' in readme
+          assert 'READ_ONLY_PRESENTATION != WRITE_AUTHORITY' in readme
+
+          scripts = re.findall(r'<script>(.*?)</script>', html, re.S)
+          assert scripts, 'inline Registry Mode script missing'
+          Path('/tmp/janus-inline.js').write_text(scripts[-1], encoding='utf-8')
+          print('HRAIN_JANUS_REGISTRY_CONTRACT=PASS')
+          print('HRAIN_JANUS_REGISTRY_READ_ONLY=TRUE')
+          PY
+          node --check /tmp/janus-inline.js
