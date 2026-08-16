@@ -1,0 +1,73 @@
+{
+  "schema": "hrain.mendes_phallus_relic_pass.v1",
+  "case_id": "OSIRIS-MENDES-PHALLUS-RELIC-001",
+  "created_at": "2026-08-16",
+  "priority": "A1",
+  "research_question": "Does Mendes / Djedet / Tell el-Rub'a contain an object, container, burial assemblage, or museum-provenanced fragment that bridges the Mendesian Osiris-phallus relic tradition to a physical candidate class?",
+  "method_rule": "Independent convergence raises search priority but is not proof. Search only catalogs, excavation archives, museum records, publications, conservation reports and non-destructive imaging; no illicit excavation or removal.",
+  "why_mendes": [
+    "Mendes is the cult center of Banebdjedet and a major Mendesian religious node.",
+    "Prior source work in this project places the Mendesian relic tradition in the phallus/spine branch of Osirian religious geography.",
+    "Museum collections preserve identifiable Mendes excavation assemblages that can be provenance-rewound object by object."
+  ],
+  "first_pass_findings": [
+    {
+      "id": "MET_NESBANEB-DJEDET_TOMB_1902",
+      "priority": "VERY_HIGH",
+      "finding": "The Met records a 1902 Mendes burial of priest Nesbanebdjedet. One chamber was nearly empty except for fragments of gold leaf; another context contained more than 360 shabtis, fragments, several amulets, and a mummy decorated with gold-leaf trappings, with Cairo CG 53465-53469 cited for the mummy equipment.",
+      "search_consequence": "Audit the complete 1902 assemblage, especially amulets, gold-leaf fragments, mummy trappings, unillustrated fragments, object cards, and Cairo CG 53465-53469. Do not infer relic identity from gold alone.",
+      "source": "https://www.metmuseum.org/art/collection/search/329905"
+    },
+    {
+      "id": "BM_TELL_EL_RUBA_INDEX",
+      "priority": "HIGH",
+      "finding": "The British Museum place index for Tell el-Ruba / Mendes currently links 15 collection objects, including figures and multiple shabtis with Mendes/Tell el-Ruba findspot associations.",
+      "search_consequence": "Enumerate all 15 records and inspect provenance wording, conservation history, materials, unexplained attachments, cavities, fragments, and associated excavation references.",
+      "source": "https://www.britishmuseum.org/collection/term/x30367"
+    },
+    {
+      "id": "MET_DISTRIBUTED_NESBANEB-DJEDET_SHABTIS",
+      "priority": "MEDIUM_HIGH",
+      "finding": "The Met notes that the Nesbanebdjedet shabtis and related burial material became dispersed across Egypt, museums, and private collections.",
+      "search_consequence": "Treat the assemblage as a distributed provenance graph rather than one museum collection; reconstruct sister objects by inscription, dimensions, excavation year and priest name.",
+      "source": "https://www.metmuseum.org/art/collection/search/574065"
+    }
+  ],
+  "highest_value_object_classes": [
+    "GOLD_LEAF_FRAGMENT",
+    "AMULET_OR_TOKEN",
+    "MUMMY_TRAPPING",
+    "UNIDENTIFIED_FRAGMENT",
+    "SEALED_OR_NESTED_CONTAINER",
+    "HOLLOW_STATUETTE",
+    "RELIQUARY_OR_SHRINE",
+    "OBJECT_WITH_UNEXPLAINED_INTERNAL_DENSITY",
+    "BANEB-DJEDET_OR_OSIRIS_ASSOCIATED_OBJECT"
+  ],
+  "next_queries": [
+    "Cairo CG 53465-53469 complete catalog entries, drawings, photographs and conservation history",
+    "1902 Aly Habib / Egyptian Antiquities Service Mendes excavation report and object lists",
+    "all amulets associated with Nesbanebdjedet burial",
+    "all gold-leaf fragments or trappings from the nearly empty chamber and mummy",
+    "British Museum Tell el-Ruba 15-object complete audit",
+    "Mendes / Banebdjedet objects with X-ray, CT, radiography or conservation imaging",
+    "objects from Mendes catalogued as fragment, unidentified, fitting, insert, plaque, amulet, pendant, vessel or reliquary"
+  ],
+  "decision_rule": {
+    "upgrade_to_bridge_candidate_if": [
+      "secure Mendes provenance",
+      "independent Osirian or Banebdjedet ritual association",
+      "phallic/body-part/relic/container semantics",
+      "or sealed/internal structure supported by imaging or conservation records"
+    ],
+    "do_not_upgrade_for": [
+      "gold material alone",
+      "Mendes provenance alone",
+      "phallic shape alone",
+      "absence of image alone",
+      "tourism level or perceived remoteness"
+    ]
+  },
+  "current_verdict": "MENDES_PRIORITY_CONFIRMED_FOR_CATALOG_PASS; RELIC_NOT_IDENTIFIED",
+  "claim_ceiling": "This pass prioritizes Mendes for documentary and museum research. It does not establish the existence, survival, location, or divine identity of a physical Osiris phallus relic."
+}
