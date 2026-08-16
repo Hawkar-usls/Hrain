@@ -46,7 +46,7 @@ jobs:
           assert "encodeURIComponent(node.path)" in s
           assert '<script src="./janus-network-v3.js"></script>' in s
           assert 'janus-site-language-v1' in j
-          for token in ['data-lang','localStorage.setItem(LANG_KEY','MutationObserver','EN','UA','ru']:
+          for token in ['dataset.lang','localStorage.setItem(LANG_KEY','MutationObserver','EN','UA','ru']:
               assert token in j, token
           forbidden=['/api/hrain/save','/api/hrain/event','method:\'DELETE\'','method:\'PUT\'','method:\'PATCH\'']
           for token in forbidden:
