@@ -1,0 +1,147 @@
+{
+  "schema": "hrain.inverse_semantic_oracle.v1",
+  "case_id": "OSIRIS-SOBEK-ANUBIS-CUSTODY-001",
+  "method": "REVERSE_SEMANTIC_DEPENDENCY_NOT_REVERSE_CHAPTER_NUMBERS",
+  "entity_types": {
+    "OSIRIS": "DIVINE_TARGET",
+    "ANUBIS": "DIVINE_AGENT",
+    "SOBEK": "DIVINE_AGENT",
+    "HORUS": "DIVINE_AGENT",
+    "DUAMUTEF": "DIVINE_AGENT",
+    "QEBEHSENUEF": "DIVINE_AGENT",
+    "HAPY": "DIVINE_AGENT",
+    "IMSETI": "DIVINE_AGENT",
+    "PHALLUS": "BODY_PART",
+    "HANDS": "BODY_PART",
+    "ENTRAILS": "BODY_PART",
+    "HEART": "BODY_PART",
+    "CHEST": "CONTAINER",
+    "WATER": "DOMAIN",
+    "SNARE": "TOOL"
+  },
+  "nodes": [
+    {
+      "id": "BD42_PHALLUS_IS_OSIRIS",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["OSIRIS", "PHALLUS"],
+      "source": "UCL Book of the Dead 42",
+      "meaning": "The phallus is identified with Osiris."
+    },
+    {
+      "id": "BD17_ANUBIS_GUARDS_CHEST",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["ANUBIS", "OSIRIS", "CHEST", "ENTRAILS"],
+      "source": "UCL Book of the Dead 17",
+      "meaning": "Anubis guards the chest containing the entrails of Osiris."
+    },
+    {
+      "id": "BD151_ANUBIS_EMBALMER",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["ANUBIS", "OSIRIS"],
+      "source": "UCL Book of the Dead 151",
+      "meaning": "Anubis stands at the center of the embalming tent as divine embalmer."
+    },
+    {
+      "id": "BD151_SONS_PROTECT_ORGANS",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["OSIRIS", "DUAMUTEF", "QEBEHSENUEF", "HAPY", "IMSETI"],
+      "source": "UCL Book of the Dead 151",
+      "meaning": "The four children of Horus protect the internal organs."
+    },
+    {
+      "id": "BD151_QEBEHSENUEF_REASSEMBLES",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["OSIRIS", "QEBEHSENUEF", "HEART"],
+      "source": "UCL Book of the Dead 151",
+      "meaning": "Qebehsenuef unites bones, assembles limbs and returns the heart."
+    },
+    {
+      "id": "BD151_DUAMUTEF_RESCUES_OSIRIS",
+      "domain": "CUSTODY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["OSIRIS", "DUAMUTEF"],
+      "source": "UCL Book of the Dead 151",
+      "meaning": "Duamutef says he came to rescue his father Osiris from his assailant."
+    },
+    {
+      "id": "BD113_SOBEK_WATER_SEARCH",
+      "domain": "RECOVERY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["SOBEK", "HORUS", "WATER"],
+      "source": "UCL Book of the Dead 113",
+      "meaning": "Sobek searches the water edge for Horus's scattered hands."
+    },
+    {
+      "id": "BD113_SOBEK_RECOVERS_HANDS",
+      "domain": "RECOVERY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["SOBEK", "HORUS", "HANDS", "WATER", "SNARE"],
+      "source": "UCL Book of the Dead 113",
+      "meaning": "Sobek finds where the hands scattered and snares them."
+    },
+    {
+      "id": "BD113_HORUS_DUAMUTEF_QEBEHSENUEF",
+      "domain": "RECOVERY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["HORUS", "DUAMUTEF", "QEBEHSENUEF"],
+      "source": "UCL Book of the Dead 113",
+      "meaning": "After the hand-recovery passage, Horus asks for Duamutef and Qebehsenuef; the powers of Nekhen are Horus, Duamutef and Qebehsenuef."
+    },
+    {
+      "id": "KHOIAK_PHALLUS_FINDING",
+      "domain": "RECOVERY",
+      "evidence_state": "SOURCE_BOUND",
+      "entities": ["OSIRIS", "PHALLUS"],
+      "source": "UCL Festivals of Khoiak",
+      "meaning": "A ritual schedule preserves finding of the phallus of Osiris in variant sequences."
+    },
+    {
+      "id": "HYP_SOBEK_PHALLUS_SEARCH",
+      "domain": "HYPOTHESIS",
+      "evidence_state": "HYPOTHESIS_ONLY",
+      "entities": ["SOBEK", "OSIRIS", "PHALLUS"],
+      "meaning": "Sobek specifically searched for Osiris's phallus."
+    },
+    {
+      "id": "HYP_ANUBIS_PHALLUS_CUSTODY",
+      "domain": "HYPOTHESIS",
+      "evidence_state": "HYPOTHESIS_ONLY",
+      "entities": ["ANUBIS", "OSIRIS", "PHALLUS"],
+      "meaning": "Anubis specifically held the phallus in custody."
+    }
+  ],
+  "target_claims": [
+    {
+      "claim_id": "SOBEK_SPECIFICALLY_SEARCHED_PHALLUS",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "SOBEK_FAILED_PHALLUS_SEARCH",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "ANUBIS_HELD_PHALLUS_SPECIFICALLY",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "SOBEK_IS_CAPABLE_WATER_RECOVERY_AGENT",
+      "support_node_ids": ["BD113_SOBEK_WATER_SEARCH", "BD113_SOBEK_RECOVERS_HANDS"],
+      "contradiction_node_ids": []
+    }
+  ],
+  "source_urls": [
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd17.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd42.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd113.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/hpres151.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/ideology/khoiak.html"
+  ]
+}
