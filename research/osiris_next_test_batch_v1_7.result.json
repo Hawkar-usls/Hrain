@@ -1,0 +1,33 @@
+{
+  "schema": "hrain.phallus_mandrel_gate.result.v1",
+  "input": "research/osiris_next_test_batch_v1_7.json",
+  "object_count": 7,
+  "all_pairwise_combinations": 21,
+  "eligible_pair_count": 0,
+  "shared_mandrel_candidate_count": 0,
+  "status": "BLOCKED_INSUFFICIENT_COMPARABLE_METROLOGY",
+  "rule": "SAME_SIZE != SAME_MOLD; SAME_MOLD != CAST_FROM_OSIRIS",
+  "pairs": [
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"EMC_JE_56935","eligible":false},
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"EMC_JE_56967","eligible":false},
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"MET_23.10.23","eligible":false},
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"BM_1973_0501_23","eligible":false},
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"KHM_INV_10077_GENITAL_COMPONENT","eligible":false},
+    {"a":"MENDES_1902_GOLD_PHALLUS_SHEATH","b":"LOUVRE_G2486_ME1427","eligible":false},
+    {"a":"EMC_JE_56935","b":"EMC_JE_56967","eligible":false},
+    {"a":"EMC_JE_56935","b":"MET_23.10.23","eligible":false},
+    {"a":"EMC_JE_56935","b":"BM_1973_0501_23","eligible":false},
+    {"a":"EMC_JE_56935","b":"KHM_INV_10077_GENITAL_COMPONENT","eligible":false},
+    {"a":"EMC_JE_56935","b":"LOUVRE_G2486_ME1427","eligible":false},
+    {"a":"EMC_JE_56967","b":"MET_23.10.23","eligible":false},
+    {"a":"EMC_JE_56967","b":"BM_1973_0501_23","eligible":false},
+    {"a":"EMC_JE_56967","b":"KHM_INV_10077_GENITAL_COMPONENT","eligible":false},
+    {"a":"EMC_JE_56967","b":"LOUVRE_G2486_ME1427","eligible":false},
+    {"a":"MET_23.10.23","b":"BM_1973_0501_23","eligible":false},
+    {"a":"MET_23.10.23","b":"KHM_INV_10077_GENITAL_COMPONENT","eligible":false},
+    {"a":"MET_23.10.23","b":"LOUVRE_G2486_ME1427","eligible":false},
+    {"a":"BM_1973_0501_23","b":"KHM_INV_10077_GENITAL_COMPONENT","eligible":false},
+    {"a":"BM_1973_0501_23","b":"LOUVRE_G2486_ME1427","eligible":false},
+    {"a":"KHM_INV_10077_GENITAL_COMPONENT","b":"LOUVRE_G2486_ME1427","eligible":false}
+  ]
+}
