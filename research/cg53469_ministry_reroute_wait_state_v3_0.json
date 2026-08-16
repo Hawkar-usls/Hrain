@@ -1,0 +1,84 @@
+{
+  "schema": "hrain.cg53469_ministry_reroute_wait_state.v3_0",
+  "created_at": "2026-08-16",
+  "case": "OSIRIS_MENDES_GENITAL_BUNDLE",
+  "status": "MINISTRY_REROUTE_SENT__WAITING_FOR_EXTERNAL_RESPONSE",
+  "extends": [
+    "research/cg53469_cairo_custody_imaging_outreach_gate_v2_8.json",
+    "research/quibell_1902_body_context_and_phallus_sheath_primary_source_v2_9.json"
+  ],
+  "target": {
+    "id": "CAIRO_CG53469_JE35425",
+    "catalogue_name": "Enveloppe de phallus",
+    "current_custody": "UNVERIFIED_PUBLICLY",
+    "current_internal_content": "UNKNOWN",
+    "current_ct_status": "UNKNOWN"
+  },
+  "contact_forensics": {
+    "museum_official_page": "https://egymonuments.gov.eg/en/subportals-group/the-egyptian-museum/",
+    "museum_page_still_lists": "egyptianmuseum@moantiq.gov.eg",
+    "museum_page_phone": "+20 2 25796948",
+    "first_delivery_attempt": {
+      "recipient": "egyptianmuseum@moantiq.gov.eg",
+      "result": "HARD_BOUNCE",
+      "smtp_status": "550 5.1.1 User unknown",
+      "interpretation": "The mailbox published on the museum's official page was not accepting mail at the time of the research attempt. This does not establish that the entire domain or museum contact system is unavailable.",
+      "evidence_class": "USER_SUPPLIED_MAIL_DELIVERY_SCREENSHOT"
+    },
+    "verified_ministry_route": {
+      "institution": "Egyptian Ministry of Tourism and Antiquities",
+      "official_source": "https://mota.gov.eg/ar/%D8%B9%D9%86-%D8%A7%D9%84%D9%88%D8%B2%D8%A7%D8%B1%D8%A9/%D9%85%D9%83%D8%A7%D8%AA%D8%A8-%D8%A7%D9%84%D9%88%D8%B2%D8%A7%D8%B1%D8%A9/",
+      "inquiries_and_suggestions_email": "moa.portal@mota.gov.eg",
+      "complaints_email": "shakawa.mta@mota.gov.eg",
+      "route_selected": "moa.portal@mota.gov.eg",
+      "reason": "Research inquiry; the complaints mailbox was intentionally not used."
+    },
+    "reroute_delivery": {
+      "sent": true,
+      "sent_at": "2026-08-16",
+      "recipient": "moa.portal@mota.gov.eg",
+      "request": "Forward the CG 53469 / JE 35425 research inquiry to the appropriate Egyptian Museum Tahrir collections, registration, archives or conservation team, or provide the current working contact.",
+      "delivery_state": "GMAIL_SENT_CONFIRMED_NO_BOUNCE_OBSERVED_AT_FREEZE_TIME"
+    }
+  },
+  "research_request_scope": [
+    "verify present custodian/location and current object number(s)",
+    "obtain current mass and dimensions",
+    "obtain front/reverse/left/right/base photographs",
+    "obtain any radiography/CT/micro-CT/XRF/microscopy/3D/conservation records",
+    "check packing, support, adhesive, residue, removed material or earlier contents",
+    "resolve seams/folds/joins and basal-mass continuity or attachment",
+    "if no internal imaging exists, ask whether strictly non-destructive radiography/CT could be considered"
+  ],
+  "current_operational_state": {
+    "SEARCH": "ACTIVE",
+    "MUSEUM_GATE": "WAITING_FOR_EXTERNAL_RESPONSE",
+    "CT_GATE": "BLOCKED_BY_CUSTODIAN_DATA",
+    "OPEN_SOURCE_ARCHIVE_PASS": "CONTINUE",
+    "CAT": "RESTING_AND_BEING_PETTED"
+  },
+  "contact_discipline": {
+    "do_not_send_additional_museum_or_ministry_messages_before_followup_window": true,
+    "followup_window_working_days": "7-10",
+    "earliest_planned_check_date": "2026-08-25",
+    "followup_if_no_response": "ONE_POLITE_FOLLOWUP_VIA_MINISTRY",
+    "avoid_spam": true
+  },
+  "open_source_archive_front": [
+    "search historical photographs between Quibell 1902, Vernier 1927 and modern collection records",
+    "search JE/CG transfer, storage and renumbering records",
+    "search conservation/restoration publications concerning CG 53469 and related gold body-part sheaths",
+    "resolve provenance, date, dimensions and publications for JE 56935 and JE 56967",
+    "expand the Cairo gold finger/toe/phallus body-part sheath comparative corpus"
+  ],
+  "epistemic_rules": {
+    "organic_core_does_not_establish_osiris_identity": true,
+    "basal_mass_not_identified_as_testicles": true,
+    "current_custody_not_assumed": true,
+    "museum_email_page_listing_does_not_override_observed_smtp_bounce": true,
+    "nondestructive_only": true,
+    "literal_osiris_relic_identified": false
+  },
+  "next_gate": "CG53469_CURRENT_CUSTODY_PLUS_IMAGING_RESPONSE_PASS",
+  "safety": "ARCHIVE_CATALOGUE_CONSERVATION_AND_NONDESTRUCTIVE_IMAGING_ONLY"
+}
