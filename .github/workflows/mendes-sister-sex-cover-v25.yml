@@ -1,0 +1,31 @@
+name: Mendes sister and sex-cover extract v2.5
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/mendes_sister_and_sex_cover_extract_v25.py'
+      - '.github/workflows/mendes-sister-sex-cover-v25.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Resolve exact catalogue neighbors and genital-cover controls
+        run: python tools/mendes_sister_and_sex_cover_extract_v25.py
+      - name: Upload exact contexts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mendes-sister-sex-cover-v25
+          path: /tmp/mendes-sister-v25/
+          if-no-files-found: error
+          retention-days: 3
