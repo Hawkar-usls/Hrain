@@ -1,0 +1,31 @@
+name: Mendes CG 53465-53469 Gallica extract
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/gallica_cg_extract.py'
+      - '.github/workflows/mendes-cg-gallica-extract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Query Gallica OCR/API for exact Cairo CG targets
+        run: python tools/gallica_cg_extract.py
+      - name: Upload extraction artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mendes-cg53465-53469-gallica-extract
+          path: /tmp/mendes-cg-extract/
+          if-no-files-found: error
+          retention-days: 3
