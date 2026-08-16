@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#030508">
+<title>HRain · DemiHead Left Hemisphere</title>
+<style>
+:root{color-scheme:dark;--bg:#030508;--panel:#0b101a;--line:#20302b;--accent:#00ffa3;--muted:#8aa097;--danger:#ff2a6d}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#0b1616,var(--bg) 55%);color:#e8fff7;font:15px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:100vh}.wrap{max-width:980px;margin:auto;padding:28px}.kicker{color:var(--accent);letter-spacing:.12em;font-weight:700}.panel{background:rgba(11,16,26,.9);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px;box-shadow:0 14px 40px rgba(0,0,0,.28)}h1{margin:.2em 0;font-size:clamp(1.5rem,5vw,2.4rem)}p{color:#b7c9c2}.laws{white-space:pre-wrap;color:#a8c7bb}.row{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1px solid var(--accent);background:#062018;color:var(--accent);padding:10px 14px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}.btn.secondary{border-color:#52645d;color:#d7e4df;background:#111a17}.status{margin-top:12px;color:var(--muted)}.status.error{color:var(--danger)}textarea{width:100%;min-height:360px;background:#020403;color:#dfffee;border:1px solid #1f3a31;border-radius:10px;padding:14px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}code{color:var(--accent)}a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">JANUS DEMIHEAD · LEFT_HRAIN</div>
+  <h1>Structural Context Hemisphere</h1>
+  <p>This sidecar reads the existing HRain browser-local workspace and emits a <strong>read-only</strong> DemiHead hemisphere packet. It has no registry write channel and no cross-hemisphere mutation channel.</p>
+  <div class="panel laws">HEMISPHERE_METAPHOR != NEUROSCIENCE_CLAIM
+STRUCTURE != COMMAND
+BOTH_HEMISPHERES_AGREE != TRUTH
+PACKET_TRANSFER = READ_ONLY
+AUTHORITY_DELTA = 0
+MASS_EFFECT_BUDGET_DELTA = 0</div>
+  <div class="panel">
+    <div class="row">
+      <button class="btn" id="refresh">REFRESH SNAPSHOT</button>
+      <button class="btn" id="download">DOWNLOAD PACKET</button>
+      <button class="btn secondary" id="copy">COPY JSON</button>
+      <a class="btn secondary" href="./">BACK TO HRAIN</a>
+    </div>
+    <div class="status" id="status">Loading local workspace…</div>
+  </div>
+  <div class="panel">
+    <textarea id="packet" spellcheck="false" readonly></textarea>
+  </div>
+</div>
+<script src="./demihead-bridge.js"></script>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'hrain_v10_4_restore';
+  const bridge = window.JANUSDemiHeadHRainBridge;
+  const packetBox = document.getElementById('packet');
+  const status = document.getElementById('status');
+  let packet = null;
+
+  function readWorkspace() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {nodes: [], links: []};
+    const value = JSON.parse(raw);
+    if (!value || !Array.isArray(value.nodes) || !Array.isArray(value.links)) throw new Error('Stored HRain workspace is malformed');
+    return value;
+  }
+
+  function refresh() {
+    try {
+      packet = bridge.buildPacket(readWorkspace());
+      packetBox.value = JSON.stringify(packet, null, 2);
+      status.className = 'status';
+      status.textContent = `${packet.graph.nodes.length} nodes · ${packet.graph.links.length} links · LEGACY_UNKNOWN is preserved when old nodes lack origin metadata.`;
+    } catch (err) {
+      packet = null;
+      packetBox.value = '';
+      status.className = 'status error';
+      status.textContent = `REFUSED: ${err.message}`;
+    }
+    return packet;
+  }
+
+  function download() {
+    const current = refresh();
+    if (!current) return;
+    const blob = new Blob([JSON.stringify(current, null, 2) + '\n'], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `janus_demihead_left_hrain_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  function allowedParentOrigin(origin) {
+    if (origin === location.origin) return true;
+    if (origin === 'https://hawkar-usls.github.io') return true;
+    return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  }
+
+  window.addEventListener('message', (event) => {
+    if (!allowedParentOrigin(event.origin)) return;
+    if (!event.data || event.data.type !== 'JANUS_DEMIHEAD_REQUEST_PACKET_V1') return;
+    const current = refresh();
+    if (!current || !event.source) return;
+    event.source.postMessage({type: 'JANUS_DEMIHEAD_HEMISPHERE_PACKET_V1', packet: current}, event.origin);
+  });
+
+  document.getElementById('refresh').onclick = refresh;
+  document.getElementById('download').onclick = download;
+  document.getElementById('copy').onclick = async () => {
+    const current = refresh();
+    if (!current) return;
+    try { await navigator.clipboard.writeText(JSON.stringify(current, null, 2)); status.textContent += ' · copied'; }
+    catch (_) { status.textContent += ' · clipboard unavailable'; }
+  };
+
+  refresh();
+})();
+</script>
+</body>
+</html>
