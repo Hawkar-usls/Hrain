@@ -1,0 +1,80 @@
+{
+  "schema": "hrain.terracotta_phallus_corpus.result.v1",
+  "case_id": "OSIRIS-TERRACOTTA-PHALLUS-CORPUS-001",
+  "created_at": "2026-08-16",
+  "direct_audited_records": 33,
+  "strict_metric_core_objects": 5,
+  "strict_metric_pair_count": 10,
+  "pairwise_metrics": [
+    {"a":"BM_1973_0501_22","b":"LOUVRE_E35618","slenderness_a":1.886364,"slenderness_b":1.87234,"slenderness_relative_difference":0.007462,"length_scale":1.060241,"transverse_scale":1.068182,"scale_consistency_difference":0.007462,"normalized_2d_scale_residual":0.003094,"axis_a":"thickness","axis_b":"fragment_width"},
+    {"a":"BM_1973_0501_23","b":"LOUVRE_AF10412","slenderness_a":3.882353,"slenderness_b":4.432432,"slenderness_relative_difference":0.132314,"length_scale":2.484848,"transverse_scale":2.176471,"scale_consistency_difference":0.132314,"normalized_2d_scale_residual":0.030197,"axis_a":"thickness","axis_b":"width"},
+    {"a":"LOUVRE_E35618","b":"UCL_UC38344","slenderness_a":1.87234,"slenderness_b":1.284091,"slenderness_relative_difference":0.372731,"length_scale":1.284091,"transverse_scale":1.87234,"scale_consistency_difference":0.372731,"normalized_2d_scale_residual":0.170275,"axis_a":"fragment_width","axis_b":"width_including_wings"},
+    {"a":"BM_1973_0501_22","b":"UCL_UC38344","slenderness_a":1.886364,"slenderness_b":1.284091,"slenderness_relative_difference":0.379844,"length_scale":1.361446,"transverse_scale":2.0,"scale_consistency_difference":0.379844,"normalized_2d_scale_residual":0.173323,"axis_a":"thickness","axis_b":"width_including_wings"},
+    {"a":"BM_1973_0501_23","b":"BM_1973_0501_22","slenderness_a":3.882353,"slenderness_b":1.886364,"slenderness_relative_difference":0.69181,"length_scale":1.257576,"transverse_scale":2.588235,"scale_consistency_difference":0.69181,"normalized_2d_scale_residual":0.23319,"axis_a":"thickness","axis_b":"thickness"},
+    {"a":"BM_1973_0501_23","b":"LOUVRE_E35618","slenderness_a":3.882353,"slenderness_b":1.87234,"slenderness_relative_difference":0.698548,"length_scale":1.333333,"transverse_scale":2.764706,"scale_consistency_difference":0.698548,"normalized_2d_scale_residual":0.236198,"axis_a":"thickness","axis_b":"fragment_width"},
+    {"a":"BM_1973_0501_22","b":"LOUVRE_AF10412","slenderness_a":1.886364,"slenderness_b":4.432432,"slenderness_relative_difference":0.805891,"length_scale":1.975904,"transverse_scale":0.840909,"scale_consistency_difference":0.805891,"normalized_2d_scale_residual":0.262448,"axis_a":"thickness","axis_b":"width"},
+    {"a":"LOUVRE_AF10412","b":"LOUVRE_E35618","slenderness_a":4.432432,"slenderness_b":1.87234,"slenderness_relative_difference":0.812177,"length_scale":0.536585,"transverse_scale":1.27027,"scale_consistency_difference":0.812177,"normalized_2d_scale_residual":0.265432,"axis_a":"width","axis_b":"fragment_width"},
+    {"a":"BM_1973_0501_23","b":"UCL_UC38344","slenderness_a":3.882353,"slenderness_b":1.284091,"slenderness_relative_difference":1.005813,"length_scale":1.712121,"transverse_scale":5.176471,"scale_consistency_difference":1.005813,"normalized_2d_scale_residual":0.398205,"axis_a":"thickness","axis_b":"width_including_wings"},
+    {"a":"LOUVRE_AF10412","b":"UCL_UC38344","slenderness_a":4.432432,"slenderness_b":1.284091,"slenderness_relative_difference":1.101315,"length_scale":0.689024,"transverse_scale":2.378378,"scale_consistency_difference":1.101315,"normalized_2d_scale_residual":0.425723,"axis_a":"width","axis_b":"width_including_wings"}
+  ],
+  "findings": {
+    "serial_mould_production_at_naukratis": {
+      "status": "SUPPORTED",
+      "evidence": [
+        "BM 1973,0501.59-.62 are catalogued as same or very similar mould series.",
+        "BM EA90389, BM 1973,0501.28, and Louvre E20834 are catalogued as the same mould series.",
+        "BM Harpocrates harpist corpus has at least six similar mould variants and a production waster from Naukratis.",
+        "BM Priapus plaque family is described as using two very similar moulds at Naukratis."
+      ],
+      "interpretation": "Standardized serial production is real at whole-figurine level."
+    },
+    "negative_mould_control": {
+      "status": "SUPPORTED",
+      "evidence": "BM 1973,0501.35 and .37 are explicitly very similar but NOT from the same mould.",
+      "interpretation": "Visual similarity alone is insufficient; curatorial mould diagnosis can reject a tempting match."
+    },
+    "detachable_insert_phallus_technology": {
+      "status": "SUPPORTED",
+      "evidence": [
+        "BM 1973,0501.23 is a separate hand-modelled insert phallus.",
+        "BM 1973,0501.45 had a separately made hollow two-piece moulded phallus inserted into a hole; stump survives.",
+        "BM 1973,0501.53 retains a socket after loss of the separately attached phallus."
+      ]
+    },
+    "best_dimensional_near_match": {
+      "status": "HIGH_PRIORITY_PRELIMINARY_NEAR_MATCH_NOT_SAME_MOULD",
+      "a": "BM_1973_0501_22",
+      "b": "LOUVRE_E35618",
+      "metrics": {"a_length_cm":8.3,"a_transverse_cm":4.4,"b_length_cm":8.8,"b_transverse_cm":4.7,"length_scale":1.060241,"transverse_scale":1.068182,"slenderness_a":1.886364,"slenderness_b":1.87234,"slenderness_relative_difference":0.007462,"scale_consistency_difference":0.007462},
+      "critical_caveat": "BM records thickness while Louvre records width of a high-relief fragment. The axes may not be homologous. Direct calibrated 3D/orthographic measurements are required before treating this as a true shape match."
+    },
+    "second_shape_cluster": {
+      "status": "WEAK",
+      "a": "BM_1973_0501_23",
+      "b": "LOUVRE_AF10412",
+      "slenderness_relative_difference": 0.132314,
+      "interpretation": "Both are slender standalone phallic objects, but ~13.2% ratio disagreement is too large for a common-template claim from public dimensions."
+    },
+    "osiris_relic_signal": {
+      "status": "NOT_FOUND",
+      "reason": "No terracotta object in the current audited corpus has independent provenance identifying it as the physical phallus relic of Osiris."
+    }
+  },
+  "priority_followups": [
+    "Obtain orthographic photographs or 3D measurements for BM 1973,0501.22 and Louvre E35618; resolve thickness-versus-width axis semantics.",
+    "Request/locate genital-specific metrology and conservation imaging for BM 1973,0501.23, especially damaged root and hollow/solid state.",
+    "Expand direct audit to accession leads cited by BM from Petrie, Fitzwilliam, Ashmolean, Cairo, Brussels, Boston and Cambridge.",
+    "Keep Cairo CG 53465-53469 gold-sheath concordance in parallel; terracotta is a manufacturing control, not a replacement for Mendes provenance.",
+    "Compare clay fabric/petrography, mould seams, trimming and tool marks only through published or institutional non-destructive data."
+  ],
+  "verdict": {
+    "BANANA_FOUND": false,
+    "TERRACOTTA_PHALLUS_CORPUS_BUILT": true,
+    "SERIAL_MOULD_PRODUCTION_SUPPORTED": true,
+    "DETACHABLE_PHALLUS_TECH_SUPPORTED": true,
+    "SHARED_PHALLUS_MASTER_MANDREL": false,
+    "BEST_DIMENSIONAL_LEAD": "BM 1973,0501.22 <-> Louvre E35618",
+    "BEST_EXPLICIT_SAME_MOULD_FAMILY": "BM EA90389 / BM 1973,0501.28 / Louvre E20834",
+    "OSIRIS_RELIC_IDENTIFIED": false
+  }
+}
