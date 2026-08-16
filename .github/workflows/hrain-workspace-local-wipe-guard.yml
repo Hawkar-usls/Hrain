@@ -1,0 +1,62 @@
+name: HRaiN workspace local-only WIPE guard
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'tools/hrain_workspace_local_wipe_guard.py'
+      - '.github/workflows/hrain-workspace-local-wipe-guard.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hrain_workspace_local_wipe_guard.py'
+      - '.github/workflows/hrain-workspace-local-wipe-guard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  validate-or-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate local-only WIPE transform
+        run: |
+          python -m py_compile tools/hrain_workspace_local_wipe_guard.py
+          python tools/hrain_workspace_local_wipe_guard.py
+
+      - name: Apply migration on main
+        if: github.event_name != 'pull_request'
+        id: apply
+        run: |
+          python tools/hrain_workspace_local_wipe_guard.py --apply
+          if [ -z "$(git status --porcelain -- index.html)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "HRaiN Workspace Guard"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix(hrain): make WIPE explicitly local-desk only"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Request Pages rebuild
+        if: github.event_name != 'pull_request' && steps.apply.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "repos/${GITHUB_REPOSITORY}/pages/builds" >/tmp/pages.json
+          cat /tmp/pages.json
+          echo 'HRAIN_WORKSPACE_PAGES_REBUILD=REQUESTED'
