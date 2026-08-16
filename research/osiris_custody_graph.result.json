@@ -1,0 +1,74 @@
+{
+  "schema": "hrain.inverse_semantic_oracle.result.v1",
+  "case_id": "OSIRIS-SOBEK-ANUBIS-CUSTODY-001",
+  "source_bound_intersection_entities": [
+    "DUAMUTEF",
+    "OSIRIS",
+    "PHALLUS",
+    "QEBEHSENUEF"
+  ],
+  "first_named_agent_bridge": [
+    "DUAMUTEF",
+    "QEBEHSENUEF"
+  ],
+  "custody_domain_entities": [
+    "ANUBIS",
+    "CHEST",
+    "DUAMUTEF",
+    "ENTRAILS",
+    "HAPY",
+    "HEART",
+    "IMSETI",
+    "OSIRIS",
+    "PHALLUS",
+    "QEBEHSENUEF"
+  ],
+  "recovery_domain_entities": [
+    "DUAMUTEF",
+    "HANDS",
+    "HORUS",
+    "OSIRIS",
+    "PHALLUS",
+    "QEBEHSENUEF",
+    "SNARE",
+    "SOBEK",
+    "WATER"
+  ],
+  "target_claims": [
+    {
+      "claim_id": "SOBEK_SPECIFICALLY_SEARCHED_PHALLUS",
+      "state": "UNRESOLVED",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "SOBEK_FAILED_PHALLUS_SEARCH",
+      "state": "UNRESOLVED",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "ANUBIS_HELD_PHALLUS_SPECIFICALLY",
+      "state": "UNRESOLVED",
+      "support_node_ids": [],
+      "contradiction_node_ids": []
+    },
+    {
+      "claim_id": "SOBEK_IS_CAPABLE_WATER_RECOVERY_AGENT",
+      "state": "SUPPORTED_BY_BOUND_SOURCES",
+      "support_node_ids": [
+        "BD113_SOBEK_WATER_SEARCH",
+        "BD113_SOBEK_RECOVERS_HANDS"
+      ],
+      "contradiction_node_ids": []
+    }
+  ],
+  "last_source_bound_witness_before_sobek_phallus_search": null,
+  "last_witness_status": "NOT_ESTABLISHED_BECAUSE_PHALLUS_SPECIFIC_SOBEK_SEARCH_IS_NOT_SOURCE_BOUND",
+  "sobek_failure_accusation": "NOT_ADMITTED",
+  "sobek_competence_signal": "SUPPORTED_IN_WATER_RECOVERY_CONTEXT",
+  "custody_handoff_status": "UNRESOLVED",
+  "bridge_interpretation": "The first concrete named-agent intersection between the water-recovery branch and the Anubis/embalming-restoration branch is Duamutef plus Qebehsenuef. BD113 places both immediately after Sobek's successful recovery of Horus's hands; BD151 places them inside the Osiris protection/reassembly ensemble under the embalming scene centered on Anubis. This is a source-bounded routing bridge, not evidence that either held the phallus.",
+  "search_consequence": "Prioritize DUAMUTEF and QEBEHSENUEF as bridge nodes. Trace objects, shrines, containers, iconography and conservation records where they co-occur with Anubis/Osiris, then test hollow/sealed/nested constructions by published X-ray/CT evidence. In parallel retain Sobek's water-recovery branch as a competence control.",
+  "claim_ceiling": "The graph rejects an unsupported failure accusation against Sobek in the source-bound model. It does not prove innocence as a metaphysical fact, supernatural testimony, phallus custody, or that the Book of the Dead was physically authored backwards."
+}
