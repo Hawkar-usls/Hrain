@@ -1,0 +1,196 @@
+{
+  "schema": "hrain.osiris_resurrection_sabotage_matrix.v1",
+  "case_id": "OSIRIS-RESURRECTION-SABOTAGE-001",
+  "created_at": "2026-08-16",
+  "purpose": "Rank investigative hypotheses for who would benefit from preventing the restoration of Osiris while preventing motive/opportunity from being misread as guilt.",
+  "method": {
+    "score_name": "INVESTIGATIVE_PRIORITY_SCORE",
+    "not_probability": true,
+    "not_guilt_score": true,
+    "dimensions": {
+      "motive": "0-3: direct benefit from Osiris remaining disabled / succession remaining blocked",
+      "opportunity": "0-3: source-bound proximity to attack, body, burial, recovery or custody domain",
+      "means": "0-3: source-bound ability to attack, conceal, bind, move, guard or alter access",
+      "conflict_link": "0-3: strength of source-bound conflict with Osiris/Horus restoration order",
+      "anti_restoration_alignment": "0-3: degree to which the source role points against restoration",
+      "protection_evidence": "0-3: source-bound evidence that the actor instead protects, restores or recovers Osiris/divine body parts"
+    },
+    "formula": "max(0, motive + opportunity + means + conflict_link + anti_restoration_alignment - 2*protection_evidence)",
+    "claim_ceiling": "A high score only means 'investigate this branch first'. It is not proof of historical action, secret custody, sabotage, guilt, supernatural testimony, or a literal backwards-authored Book of the Dead."
+  },
+  "source_anchors": [
+    {
+      "id": "UCL_CREATION_SETH_OSIRIS",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/religion/deitiescreation.html",
+      "summary": "UCL summarizes Seth as murdering and dismembering Osiris, taking his place as king; Isis revives Osiris sufficiently to conceive Horus, who later contests Seth and succeeds to Osiris's kingship."
+    },
+    {
+      "id": "BD17_SETH_BOUND_VICE_VERSA",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd17.html",
+      "summary": "Book of the Dead 17 contains the opposition 'If Horus is honoured, Seth is bound, and vice versa', identifies Seth in an adversarial rescue passage, names confederates of Seth, and also places Anubis guarding the chest containing the entrails of Osiris."
+    },
+    {
+      "id": "BD151_PROTECTORS_AND_ASSAILANT",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/hpres151.html",
+      "summary": "Book of the Dead 151 places Anubis as divine embalmer; Isis and Nephthys flank the body; the four sons of Horus protect the organs; Qebehsenuef reassembles Osiris and Duamutef says he came to rescue Osiris from his assailant."
+    },
+    {
+      "id": "BD1_ENEMIES_AND_REBELS",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd1.html",
+      "summary": "Book of the Dead 1 speaks of the enemies of Osiris and those who rebel against him, while aligning Horus/Thoth with Osiris's vindication."
+    },
+    {
+      "id": "BD42_PHALLUS_IDENTITY",
+      "url": "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd42.html",
+      "summary": "Book of the Dead 42 identifies the phallus with Osiris but does not name a phallus-specific guardian or saboteur."
+    }
+  ],
+  "suspect_priority": [
+    {
+      "rank": 1,
+      "id": "SETH",
+      "class": "NAMED_DIVINE_ADVERSARY",
+      "scores": {
+        "motive": 3,
+        "opportunity": 3,
+        "means": 3,
+        "conflict_link": 3,
+        "anti_restoration_alignment": 3,
+        "protection_evidence": 0,
+        "total": 15
+      },
+      "why_investigate": "Strongest source-bound motive branch: Seth is the direct rival in the Osiris-Horus succession complex; UCL's synthesis has him murder/dismember Osiris and take his place, while BD17 explicitly encodes Horus/Seth opposition and adversarial Seth passages.",
+      "important_caveat": "This still does not prove that Seth hid one specific missing body part in a container. That remains a separate custody claim requiring evidence."
+    },
+    {
+      "rank": 2,
+      "id": "CONFEDERATES_OF_SETH",
+      "class": "NAMED_COLLECTIVE_ADVERSARY",
+      "scores": {
+        "motive": 2,
+        "opportunity": 2,
+        "means": 2,
+        "conflict_link": 3,
+        "anti_restoration_alignment": 2,
+        "protection_evidence": 0,
+        "total": 11
+      },
+      "why_investigate": "BD17 explicitly mentions the confederates of Seth in an enemy-repulsion context. A coalition branch matters because concealment or misleading tasking need not be performed by Seth personally.",
+      "important_caveat": "No bound source currently links these confederates specifically to custody of the phallus."
+    },
+    {
+      "rank": 3,
+      "id": "UNNAMED_ASSAILANT_OF_OSIRIS",
+      "class": "UNRESOLVED_ATTACKER_IDENTITY",
+      "scores": {
+        "motive": 2,
+        "opportunity": 2,
+        "means": 2,
+        "conflict_link": 3,
+        "anti_restoration_alignment": 2,
+        "protection_evidence": 0,
+        "total": 11
+      },
+      "why_investigate": "BD151 has Duamutef say that he came to rescue Osiris from 'his assailant'. HRain should not automatically collapse every unnamed assailant into Seth; keeping the identity unresolved preserves alternative source branches.",
+      "important_caveat": "May overlap with Seth or Seth-aligned agents; identity is not established by this passage alone."
+    },
+    {
+      "rank": 4,
+      "id": "ENEMIES_OR_REBELS_OF_OSIRIS",
+      "class": "GENERIC_ADVERSARIAL_NETWORK",
+      "scores": {
+        "motive": 2,
+        "opportunity": 1,
+        "means": 1,
+        "conflict_link": 3,
+        "anti_restoration_alignment": 2,
+        "protection_evidence": 0,
+        "total": 9
+      },
+      "why_investigate": "BD1 independently preserves enemies/rebels of Osiris. This is weaker than a named suspect but useful as a network-level hypothesis for sabotage, misinformation or concealment.",
+      "important_caveat": "Generic enemy language cannot identify a specific actor or object."
+    },
+    {
+      "rank": 5,
+      "id": "UNKNOWN_CUSTODY_INSIDER",
+      "class": "SYSTEMS_HYPOTHESIS_ONLY",
+      "scores": {
+        "motive": 0,
+        "opportunity": 3,
+        "means": 2,
+        "conflict_link": 0,
+        "anti_restoration_alignment": 0,
+        "protection_evidence": 0,
+        "total": 5
+      },
+      "why_investigate": "If the object crossed from recovery into embalming/necropolis custody before Sobek searched, an unknown custodian could explain a no-find without implicating Sobek. This is a systems hypothesis generated by the custody gap, not an ancient accusation.",
+      "important_caveat": "No named historical/divine actor is supported for this role yet."
+    }
+  ],
+  "exculpatory_controls": [
+    {
+      "id": "ANUBIS",
+      "role": "EMBALMER_GUARDIAN_CONTROL",
+      "raw_opportunity": "HIGH",
+      "sabotage_priority": "LOW",
+      "reason": "BD151 makes Anubis the divine embalmer/protector; BD17 places Anubis guarding the chest containing Osiris's entrails. Opportunity is high, but current role evidence points toward protection rather than sabotage."
+    },
+    {
+      "id": "QEBEHSENUEF",
+      "role": "REASSEMBLY_PROTECTOR_CONTROL",
+      "raw_opportunity": "HIGH",
+      "sabotage_priority": "LOW",
+      "reason": "BD151 explicitly has Qebehsenuef unite bones, assemble limbs and return the heart of Osiris."
+    },
+    {
+      "id": "DUAMUTEF",
+      "role": "RESCUE_PROTECTOR_CONTROL",
+      "raw_opportunity": "HIGH",
+      "sabotage_priority": "LOW",
+      "reason": "BD151 explicitly has Duamutef come to rescue Osiris from his assailant."
+    },
+    {
+      "id": "ISIS_AND_NEPHTHYS",
+      "role": "RESTORATION_MOURNING_PROTECTOR_CONTROL",
+      "raw_opportunity": "HIGH",
+      "sabotage_priority": "LOW",
+      "reason": "BD151 positions Isis and Nephthys at the embalming scene; broader UCL synthesis presents Isis as collecting/reviving Osiris and protecting Horus."
+    },
+    {
+      "id": "HORUS",
+      "role": "SUCCESSION_BENEFICIARY_CONTROL",
+      "raw_opportunity": "MEDIUM",
+      "sabotage_priority": "LOW",
+      "reason": "Horus's legitimacy is tied to Osiris and he becomes the ruler on his father's throne; sabotaging Osiris restoration runs against the main succession logic preserved in the bound corpus."
+    },
+    {
+      "id": "SOBEK",
+      "role": "WATER_RECOVERY_COMPETENCE_CONTROL",
+      "raw_opportunity": "MEDIUM",
+      "sabotage_priority": "LOW",
+      "reason": "The existing HRain/DemiHead pass supports Sobek as a capable water-recovery operator and does not establish a phallus-specific failed assignment or betrayal."
+    }
+  ],
+  "non_agent_branches": [
+    {
+      "id": "FISH_CONSUMPTION_BRANCH",
+      "status": "TEXTUAL_BRANCH_NOT_INTENT_MODEL",
+      "reason": "A fish-consumption story cannot be ranked in a motive matrix unless agency/intent is independently established. Preserve it as a textual branch, not a suspect."
+    }
+  ],
+  "key_inference": {
+    "statement": "The strongest sabotage motive is not merely 'prevent Osiris from functioning'; it is also to disrupt the Osiris-to-Horus succession chain. BD17's 'If Horus is honoured, Seth is bound, and vice versa' makes the zero-sum conflict unusually explicit.",
+    "search_effect": "Prioritize Seth / Seth-confederate provenance nodes before accusing custodial protectors. Search for evidence of transfer, concealment, substitution, false tasking or access restriction between the attack domain and the Anubis/Sons-of-Horus custody domain."
+  },
+  "next_gate": {
+    "id": "SABOTAGE_TO_CUSTODY_HANDOFF_PASS",
+    "query": "Which source-bound node can connect a Seth-aligned adversarial branch to a later protected Osirian container without assuming that the protector was the saboteur?",
+    "required_outputs": [
+      "last adversarial actor before recovery/restoration",
+      "first protective custodian after recovery/restoration",
+      "container or body-part representation involved",
+      "whether a substitution or concealment event is source-bound",
+      "whether museum X-ray/CT evidence exists for the resulting object class"
+    ]
+  }
+}
