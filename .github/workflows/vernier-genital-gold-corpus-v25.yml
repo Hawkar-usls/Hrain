@@ -1,0 +1,31 @@
+name: Vernier genital gold corpus v2.5
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/vernier_genital_gold_corpus_v25.py'
+      - '.github/workflows/vernier-genital-gold-corpus-v25.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Sweep Vernier OCR for genital gold and Mendes sister objects
+        run: python tools/vernier_genital_gold_corpus_v25.py
+      - name: Upload corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernier-genital-gold-corpus-v25
+          path: /tmp/vernier-genital-v25/
+          if-no-files-found: error
+          retention-days: 3
