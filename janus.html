@@ -2,115 +2,509 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#030508">
-  <title>HRaiN · JANUS Meta Registry</title>
-  <meta name="description" content="Read-only HRaiN graph view of the active JANUS Meta Registry projection.">
+  <title>HRaiN · JANUS Living Registry</title>
+  <meta name="description" content="Read-only Spore-like HRaiN navigation view of the JANUS Meta Registry.">
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#030508;--bg2:#07111b;--cyan:#00ffa3;--blue:#39c6ff;--violet:#d300ff;--gold:#c8a96b;--text:#e7f2f8;--muted:#8da9b8;--line:rgba(122,231,255,.18);--panel:rgba(5,13,20,.92)}
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Rajdhani,system-ui,sans-serif}
-    body{background:radial-gradient(circle at 50% 20%,rgba(57,198,255,.09),transparent 34%),linear-gradient(180deg,#030508,#07111b 48%,#020408)}
-    #grid{position:fixed;inset:0;pointer-events:none;opacity:.34;background-image:linear-gradient(rgba(57,198,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(57,198,255,.04) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg,#000,transparent 92%)}
-    #chart{position:fixed;inset:0;z-index:1}
-    .network{position:fixed;left:0;right:0;top:0;z-index:30;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:68px;padding:10px 24px;background:linear-gradient(180deg,rgba(2,7,12,.96),rgba(4,13,20,.84));border-bottom:1px solid rgba(57,198,255,.22);backdrop-filter:blur(16px)}
-    .network a{text-decoration:none;color:#b9cedb;letter-spacing:.08em;font-weight:700}.network-left{justify-self:start}.network-center{justify-self:center;font-family:Orbitron,sans-serif;font-size:clamp(1.45rem,3vw,2rem);color:#f3fbff!important;text-shadow:0 0 24px rgba(57,198,255,.28)}.network-center strong{color:var(--blue);font-size:.74em}.network-right{justify-self:end;font-family:Orbitron,sans-serif}.network-right strong{color:var(--blue)}
-    .mode{position:fixed;top:78px;left:24px;z-index:25;display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid rgba(0,255,163,.2);border-radius:999px;background:rgba(2,10,14,.72);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}.mode b{color:#7cf0ca}.mode span{color:#718b98}
-    .breadcrumbs{position:fixed;top:122px;left:24px;z-index:25;display:flex;gap:6px;align-items:center;max-width:min(70vw,900px);flex-wrap:wrap}.crumb{border:0;background:rgba(4,13,20,.72);color:#8ba9ba;border:1px solid rgba(57,198,255,.14);border-radius:999px;padding:5px 9px;cursor:pointer;font:700 .75rem Rajdhani}.crumb.active{color:#7ae7ff;border-color:rgba(122,231,255,.35)}
-    .stats{position:fixed;right:24px;top:82px;z-index:25;text-align:right;color:#738b99;font-size:.72rem;line-height:1.35}.stats strong{display:block;color:#a8c9d8;font-family:Orbitron;font-size:.72rem}
-    .panel{position:fixed;right:18px;bottom:18px;z-index:35;width:min(430px,calc(100vw - 36px));max-height:58vh;overflow:auto;padding:18px;border:1px solid rgba(57,198,255,.24);border-radius:16px;background:linear-gradient(150deg,rgba(8,22,33,.96),rgba(2,8,13,.96));box-shadow:0 18px 70px rgba(0,0,0,.5),0 0 36px rgba(57,198,255,.06);backdrop-filter:blur(14px);transform:translateY(calc(100% + 28px));opacity:0;transition:.22s ease}.panel.open{transform:translateY(0);opacity:1}.panel-close{float:right;border:0;background:transparent;color:#8198a5;font-size:1.4rem;cursor:pointer}.panel-kicker{color:#7ae7ff;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}.panel h2{margin:.35rem 0 .7rem;font-family:Orbitron;font-size:1.05rem;line-height:1.35}.panel p{color:#a7c1d0;font-size:.88rem;line-height:1.5}.meta{display:grid;gap:6px;margin:.8rem 0}.meta div{padding:7px 8px;border-left:2px solid rgba(200,169,107,.45);background:rgba(255,255,255,.025);font-size:.75rem;overflow-wrap:anywhere}.meta b{color:#d3e6ef}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 11px;border:1px solid rgba(57,198,255,.26);border-radius:8px;background:rgba(7,31,45,.7);color:#8fe5ff;text-decoration:none;font-weight:800;font-size:.78rem;letter-spacing:.04em}.btn.gold{border-color:rgba(200,169,107,.36);color:#ddc995}.boundary{position:fixed;left:24px;bottom:18px;z-index:20;max-width:min(620px,calc(100vw - 48px));color:#66818f;font-size:.7rem;line-height:1.35}.boundary b{color:#9bb5c2}
-    .node circle.core{stroke-width:2;transition:.18s}.node circle.aura{fill:none;stroke-width:1;opacity:.26}.node text.icon{font-size:22px;text-anchor:middle;dominant-baseline:central;pointer-events:none}.node text.label{font-size:12px;font-weight:700;fill:#e2edf3;text-anchor:middle;pointer-events:none;text-shadow:0 2px 5px #000}.node.root circle.core{fill:rgba(211,0,255,.16);stroke:#d300ff;filter:drop-shadow(0 0 11px rgba(211,0,255,.5))}.node.surface circle.core{fill:rgba(57,198,255,.13);stroke:#39c6ff;filter:drop-shadow(0 0 9px rgba(57,198,255,.42))}.node.object circle.core{fill:rgba(0,255,163,.10);stroke:#00ffa3;filter:drop-shadow(0 0 7px rgba(0,255,163,.28))}.node:hover circle.core{stroke:#fff;stroke-width:3}.link{stroke:rgba(122,231,255,.28);stroke-width:1.4}.loading{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#030508;font-family:Orbitron;color:#7ae7ff;letter-spacing:.12em}.loading.hidden{display:none}.error{color:#ff6577}
-    @media(max-width:720px){.network{padding:8px 12px;min-height:62px}.network-left{font-size:.72rem}.network-center{font-size:1.15rem}.network-right{font-size:.72rem}.mode{left:12px;top:70px}.stats{right:12px;top:72px}.breadcrumbs{left:12px;top:112px;max-width:calc(100vw - 24px)}.boundary{left:12px;bottom:10px;max-width:calc(100vw - 24px)}.panel{right:10px;bottom:10px;width:calc(100vw - 20px);max-height:52vh}}
+    :root{
+      --bg-dark:#030508;--bg-pulse:#0b101a;
+      --c-default:#00ffa3;--c-danger:#ff2a6d;--c-warn:#ffc107;--c-info:#d300ff;
+      --c-ambient:#00ffa3;--border:rgba(255,255,255,.15);--text:#e8f4ef;--muted:#89a59d;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg-dark);font-family:Rajdhani,sans-serif;color:var(--text);user-select:none;touch-action:none;position:fixed}
+    #neural-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,var(--bg-pulse),var(--bg-dark));z-index:0;animation:breathe 12s infinite alternate ease-in-out;pointer-events:none}
+    @keyframes breathe{0%{opacity:.58;transform:scale(1)}100%{opacity:1;transform:scale(1.1)}}
+    #particles{position:absolute;inset:0;pointer-events:none;z-index:0}
+    .particle{position:absolute;background:var(--c-ambient);border-radius:50%;opacity:.28;animation:float 28s infinite linear;box-shadow:0 0 10px var(--c-ambient);transition:background-color 2.5s ease,box-shadow 2.5s ease}
+    @keyframes float{0%{transform:translateY(8vh) translateX(0);opacity:0}45%{opacity:.48}100%{transform:translateY(-108vh) translateX(50px);opacity:0}}
+    #grid-bg{position:absolute;inset:0;background-size:60px 60px;opacity:0;transition:opacity .45s,background-image 2.5s ease;z-index:1;pointer-events:none}
+    body.grid-active #grid-bg{opacity:1}
+    #chart{width:100%;height:100%;position:relative;z-index:2}
+    .ui-layer{position:fixed;inset:0;z-index:20;pointer-events:none}
+    .ui-interactive{pointer-events:auto!important}
+    .network{position:absolute;left:0;right:0;top:0;min-height:70px;padding:12px 26px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:linear-gradient(180deg,rgba(2,7,12,.93),rgba(3,10,16,.68),transparent);pointer-events:auto}
+    .network a{text-decoration:none;color:rgba(255,255,255,.48);font-weight:700;letter-spacing:.07em}
+    .network-left{justify-self:start}.network-center{justify-self:center;font-family:Orbitron;font-size:clamp(1.55rem,3vw,2.15rem);color:#fff!important;text-shadow:0 0 20px rgba(0,255,163,.23)}.network-center span{color:var(--c-default);font-size:.72em}
+    .network-right{justify-self:end;font-family:Orbitron}.network-right span{color:#d300ff}
+    .mode{position:absolute;top:76px;left:28px;padding:7px 11px;border:1px solid rgba(0,255,163,.25);border-radius:999px;background:rgba(3,12,12,.66);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#7d9c92}
+    .mode b{color:#7cf0c6}.mode i{font-style:normal;color:#536a64;margin-left:7px}
+    .top-controls{position:absolute;top:82px;right:28px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:64%}
+    .btn{background:rgba(8,15,18,.72);border:1px solid var(--border);color:rgba(255,255,255,.8);backdrop-filter:blur(8px);padding:9px 14px;border-radius:8px;font-family:Rajdhani;font-weight:700;font-size:.82rem;cursor:pointer;transition:.12s;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 8px rgba(0,0,0,.28)}
+    .btn:active{transform:scale(.93);border-color:var(--c-default);color:#fff}
+    .btn.active{border-color:var(--c-default);color:var(--c-default);background:rgba(0,255,163,.1);box-shadow:0 0 15px rgba(0,255,163,.14)}
+    .btn.local{border-color:rgba(255,193,7,.25);color:#d7c27e}
+    #nav-context{position:absolute;top:122px;left:28px;display:flex;flex-direction:column;gap:7px;opacity:0;transition:.25s}
+    #nav-context.visible{opacity:1}
+    #breadcrumbs{display:flex;flex-direction:column;gap:4px}
+    .crumb{font-size:.82rem;color:#6f8d84;cursor:pointer;max-width:min(62vw,720px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .crumb:hover{color:#fff}.crumb.active{color:var(--c-default);font-weight:700;text-shadow:0 0 10px rgba(0,255,163,.35)}
+    #btn-ascend{padding:6px 12px;font-size:.74rem;border-color:var(--c-default);color:var(--c-default);width:max-content}
+    #btn-dive{position:absolute;bottom:38px;left:28px;border-color:var(--c-default);color:var(--c-default);font-family:Orbitron;font-size:.9rem;padding:11px 18px;box-shadow:0 0 18px rgba(0,255,163,.1);opacity:0;transform:translateY(18px);transition:.3s;pointer-events:none;background:rgba(0,18,10,.86)}
+    #btn-dive.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+    .stats{position:absolute;right:28px;bottom:34px;text-align:right;color:#607a72;font-size:.71rem;line-height:1.4}.stats strong{display:block;color:#a0c2b6;font-family:Orbitron;font-size:.72rem}
+    #toast-container{position:absolute;bottom:105px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;width:90%;max-width:390px;pointer-events:none}
+    .toast{padding:11px 14px;border-radius:9px;border:1px solid rgba(0,255,163,.22);background:rgba(5,14,16,.94);color:#b8d6cc;font-weight:700;letter-spacing:.04em;text-align:center;opacity:0;transform:translateY(14px);transition:.25s;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+    .toast.visible{opacity:1;transform:translateY(0)}.toast.warn{border-color:rgba(255,193,7,.35);color:#e7ce86}.toast.error{border-color:rgba(255,42,109,.45);color:#ff7d9f}
+    .panel{position:absolute;right:18px;bottom:18px;width:min(440px,calc(100vw - 36px));max-height:60vh;overflow:auto;padding:18px;border:1px solid rgba(0,255,163,.22);border-radius:16px;background:linear-gradient(150deg,rgba(8,23,24,.96),rgba(2,8,10,.96));box-shadow:0 18px 70px rgba(0,0,0,.5),0 0 36px rgba(0,255,163,.05);backdrop-filter:blur(14px);transform:translateY(calc(100% + 30px));opacity:0;transition:.22s;pointer-events:auto}
+    .panel.open{transform:translateY(0);opacity:1}
+    .panel-close{float:right;border:0;background:transparent;color:#76958b;font-size:1.4rem;cursor:pointer}
+    .panel-kicker{color:#72e8c1;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}.panel h2{margin:.35rem 0 .7rem;font-family:Orbitron;font-size:1.05rem;line-height:1.35}.panel p{color:#a4c2b8;font-size:.88rem;line-height:1.48}
+    .meta{display:grid;gap:6px;margin:.8rem 0}.meta div{padding:7px 8px;border-left:2px solid rgba(200,169,107,.45);background:rgba(255,255,255,.025);font-size:.75rem;overflow-wrap:anywhere}.meta b{color:#d5e9e2}
+    .panel-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.panel-buttons a{display:inline-flex;padding:8px 11px;border:1px solid rgba(0,255,163,.25);border-radius:8px;background:rgba(0,45,28,.4);color:#83ecc8;text-decoration:none;font-weight:800;font-size:.78rem}
+    .boundary{position:absolute;left:28px;bottom:98px;max-width:min(620px,55vw);color:#506a62;font-size:.68rem;line-height:1.4}.boundary b{color:#8eb2a6}
+    .link{fill:none;stroke-width:2.4;opacity:.62;filter:drop-shadow(0 0 3px currentColor);transition:opacity .25s}
+    .link-tendon{fill:none;stroke-width:8;opacity:.05;stroke-linecap:round}
+    .impulse{pointer-events:none;mix-blend-mode:screen;filter:drop-shadow(0 0 8px currentColor)}
+    @keyframes corePulse{0%,100%{filter:drop-shadow(0 0 5px var(--node-color));stroke-width:2px}50%{filter:drop-shadow(0 0 15px var(--node-color));stroke-width:3px}}
+    @keyframes auraBreathe{0%,100%{opacity:.17;transform:scale(.92)}50%{opacity:.52;transform:scale(1.12)}}
+    @keyframes membraneSpin{from{transform:rotate(0deg) scale(1.08)}to{transform:rotate(360deg) scale(1.08)}}
+    .node-group{cursor:pointer}
+    .neuron-core{fill:var(--node-bg);stroke:var(--node-color);stroke-width:2px;animation:corePulse 4.2s infinite ease-in-out}
+    .neuron-aura{fill:transparent;stroke:var(--node-color);stroke-width:1.3px;opacity:.3;transform-origin:center;transform-box:fill-box;animation:auraBreathe 5.7s infinite ease-in-out}
+    .neuron-membrane{fill:transparent;stroke:var(--node-color);stroke-width:.8px;stroke-dasharray:4 8;opacity:.16;transform-origin:center;transform-box:fill-box}
+    .node-group.selected .neuron-core{stroke:#fff;stroke-width:3px;filter:drop-shadow(0 0 12px var(--node-color)) drop-shadow(0 0 25px var(--node-color))}
+    .node-group.selected .neuron-membrane{opacity:.7;stroke-width:1.5px;animation:membraneSpin 9s infinite linear}
+    .node-group.is-root .neuron-core{stroke-width:4px;fill:rgba(255,255,255,.08)}
+    .type-default{--node-color:var(--c-default);--node-bg:rgba(0,255,163,.13)}
+    .type-danger{--node-color:var(--c-danger);--node-bg:rgba(255,42,109,.14)}
+    .type-warn{--node-color:var(--c-warn);--node-bg:rgba(255,193,7,.13)}
+    .type-info{--node-color:var(--c-info);--node-bg:rgba(211,0,255,.14)}
+    text.emoji{font-size:23px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+    text.label{font-family:Rajdhani;font-size:13px;font-weight:700;fill:rgba(255,255,255,.9);text-anchor:middle;pointer-events:none;text-shadow:0 2px 6px #000}
+    .loading{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#030508;font-family:Orbitron;color:#72e8c1;letter-spacing:.12em;text-align:center;padding:24px}.loading.hidden{display:none}
+    @media(max-width:760px){
+      .network{padding:9px 12px;min-height:62px}.network-left,.network-right{font-size:.68rem}.network-center{font-size:1.12rem}
+      .mode{top:68px;left:12px}.top-controls{top:68px;right:12px;max-width:70%;gap:5px}.btn{padding:7px 9px;font-size:.68rem}
+      #nav-context{top:108px;left:12px}.boundary{display:none}.stats{right:12px;bottom:18px}.panel{right:10px;bottom:10px;width:calc(100vw - 20px);max-height:54vh}
+      #btn-dive{left:12px;bottom:20px}
+    }
+    @media(prefers-reduced-motion:reduce){#neural-bg,.particle,.neuron-core,.neuron-aura,.node-group.selected .neuron-membrane{animation:none!important}}
   </style>
 </head>
 <body>
-  <div id="grid"></div>
-  <header class="network">
-    <a class="network-left" href="https://hawkar-usls.github.io/janus-meta-registry/">JANUS Meta Registry</a>
-    <a class="network-center" href="./">HR<strong>ai</strong>N</a>
-    <a class="network-right" href="https://hawkar-usls.github.io/iNaiHR/">iN<strong>ai</strong>HR</a>
-  </header>
-  <div class="mode"><b>REGISTRY MODE</b><span>READ ONLY</span></div>
-  <div class="stats"><strong id="source-state">JANUS UPLINK</strong><span id="stats-text">loading…</span></div>
-  <div class="breadcrumbs" id="breadcrumbs"></div>
+  <div id="neural-bg"></div>
+  <div id="particles"></div>
+  <div id="grid-bg"></div>
   <div id="chart"></div>
-  <aside class="panel" id="panel"><button class="panel-close" id="panel-close" aria-label="Close">×</button><span class="panel-kicker" id="panel-kicker">registry object</span><h2 id="panel-title"></h2><p id="panel-summary"></p><div class="meta" id="panel-meta"></div><div class="buttons" id="panel-buttons"></div></aside>
-  <div class="boundary"><b>HRAIN_GRAPH != REGISTRY_AUTHORITY.</b> This view is an automatically generated read-only navigation projection. Source JSON, code, receipts and current-authority objects remain authoritative.</div>
+
+  <div class="ui-layer">
+    <header class="network">
+      <a class="network-left" href="https://hawkar-usls.github.io/janus-meta-registry/">JANUS Meta Registry</a>
+      <a class="network-center" href="./">HR<span>ai</span>N</a>
+      <a class="network-right" href="https://hawkar-usls.github.io/iNaiHR/">iN<span>ai</span>HR</a>
+    </header>
+
+    <div class="mode"><b>REGISTRY MODE</b><i>READ ONLY · APPEND-ONLY SOURCE</i></div>
+    <div class="top-controls ui-interactive">
+      <button id="btn-grid" class="btn" type="button">GRID</button>
+      <button id="btn-home" class="btn" type="button">ORIGIN</button>
+      <button id="btn-wipe" class="btn local" type="button" title="Clears only this browser view. Registry data is untouched.">WIPE LOCAL DESK</button>
+    </div>
+
+    <div id="nav-context" class="ui-interactive"><div id="breadcrumbs"></div><button id="btn-ascend" class="btn" type="button">▲ ASCEND</button></div>
+    <button id="btn-dive" class="btn ui-interactive" type="button">DIVE</button>
+
+    <div class="stats"><strong id="source-state">JANUS UPLINK</strong><span id="stats-text">loading…</span></div>
+    <div class="boundary"><b>HRAIN_GRAPH != REGISTRY_AUTHORITY.</b> WIPE is local-view-only. No HRaiN control can delete, rewrite, or mutate JANUS Meta Registry source objects.</div>
+    <div id="toast-container"></div>
+
+    <aside class="panel" id="panel">
+      <button class="panel-close" id="panel-close" aria-label="Close">×</button>
+      <span class="panel-kicker" id="panel-kicker">registry object</span>
+      <h2 id="panel-title"></h2>
+      <p id="panel-summary"></p>
+      <div class="meta" id="panel-meta"></div>
+      <div class="panel-buttons" id="panel-buttons"></div>
+    </aside>
+  </div>
+
   <div class="loading" id="loading">CONNECTING TO JANUS META REGISTRY…</div>
+
 <script>
 (() => {
   'use strict';
+
   const INDEX_URL = 'https://hawkar-usls.github.io/janus-meta-registry/assets/hrain-registry-index.json';
-  const META_HOME = 'https://hawkar-usls.github.io/janus-meta-registry/';
-  let index = null;
-  let nodes = [], links = [], context = [];
-  let width = innerWidth, height = innerHeight;
+  const EXPECTED_SCHEMA = 'janus.hrain.registry_graph_index.v1_0';
+  const VALID_TYPES = ['default','danger','warn','info'];
+  const TYPE_COLOR = {default:'#00ffa3',danger:'#ff2a6d',warn:'#ffc107',info:'#d300ff'};
 
-  const svg = d3.select('#chart').append('svg').attr('width','100%').attr('height','100%');
-  const g = svg.append('g');
-  const linkLayer = g.append('g');
-  const nodeLayer = g.append('g');
-  const zoom = d3.zoom().scaleExtent([.18,3]).on('zoom', e => g.attr('transform', e.transform));
-  svg.call(zoom).on('dblclick.zoom', null);
+  let sourceIndex = null;
+  let globalNodes = [];
+  let globalLinks = [];
+  let viewNodes = [];
+  let viewLinks = [];
+  let contextStack = [];
+  let selectedNode = null;
+  let isGrid = false;
+  let width = innerWidth;
+  let height = innerHeight;
+  let lastDominantType = 'default';
 
-  const sim = d3.forceSimulation().force('link', d3.forceLink().id(d=>d.id).distance(d=>d.source.kind==='root'?190:155)).force('charge',d3.forceManyBody().strength(-900)).force('collide',d3.forceCollide().radius(72).strength(1)).force('x',d3.forceX(()=>width/2).strength(.025)).force('y',d3.forceY(()=>height/2).strength(.025)).velocityDecay(.52);
-
-  function currentRoot(){ return context.length ? context[context.length-1] : null; }
-  function childrenOf(id){ return nodes.filter(n => n.parentId === id); }
-  function hasChildren(node){ return childrenOf(node.id).length > 0; }
-  function nodeKind(n){ if(n.id==='registry:janus-meta-registry') return 'root'; if(String(n.id).startsWith('surface:')) return 'surface'; return 'object'; }
-
-  function updateBreadcrumbs(){
-    const box=document.getElementById('breadcrumbs'); box.innerHTML='';
-    const rootButton=document.createElement('button'); rootButton.className='crumb'; rootButton.textContent='JANUS'; rootButton.onclick=()=>{context=[]; updateView();}; box.appendChild(rootButton);
-    context.forEach((id,i)=>{ const n=nodes.find(x=>x.id===id); if(!n)return; const b=document.createElement('button'); b.className='crumb '+(i===context.length-1?'active':''); b.textContent=n.label; b.onclick=()=>{context=context.slice(0,i+1);updateView();}; box.appendChild(b); });
+  function initParticles(){
+    const box = document.getElementById('particles');
+    for(let i=0;i<30;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      p.style.left=Math.random()*100+'%';
+      p.style.top=Math.random()*100+'%';
+      p.style.width=(Math.random()*3+2)+'px';
+      p.style.height=p.style.width;
+      p.style.animationDuration=(Math.random()*15+15)+'s';
+      p.style.animationDelay=-(Math.random()*15)+'s';
+      box.appendChild(p);
+    }
   }
+  initParticles();
+  document.getElementById('grid-bg').style.backgroundImage =
+    'linear-gradient(rgba(0,255,163,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,163,.06) 1px,transparent 1px)';
+
+  const svg=d3.select('#chart').append('svg').attr('width','100%').attr('height','100%');
+  const g=svg.append('g');
+  const tendonLayer=g.append('g').attr('class','tendons');
+  const linkLayer=g.append('g').attr('class','links');
+  const impulseLayer=g.append('g').attr('class','impulses');
+  const nodeLayer=g.append('g').attr('class','nodes');
+
+  const zoom=d3.zoom().scaleExtent([.1,4]).on('zoom',e=>{
+    g.attr('transform',e.transform);
+    if(isGrid){
+      const size=60*e.transform.k;
+      document.getElementById('grid-bg').style.backgroundPosition=`${e.transform.x}px ${e.transform.y}px`;
+      document.getElementById('grid-bg').style.backgroundSize=`${size}px ${size}px`;
+    }
+  });
+  svg.call(zoom).on('dblclick.zoom',null);
+  svg.on('click',e=>{if(e.target.tagName==='svg') deselect();});
+
+  const sim=d3.forceSimulation()
+    .force('link',d3.forceLink().id(d=>d.id).distance(d=>nodeKind(d.target)==='object'?(innerWidth<768?145:190):(innerWidth<768?165:220)).strength(.55))
+    .force('charge',d3.forceManyBody().strength(innerWidth<768?-900:-1900))
+    .force('collide',d3.forceCollide().radius(d=>nodeKind(d)==='root'?95:nodeKind(d)==='surface'?82:68).strength(1).iterations(3))
+    .force('x',d3.forceX(()=>width/2).strength(.012))
+    .force('y',d3.forceY(()=>height/2).strength(.012))
+    .velocityDecay(.58);
+
+  function cloneRuntime(){
+    globalNodes=sourceIndex.nodes.map(n=>({...n,chatHistory:[],fx:null,fy:null,vx:0,vy:0}));
+    globalLinks=sourceIndex.links.map(l=>({source:l.source,target:l.target}));
+  }
+
+  function nodeKind(n){
+    if(n.id==='registry:janus-meta-registry') return 'root';
+    if(String(n.id).startsWith('surface:')) return 'surface';
+    return 'object';
+  }
+  function nodeType(n){
+    const t=n.type|| (nodeKind(n)==='root'?'info':nodeKind(n)==='surface'?'info':'default');
+    return VALID_TYPES.includes(t)?t:'default';
+  }
+  function currentRoot(){return contextStack.length?contextStack[contextStack.length-1]:null;}
+  function childrenOf(id){return globalNodes.filter(n=>n.parentId===id);}
+  function hasChildren(n){return childrenOf(n.id).length>0;}
 
   function updateView(){
-    const root=currentRoot();
-    let visible;
-    if(!root) visible=nodes.filter(n=>n.parentId==null);
-    else visible=nodes.filter(n=>n.id===root || n.parentId===root);
-    const ids=new Set(visible.map(n=>n.id));
-    const visibleLinks=links.filter(l=>ids.has(l.source.id||l.source)&&ids.has(l.target.id||l.target)).map(l=>({source:l.source.id||l.source,target:l.target.id||l.target}));
-    render(visible,visibleLinks); updateBreadcrumbs();
+    const rootId=currentRoot();
+    if(!rootId){
+      viewNodes=globalNodes.filter(n=>n.parentId==null);
+      document.getElementById('nav-context').classList.remove('visible');
+    }else{
+      const root=globalNodes.find(n=>n.id===rootId);
+      if(!root){contextStack.pop();return updateView();}
+      root.fx=width/2;root.fy=height/2;
+      viewNodes=globalNodes.filter(n=>n.id===rootId||n.parentId===rootId);
+      updateNav();
+    }
+    const ids=new Set(viewNodes.map(n=>n.id));
+    viewLinks=globalLinks.filter(l=>{
+      const s=l.source.id||l.source,t=l.target.id||l.target;
+      return ids.has(s)&&ids.has(t);
+    }).map(l=>({source:l.source.id||l.source,target:l.target.id||l.target}));
+    selectedNode=null;
+    closePanel();
+    render();
+    updateButtons();
+    sim.alpha(1).restart();
+    setTimeout(fitView,300);
   }
 
-  function render(viewNodes,viewLinks){
-    const l=linkLayer.selectAll('line').data(viewLinks,d=>(d.source.id||d.source)+'-'+(d.target.id||d.target)); l.exit().remove(); const allL=l.enter().append('line').attr('class','link').merge(l);
-    const n=nodeLayer.selectAll('g.node').data(viewNodes,d=>d.id); n.exit().remove();
-    const enter=n.enter().append('g').attr('class',d=>'node '+nodeKind(d)).style('cursor','pointer').on('click',(e,d)=>handleNode(d));
-    enter.append('circle').attr('class','aura'); enter.append('circle').attr('class','core'); enter.append('text').attr('class','icon'); enter.append('text').attr('class','label');
-    const allN=enter.merge(n).attr('class',d=>'node '+nodeKind(d));
-    allN.select('circle.core').attr('r',d=>nodeKind(d)==='root'?36:nodeKind(d)==='surface'?29:23);
-    allN.select('circle.aura').attr('r',d=>nodeKind(d)==='root'?62:nodeKind(d)==='surface'?48:36).attr('stroke',d=>nodeKind(d)==='root'?'#d300ff':nodeKind(d)==='surface'?'#39c6ff':'#00ffa3');
-    allN.select('text.icon').text(d=>d.emoji||'◈');
-    allN.select('text.label').text(d=>String(d.label||'').length>38?String(d.label).slice(0,35)+'…':d.label).attr('dy',d=>nodeKind(d)==='root'?58:45);
-    sim.nodes(viewNodes).on('tick',()=>{allL.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);allN.attr('transform',d=>`translate(${d.x},${d.y})`);}); sim.force('link').links(viewLinks); sim.alpha(1).restart();
-    setTimeout(()=>{try{const bounds=g.node().getBBox();const scale=Math.min(1.15,.82/Math.max(bounds.width/width,bounds.height/height));const tx=width/2-scale*(bounds.x+bounds.width/2),ty=height/2-scale*(bounds.y+bounds.height/2);svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(Math.max(.35,scale)));}catch(_){ }},220);
+  function render(){
+    const t=tendonLayer.selectAll('path').data(viewLinks,d=>(d.source.id||d.source)+'-'+(d.target.id||d.target));
+    t.exit().remove();
+    const allT=t.enter().append('path').attr('class','link-tendon').merge(t);
+
+    const l=linkLayer.selectAll('path').data(viewLinks,d=>(d.source.id||d.source)+'-'+(d.target.id||d.target));
+    l.exit().remove();
+    const allL=l.enter().append('path').attr('class','link').merge(l);
+    allL.style('stroke',d=>{
+      const target=viewNodes.find(n=>n.id===(d.target.id||d.target));
+      return TYPE_COLOR[nodeType(target||{})]||TYPE_COLOR.default;
+    }).style('color',d=>{
+      const target=viewNodes.find(n=>n.id===(d.target.id||d.target));
+      return TYPE_COLOR[nodeType(target||{})]||TYPE_COLOR.default;
+    });
+    allT.style('stroke',d=>{
+      const target=viewNodes.find(n=>n.id===(d.target.id||d.target));
+      return TYPE_COLOR[nodeType(target||{})]||TYPE_COLOR.default;
+    });
+
+    const n=nodeLayer.selectAll('g.node-group').data(viewNodes,d=>d.id);
+    n.exit().transition().duration(180).style('opacity',0).remove();
+    const enter=n.enter().append('g').attr('class','node-group').attr('opacity',0)
+      .call(d3.drag().on('start',dragStart).on('drag',dragged).on('end',dragEnd))
+      .on('click',clickNode);
+    enter.transition().duration(360).attr('opacity',1);
+    enter.append('circle').attr('class','neuron-membrane');
+    enter.append('circle').attr('class','neuron-aura');
+    enter.append('circle').attr('class','neuron-core');
+    enter.append('text').attr('class','emoji');
+    enter.append('text').attr('class','label');
+
+    const allN=enter.merge(n);
+    const rootId=currentRoot();
+    allN.attr('class',d=>`node-group type-${nodeType(d)} ${d===selectedNode?'selected':''} ${d.id===rootId?'is-root':''}`);
+    allN.select('.neuron-core').attr('r',d=>d.id===rootId?36:nodeKind(d)==='surface'?28:24);
+    allN.select('.neuron-aura').attr('r',d=>d.id===rootId?78:nodeKind(d)==='surface'?57:48);
+    allN.select('.neuron-membrane').attr('r',d=>d.id===rootId?92:nodeKind(d)==='surface'?70:59);
+    allN.select('.emoji').text(d=>d.emoji||'◈');
+    allN.select('.label').text(d=>{
+      const s=String(d.label||'');
+      return s.length>42?s.slice(0,39)+'…':s;
+    }).attr('dy',d=>d.id===rootId?56:46);
+
+    sim.nodes(viewNodes).on('tick',()=>{
+      allL.attr('d',organicPath);
+      allT.attr('d',organicPath);
+      allN.attr('transform',d=>`translate(${d.x},${d.y})`);
+    });
+    sim.force('link').links(viewLinks);
   }
 
-  function handleNode(node){ if(hasChildren(node)){ context.push(node.id); closePanel(); updateView(); } else openPanel(node); }
-  function closePanel(){document.getElementById('panel').classList.remove('open');}
-  document.getElementById('panel-close').onclick=closePanel;
+  function organicPath(d){
+    const s=d.source,t=d.target;
+    if(!s||!t||!Number.isFinite(s.x)||!Number.isFinite(t.x)) return '';
+    const dx=t.x-s.x,dy=t.y-s.y;
+    const mx=(s.x+t.x)/2,my=(s.y+t.y)/2;
+    const len=Math.max(1,Math.hypot(dx,dy));
+    const bend=Math.min(28,len*.08);
+    const nx=-dy/len,ny=dx/len;
+    const sign=((String(s.id)+String(t.id)).length%2)?1:-1;
+    return `M${s.x},${s.y} Q${mx+nx*bend*sign},${my+ny*bend*sign} ${t.x},${t.y}`;
+  }
+
+  function clickNode(e,d){
+    if(e.defaultPrevented)return;
+    if(selectedNode===d){
+      if(nodeKind(d)==='object') openPanel(d);
+      else deselect();
+      return;
+    }
+    selectedNode=d;
+    if(nodeKind(d)==='object') openPanel(d); else closePanel();
+    updateButtons();
+    render();
+    if(navigator.vibrate) navigator.vibrate(12);
+  }
+
+  function dive(){
+    if(!selectedNode||!hasChildren(selectedNode))return;
+    const children=childrenOf(selectedNode.id);
+    children.forEach((child,i)=>{
+      const a=(Math.PI*2/Math.max(1,children.length))*i+Math.random()*.3;
+      child.fx=null;child.fy=null;child.vx=0;child.vy=0;
+      child.x=width/2+Math.cos(a)*(55+Math.random()*35);
+      child.y=height/2+Math.sin(a)*(55+Math.random()*35);
+    });
+    contextStack.push(selectedNode.id);
+    updateView();
+  }
+
+  function ascend(){
+    if(!contextStack.length)return;
+    const id=contextStack.pop();
+    const n=globalNodes.find(x=>x.id===id);
+    if(n){n.fx=null;n.fy=null;n.vx=(Math.random()-.5)*2;n.vy=(Math.random()-.5)*2;}
+    updateView();
+  }
+
+  function updateNav(){
+    const c=document.getElementById('nav-context');
+    const b=document.getElementById('breadcrumbs');
+    b.innerHTML='';
+    if(!contextStack.length){c.classList.remove('visible');return;}
+    c.classList.add('visible');
+    contextStack.forEach((id,i)=>{
+      const n=globalNodes.find(x=>x.id===id);
+      if(!n)return;
+      const el=document.createElement('div');
+      el.className='crumb '+(i===contextStack.length-1?'active':'');
+      el.textContent=(n.label||'???')+(i<contextStack.length-1?' ›':'');
+      el.onclick=()=>{
+        while(contextStack.length>i+1){
+          const popped=contextStack.pop();
+          const node=globalNodes.find(x=>x.id===popped);
+          if(node){node.fx=null;node.fy=null;}
+        }
+        updateView();
+      };
+      b.appendChild(el);
+    });
+  }
+
+  function updateButtons(){
+    const diveBtn=document.getElementById('btn-dive');
+    diveBtn.classList.toggle('visible',!!(selectedNode&&hasChildren(selectedNode)));
+  }
+
+  function deselect(){selectedNode=null;closePanel();updateButtons();render();}
 
   function openPanel(node){
-    document.getElementById('panel-kicker').textContent=node.surface||'registry object'; document.getElementById('panel-title').textContent=node.label||node.path||'Object'; document.getElementById('panel-summary').textContent=node.summary||'No compact summary is stored in the graph index. Open the source object for the authoritative record.';
-    const meta=document.getElementById('panel-meta'); meta.innerHTML='';
-    [['Status',node.status],['Gate',node.gate],['Path',node.path],['Modified',node.modifiedAt],['Lineage',node.lineageKey],['SHA-256',node.sourceSha256]].forEach(([k,v])=>{if(!v)return;const d=document.createElement('div');d.innerHTML=`<b>${k}:</b> ${escapeHtml(String(v))}`;meta.appendChild(d);});
+    document.getElementById('panel-kicker').textContent=node.surface||'registry object';
+    document.getElementById('panel-title').textContent=node.label||node.path||'Object';
+    document.getElementById('panel-summary').textContent=node.summary||'No compact summary is stored in the graph index. Open the source object for the authoritative record.';
+    const meta=document.getElementById('panel-meta');meta.innerHTML='';
+    [['Status',node.status],['Gate',node.gate],['Path',node.path],['Modified',node.modifiedAt],['Lineage',node.lineageKey],['SHA-256',node.sourceSha256]].forEach(([k,v])=>{
+      if(!v)return;
+      const row=document.createElement('div');
+      const key=document.createElement('b');key.textContent=k+': ';
+      row.appendChild(key);row.appendChild(document.createTextNode(String(v)));meta.appendChild(row);
+    });
     const buttons=document.getElementById('panel-buttons');buttons.innerHTML='';
-    if(node.sourceUrl){const a=document.createElement('a');a.className='btn';a.href=node.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='OPEN SOURCE ↗';buttons.appendChild(a);} if(node.surfaceUrl){const a=document.createElement('a');a.className='btn gold';a.href=node.surfaceUrl;a.textContent='OPEN SURFACE';buttons.appendChild(a);} const m=document.createElement('a');m.className='btn';m.href=META_HOME;m.textContent='META REGISTRY';buttons.appendChild(m);
+    if(node.sourceUrl){
+      const a=document.createElement('a');a.href=node.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='OPEN SOURCE ↗';buttons.appendChild(a);
+    }
+    if(node.surfaceUrl){
+      const a=document.createElement('a');a.href=node.surfaceUrl;a.target='_blank';a.rel='noopener';a.textContent='OPEN SURFACE ↗';buttons.appendChild(a);
+    }
     document.getElementById('panel').classList.add('open');
   }
-  function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function closePanel(){document.getElementById('panel').classList.remove('open');}
 
-  async function boot(){
-    try{const res=await fetch(INDEX_URL,{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)throw new Error(`HTTP ${res.status}`);index=await res.json();if(index.schema!=='janus.hrain.registry_graph_index.v1_0')throw new Error('Unexpected registry schema');nodes=(index.nodes||[]).map(n=>({...n,kind:nodeKind(n)}));links=(index.links||[]).map(l=>({...l}));document.getElementById('stats-text').textContent=`${index.objectCount} objects · ${String(index.sourceCommit||'').slice(0,10)}`;document.getElementById('loading').classList.add('hidden');const root=nodes.find(n=>n.id==='registry:janus-meta-registry');if(root){context=[root.id];}updateView();}
-    catch(err){const loading=document.getElementById('loading');loading.classList.add('error');loading.innerHTML=`JANUS UPLINK FAILED · ${escapeHtml(err.message)}<br><a style="color:#7ae7ff" href="${META_HOME}">OPEN META REGISTRY</a>`;}
+  function animateImpulse(source,target){
+    if(!source||!target||!Number.isFinite(source.x)||!Number.isFinite(target.x))return;
+    const color=TYPE_COLOR[nodeType(target)]||TYPE_COLOR.default;
+    const spark=impulseLayer.append('circle').attr('class','impulse').attr('r',4).attr('cx',source.x).attr('cy',source.y).style('fill','#fff').style('color',color);
+    spark.transition().duration(820).ease(d3.easeQuadInOut).attr('cx',target.x).attr('cy',target.y).style('fill',color).on('end',function(){d3.select(this).remove();});
   }
 
-  addEventListener('resize',()=>{width=innerWidth;height=innerHeight;sim.force('x',d3.forceX(()=>width/2).strength(.025));sim.force('y',d3.forceY(()=>height/2).strength(.025));sim.alpha(.4).restart();});
+  function updateAtmosphere(){
+    if(!viewNodes.length)return;
+    const counts={default:0,danger:0,warn:0,info:0};
+    viewNodes.forEach(n=>counts[nodeType(n)]++);
+    let dom='default',max=-1;
+    Object.entries(counts).forEach(([k,v])=>{if(v>max){max=v;dom=k;}});
+    if(dom===lastDominantType)return;
+    lastDominantType=dom;
+    const c=TYPE_COLOR[dom];
+    document.documentElement.style.setProperty('--c-ambient',c);
+    const rgb=hexToRgb(c);
+    document.getElementById('grid-bg').style.backgroundImage=`linear-gradient(rgba(${rgb},.075) 1px,transparent 1px),linear-gradient(90deg,rgba(${rgb},.075) 1px,transparent 1px)`;
+  }
+  function hexToRgb(hex){
+    const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m?`${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)}`:'0,255,163';
+  }
+
+  function animateVisuals(){
+    if(Math.random()>.965)updateAtmosphere();
+    if(viewLinks.length&&Math.random()>.91){
+      const l=viewLinks[Math.floor(Math.random()*viewLinks.length)];
+      if(l.source&&l.target&&typeof l.source==='object'&&typeof l.target==='object')animateImpulse(l.source,l.target);
+    }
+    requestAnimationFrame(animateVisuals);
+  }
+  animateVisuals();
+
+  function dragStart(e,d){if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;}
+  function dragged(e,d){d.fx=e.x;d.fy=e.y;}
+  function dragEnd(e,d){
+    if(!e.active)sim.alphaTarget(0);
+    if(d.id===currentRoot()){d.fx=width/2;d.fy=height/2;}
+    else{d.fx=null;d.fy=null;}
+  }
+
+  function fitView(){
+    try{
+      const box=g.node().getBBox();
+      if(!box.width||!box.height)return;
+      const scale=Math.min(1.25,.77/Math.max(box.width/width,box.height/height));
+      const k=Math.max(.28,scale);
+      const tx=width/2-k*(box.x+box.width/2),ty=height/2-k*(box.y+box.height/2);
+      svg.transition().duration(520).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+    }catch(_){}
+  }
+
+  function goOrigin(){
+    contextStack=[];
+    globalNodes.forEach(n=>{n.fx=null;n.fy=null;});
+    selectedNode=null;closePanel();updateView();
+  }
+
+  function wipeLocalDesk(){
+    // Local runtime reset only. No storage writes, no network mutation, no source deletion.
+    cloneRuntime();
+    contextStack=[];
+    selectedNode=null;
+    closePanel();
+    updateView();
+    showToast('LOCAL DESK CLEARED · JANUS REGISTRY UNTOUCHED','warn');
+  }
+
+  function showToast(text,type=''){
+    const box=document.getElementById('toast-container');
+    const t=document.createElement('div');t.className='toast '+type;t.textContent=text;box.appendChild(t);
+    requestAnimationFrame(()=>t.classList.add('visible'));
+    setTimeout(()=>{t.classList.remove('visible');setTimeout(()=>t.remove(),260);},2400);
+  }
+
+  document.getElementById('btn-grid').onclick=()=>{
+    isGrid=!isGrid;
+    document.body.classList.toggle('grid-active',isGrid);
+    document.getElementById('btn-grid').classList.toggle('active',isGrid);
+    sim.alpha(.45).restart();
+  };
+  document.getElementById('btn-home').onclick=goOrigin;
+  document.getElementById('btn-wipe').onclick=wipeLocalDesk;
+  document.getElementById('btn-dive').onclick=dive;
+  document.getElementById('btn-ascend').onclick=ascend;
+  document.getElementById('panel-close').onclick=closePanel;
+
+  addEventListener('resize',()=>{
+    width=innerWidth;height=innerHeight;
+    sim.force('x',d3.forceX(()=>width/2).strength(.012));
+    sim.force('y',d3.forceY(()=>height/2).strength(.012));
+    const rootId=currentRoot();
+    if(rootId){const root=globalNodes.find(n=>n.id===rootId);if(root){root.fx=width/2;root.fy=height/2;}}
+    sim.alpha(.3).restart();
+  });
+
+  async function boot(){
+    const loading=document.getElementById('loading');
+    try{
+      const res=await fetch(INDEX_URL,{cache:'no-store',headers:{Accept:'application/json'}});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const raw=await res.json();
+      if(raw.schema!==EXPECTED_SCHEMA)throw new Error('Unexpected schema: '+raw.schema);
+      if(!Array.isArray(raw.nodes)||!Array.isArray(raw.links))throw new Error('Invalid graph payload');
+      if(!raw.nodes.every(n=>n.readOnly===true))throw new Error('Read-only contract violated');
+
+      sourceIndex=JSON.parse(JSON.stringify(raw));
+      cloneRuntime();
+      document.getElementById('stats-text').textContent=`${raw.objectCount||0} objects · ${raw.nodeCount||globalNodes.length} nodes · ${String(raw.sourceCommit||'').slice(0,10)}`;
+      document.getElementById('source-state').textContent='JANUS UPLINK · READ ONLY';
+      updateView();
+      loading.classList.add('hidden');
+      showToast('LIVING REGISTRY ONLINE');
+    }catch(err){
+      console.error(err);
+      loading.innerHTML=`<span style="color:#ff6a86">JANUS UPLINK ERROR<br><small>${String(err.message||err)}</small></span>`;
+    }
+  }
+
   boot();
 })();
 </script>
