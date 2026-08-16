@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#030508">
+<title>HRain · DemiHead Local Proposal Gate</title>
+<style>
+:root{color-scheme:dark;--bg:#030508;--panel:#0b101a;--line:#20302b;--accent:#00ffa3;--muted:#8aa097;--danger:#ff2a6d;--warn:#ffc107}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#0b1616,var(--bg) 55%);color:#e8fff7;font:15px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:100vh}.wrap{max-width:900px;margin:auto;padding:28px}.kicker{color:var(--accent);letter-spacing:.1em;font-weight:700}.panel{background:rgba(11,16,26,.92);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}.laws{white-space:pre-wrap;color:#b9d3ca}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn{border:1px solid var(--accent);background:#062018;color:var(--accent);padding:10px 14px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}.btn[disabled]{opacity:.35;cursor:not-allowed}.btn.danger{border-color:var(--danger);color:#ff91ad;background:#210812}.btn.secondary{border-color:#52645d;color:#d7e4df;background:#111a17}input[type=file]{max-width:100%}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#020403;border:1px solid #1f3a31;border-radius:10px;padding:14px;min-height:120px}.status{color:var(--muted)}.status.warn{color:var(--warn)}.status.error{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">JANUS DEMIHEAD → LEFT_HRAIN · LOCAL ACCEPT GATE</div>
+  <h1>Proposal preview, then local choice</h1>
+  <p>This page accepts a proposal file only. Loading or previewing a proposal never changes HRain. A local workspace write occurs only after the separate <strong>ACCEPT LOCALLY</strong> button event and a fresh base-graph recheck.</p>
+  <div class="panel laws">DEMIHEAD_PROPOSAL != WORKSPACE_MUTATION
+NO_ACCEPT_EVENT => NO_MUTATION
+DECLINE != PENALTY
+SHA256_BINDING != SIGNATURE
+CLICK_EVENT != VERIFIED_HUMAN_IDENTITY
+GITHUB_PAGES_PROJECT_PATH != ORIGIN_ISOLATION
+DIRECT_CROSS_HEMISPHERE_WRITE = false
+EXTERNAL_EFFECT = false
+AUTHORITY_DELTA = 0</div>
+  <div class="panel">
+    <div class="row">
+      <input id="proposalFile" type="file" accept="application/json,.json">
+      <button class="btn" id="accept" disabled>ACCEPT LOCALLY</button>
+      <button class="btn danger" id="decline" disabled>DECLINE</button>
+      <a class="btn secondary" href="./">BACK TO HRAIN</a>
+    </div>
+    <p id="status" class="status">Select a local proposal JSON file.</p>
+  </div>
+  <div class="panel"><strong>Verified proposal preview</strong><pre id="preview">No proposal loaded.</pre></div>
+  <div class="panel"><strong>Local mutation receipt</strong><pre id="receipt">No mutation performed.</pre><button class="btn secondary" id="downloadReceipt" disabled>DOWNLOAD RECEIPT</button></div>
+</div>
+<script src="./demihead-bridge.js"></script>
+<script src="./demihead-apply.js"></script>
+<script>
+(() => {
+  'use strict';
+  const bridge = window.JANUSDemiHeadHRainBridge;
+  const apply = window.JANUSDemiHeadHRainApply;
+  const file = document.getElementById('proposalFile');
+  const accept = document.getElementById('accept');
+  const decline = document.getElementById('decline');
+  const status = document.getElementById('status');
+  const preview = document.getElementById('preview');
+  const receiptBox = document.getElementById('receipt');
+  const downloadReceipt = document.getElementById('downloadReceipt');
+  let verifiedEnvelope = null;
+  let receipt = null;
+
+  function readWorkspace() {
+    const raw = localStorage.getItem(apply.STORAGE_KEY);
+    if (!raw) return {nodes: [], links: []};
+    const workspace = JSON.parse(raw);
+    if (!workspace || !Array.isArray(workspace.nodes) || !Array.isArray(workspace.links)) throw new Error('Stored HRain workspace is malformed');
+    return workspace;
+  }
+
+  function normalizedGraph(workspace) {
+    return bridge.buildPacket(workspace, {capturedAt:'2026-01-01T00:00:00Z', packetId:'local-base-check'}).graph;
+  }
+
+  async function inspectEnvelope(envelope) {
+    await apply.verifyEnvelope(envelope);
+    const workspace = readWorkspace();
+    const currentGraphSha = await apply.sha256Json(normalizedGraph(workspace));
+    if (currentGraphSha !== envelope.proposal.base_graph_sha256) throw new Error('BASE_WORKSPACE_CHANGED_REPROPOSE_REQUIRED');
+    return {currentGraphSha, envelope};
+  }
+
+  function resetProposal(message) {
+    verifiedEnvelope = null;
+    accept.disabled = true;
+    decline.disabled = true;
+    preview.textContent = 'No proposal loaded.';
+    status.className = 'status';
+    status.textContent = message || 'Select a local proposal JSON file.';
+  }
+
+  file.addEventListener('change', async () => {
+    resetProposal('Validating proposal…');
+    receipt = null;
+    receiptBox.textContent = 'No mutation performed.';
+    downloadReceipt.disabled = true;
+    const selected = file.files && file.files[0];
+    if (!selected) return resetProposal();
+    try {
+      const envelope = JSON.parse(await selected.text());
+      const checked = await inspectEnvelope(envelope);
+      verifiedEnvelope = checked.envelope;
+      preview.textContent = JSON.stringify({
+        proposal_id: envelope.proposal.proposal_id,
+        proposal_sha256: envelope.proposal_sha256,
+        target: envelope.proposal.target,
+        base_graph_sha256: envelope.proposal.base_graph_sha256,
+        operation: envelope.proposal.operation,
+        controls: envelope.proposal.control
+      }, null, 2);
+      accept.disabled = false;
+      decline.disabled = false;
+      status.className = 'status warn';
+      status.textContent = 'Proposal is hash-valid and bound to the current graph. Nothing has been written. Choose ACCEPT LOCALLY or DECLINE.';
+    } catch (error) {
+      resetProposal(`REFUSED: ${error.message}`);
+      status.className = 'status error';
+    }
+  });
+
+  decline.addEventListener('click', () => {
+    verifiedEnvelope = null;
+    accept.disabled = true;
+    decline.disabled = true;
+    preview.textContent = 'DECLINED. No local mutation performed.';
+    status.className = 'status';
+    status.textContent = 'DECLINE_RECORDED_IN_RUNTIME_ONLY · no penalty · no write.';
+  });
+
+  accept.addEventListener('click', async () => {
+    if (!verifiedEnvelope) return;
+    accept.disabled = true;
+    decline.disabled = true;
+    try {
+      const workspace = readWorkspace();
+      const beforeGraph = normalizedGraph(workspace);
+      const prepared = await apply.prepareAcceptedMutation(workspace, beforeGraph, verifiedEnvelope);
+      localStorage.setItem(apply.STORAGE_KEY, JSON.stringify(prepared.workspace));
+      const afterGraph = normalizedGraph(prepared.workspace);
+      const afterGraphSha = await apply.sha256Json(afterGraph);
+      receipt = apply.buildReceipt({
+        proposalId: prepared.proposal_id,
+        proposalSha256: prepared.proposal_sha256,
+        beforeGraphSha256: prepared.before_graph_sha256,
+        afterGraphSha256: afterGraphSha,
+        nodeId: verifiedEnvelope.proposal.operation.node.id
+      });
+      receiptBox.textContent = JSON.stringify(receipt, null, 2);
+      downloadReceipt.disabled = false;
+      status.className = 'status';
+      status.textContent = 'LOCAL_MUTATION_COMMITTED_AFTER_EXPLICIT_ACCEPT · open/reload HRain to view the new node.';
+      verifiedEnvelope = null;
+    } catch (error) {
+      status.className = 'status error';
+      status.textContent = `REFUSED: ${error.message}`;
+    }
+  });
+
+  downloadReceipt.addEventListener('click', () => {
+    if (!receipt) return;
+    const blob = new Blob([JSON.stringify(receipt, null, 2) + '\n'], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `janus_hrain_local_mutation_receipt_${receipt.proposal_id}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+})();
+</script>
+</body>
+</html>
