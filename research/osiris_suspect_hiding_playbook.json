@@ -1,0 +1,141 @@
+{
+  "schema": "hrain.osiris_suspect_hiding_playbook.v1",
+  "case_id": "OSIRIS-RELIC-HIDING-REDTEAM-001",
+  "created_at": "2026-08-16",
+  "purpose": "Red-team each adversarial and custodial branch: if this actor wanted to prevent recovery, misdirect search, or protectively conceal a critical Osirian body-part relic, when would the opportunity window exist and what object/location class would be rational to inspect?",
+  "claim_ceiling": "This is adversarial hypothesis generation over mythic/source roles, not proof that any actor actually hid a phallus, not supernatural testimony, and not evidence that real-world causality is broken.",
+  "causal_windows": [
+    {"id":"T0","label":"ATTACK_DISMEMBERMENT","meaning":"Osiris is attacked/dismembered; adversarial access is maximal."},
+    {"id":"T1","label":"DISPERSAL_LOSS","meaning":"Parts are separated from the body before organized recovery/custody stabilizes."},
+    {"id":"T2","label":"RECOVERY_SEARCH","meaning":"Recovery agents search water/land and identify scattered parts."},
+    {"id":"T3","label":"CUSTODY_HANDOFF","meaning":"Recovered or substituted material crosses into a protected funerary/embalming domain."},
+    {"id":"T4","label":"EMBALMING_REASSEMBLY","meaning":"Anubis/Sons-of-Horus protection and restoration functions dominate."},
+    {"id":"T5","label":"SEALING_BURIAL","meaning":"Shrines, chests, wall chambers, deposits or nested objects can become closed custody systems."},
+    {"id":"T6","label":"RITUAL_REPLICATION","meaning":"Later cultic simulacra/replacements can preserve function while obscuring material identity."}
+  ],
+  "red_team_profiles": [
+    {
+      "actor":"SETH",
+      "status":"HIGHEST_ADVERSARIAL_PRIORITY",
+      "best_window":["T0","T1"],
+      "objective":"Prevent Osiris restoration and thereby disrupt the Osiris→Horus succession chain.",
+      "rational_hiding_strategy":"Do not keep the target in the obvious water-search domain. Move it across a domain boundary or create a false loss narrative before recovery begins.",
+      "hiding_classes":["DESERT_OR_FOREIGN_LAND_BRANCH","SECONDARY_CONTAINER","NON_PHALLIC_SYMBOLIC_OBJECT","HANDOFF_TO_CONFEDERATE"],
+      "where_to_search":"Seth-linked provenance nodes, Naqada/Nubt material, objects whose later provenance crosses into Osirian funerary custody, and any source describing transfer rather than simple loss.",
+      "source_basis":"UCL identifies Seth as disruptive power and the adversary who murders/dismembers Osiris in the mythic synthesis; BD17 preserves direct Horus/Seth opposition.",
+      "not_established":"No source-bound evidence currently says Seth hid the phallus in any specific container or place."
+    },
+    {
+      "actor":"CONFEDERATES_OF_SETH",
+      "status":"CUTOUT_NETWORK_BRANCH",
+      "best_window":["T1","T2"],
+      "objective":"Break traceability between initial attack and later custody while keeping Seth personally distant from the object.",
+      "rational_hiding_strategy":"Relay the object through an intermediary, mislabel it, substitute a small amulet/token, or place it where a recovery agent searches for anatomy but sees only ritual material.",
+      "hiding_classes":["RELAY_CONTAINER","MISIDENTIFIED_FRAGMENT","AMULET_OR_TOKEN","FALSE_PROVENANCE","DECOY"],
+      "where_to_search":"Objects with uncertain catalog labels, mixed provenance, later Osirian contexts but no secure excavation chain, and duplicate/simulacrum traditions.",
+      "source_basis":"BD17 explicitly names confederates of Seth in an enemy-repulsion context.",
+      "not_established":"No phallus-specific confederate action is source-bound."
+    },
+    {
+      "actor":"UNNAMED_ASSAILANT_OF_OSIRIS",
+      "status":"IDENTITY_UNRESOLVED",
+      "best_window":["T0","T1"],
+      "objective":"Maximize damage at the attack stage and make one critical piece difficult to recognize afterward.",
+      "rational_hiding_strategy":"Destroy recognizability rather than necessarily destroy material: separate, wrap, miniaturize, substitute, or merge with another object class.",
+      "hiding_classes":["WRAPPED_FRAGMENT","RITUAL_SUBSTITUTE","GILDED_TOKEN","BODY_PART_SIMULACRUM"],
+      "where_to_search":"Unidentified fragments and phallic or fertility objects that are morphologically non-obvious but have Osirian context.",
+      "source_basis":"BD151 has Duamutef state that he came to rescue Osiris from his assailant.",
+      "not_established":"The unnamed assailant cannot be automatically equated with Seth in this single passage."
+    },
+    {
+      "actor":"ENEMIES_OR_REBELS_OF_OSIRIS",
+      "status":"NETWORK_MISDIRECTION_BRANCH",
+      "best_window":["T1","T2","T3"],
+      "objective":"Make the search expensive and contradictory even if no single conspirator retains custody.",
+      "rational_hiding_strategy":"Generate stale tasking, decoys, multiple ritual representations, or conflicting location traditions so that a competent searcher repeatedly visits the wrong domain.",
+      "hiding_classes":["DECOY_OBJECT","DUPLICATE_RELIC","CONFLICTING_LOCATION_TRADITION","RITUAL_COPY"],
+      "where_to_search":"Places where textual traditions disagree about the body part, and museum groups containing near-duplicate relic forms with divergent provenance.",
+      "source_basis":"BD1 preserves enemies/rebels of Osiris.",
+      "not_established":"Generic enemy language does not identify a specific hider."
+    },
+    {
+      "actor":"UNKNOWN_CUSTODY_INSIDER",
+      "status":"HIGHEST_CONTAINER_OPPORTUNITY",
+      "best_window":["T3","T4","T5"],
+      "objective":"Change custody after recovery but before sealing, producing a target that is no longer lost physically while remaining missing informationally.",
+      "rational_hiding_strategy":"Place the object in a sealed/nested funerary container, hollow statue, shrine, wall chamber or foundation-style cache where external appearance no longer reveals contents.",
+      "hiding_classes":["CHEST","SHRINE","HOLLOW_STATUE","SEALED_JAR","WALL_CHAMBER","NESTED_RELIQUARY","FOUNDATION_OR_RITUAL_CACHE"],
+      "where_to_search":"Published X-ray/CT/conservation reports for Osiris/Anubis/Sons-of-Horus containers and objects with sealed access points or hidden internal compartments.",
+      "source_basis":"Generated by the unresolved recovery→embalming custody gap; archaeological positive control exists for an Anubis sacred object (imiut) hidden in a shrine in a chamber built into an enclosure wall at Lisht South.",
+      "not_established":"No named insider or phallus-specific cache is known."
+    }
+  ],
+  "protective_concealment_controls": [
+    {
+      "actor":"ANUBIS",
+      "best_window":["T3","T4","T5"],
+      "interpretation":"If Anubis concealed anything, the default source-bound interpretation should be protective custody, not sabotage.",
+      "rational_protective_strategy":"Move sacred content into shrine/chest/hidden chamber and seal it away from attackers.",
+      "search_value":"VERY_HIGH",
+      "why":"BD17 places Anubis guarding Osiris burial/chest context; BD151 makes him divine embalmer/protector. The Met documents an actual Anubis sacred object ensemble hidden in a wall chamber at Lisht South.",
+      "warning":"High access must not be converted into guilt."
+    },
+    {
+      "actor":"DUAMUTEF_AND_QEBEHSENUEF",
+      "best_window":["T3","T4"],
+      "interpretation":"Bridge witnesses/protectors rather than current suspects.",
+      "rational_protective_strategy":"Transfer protected body-part material into the embalming/custody system and guard organ-associated containers.",
+      "search_value":"VERY_HIGH",
+      "why":"BD113 places both immediately after Sobek's successful water recovery; BD151 places both in Osiris rescue/reassembly/protection.",
+      "warning":"No source currently gives them phallus-specific custody."
+    },
+    {
+      "actor":"ISIS_AND_NEPHTHYS",
+      "best_window":["T2","T3","T4"],
+      "interpretation":"Protective concealment from an adversary is more consistent with their restoration role than sabotage.",
+      "rational_protective_strategy":"Temporarily hide or substitute a critical part until the body is secured.",
+      "search_value":"MEDIUM_HIGH",
+      "warning":"This is a counter-hypothesis, not a source-bound event."
+    }
+  ],
+  "strong_positive_controls": [
+    {
+      "id":"MET_LISHT_IMIUT_HIDDEN_CHAMBER",
+      "object":"Guardian Figure and Shrine with an imiut in a Jar, Met 14.3.17–.20 related",
+      "fact":"A shrine containing an object sacred to Anubis (imiut), with guardian figures, was discovered hidden in a chamber built into the south enclosure wall at Lisht South.",
+      "significance":"Demonstrates the exact architectural pattern SACRED_ANUBIS_OBJECT → SHRINE/JAR → HIDDEN_WALL_CHAMBER in real archaeology, without implying any Osiris-phallus connection."
+    },
+    {
+      "id":"BD151_HIDDEN_CHAMBER_WALL",
+      "fact":"BD151 protective torch text includes 'the wall of the hidden chamber'.",
+      "significance":"Supports HIDDEN_CHAMBER as a genuine semantic node in the same embalming-protection composition, though not as a direct phallus container statement."
+    },
+    {
+      "id":"BD17_SHRINE_VESSEL_PHALLUS_ADJACENCY",
+      "fact":"Within one BD17 explanatory block, a shrine/vessel gloss and the phallus of Osiris occur in close textual proximity.",
+      "significance":"Creates a high-value HRain adjacency but NOT a containment edge; the graph must keep SHRINE/VESSEL_NEAR_PHALLUS distinct from PHALLUS_INSIDE_SHRINE."
+    }
+  ],
+  "sobek_redeployment": {
+    "principle":"Do not send Sobek only to WATER. Send the search process across the domain boundary that a competent water-recovery specialist could not see.",
+    "priority_routes":[
+      "ANUBIS_SACRED_OBJECT → SHRINE/JAR → HIDDEN_WALL_CHAMBER",
+      "SONS_OF_HORUS → ORGAN_PROTECTION → CHEST/RELIQUARY",
+      "OSIRIS/ANUBIS → HOLLOW_OR_SEALED_OBJECT → XRAY/CT",
+      "SETH/CONFEDERATES → UNKNOWN_TRANSFER → LATER_PROTECTED_CUSTODY",
+      "RITUAL_SUBSTITUTE/AMULET → NON_ANATOMICAL_MORPHOLOGY → OSIRIAN_PROVENANCE"
+    ],
+    "top_search_class":"ANUBIS_OR_SONS_OF_HORUS_ASSOCIATED_CONTAINERS_WITH_HIDDEN_OR_SEALED_INTERNAL_VOLUME",
+    "reason":"This is where the strongest protective-custody evidence and the strongest no-find explanation intersect."
+  },
+  "source_anchors":[
+    {"id":"UCL_BD17","url":"https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd17.html"},
+    {"id":"UCL_BD151","url":"https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/hpres151.html"},
+    {"id":"UCL_DEITIES_PLACES","url":"https://www.ucl.ac.uk/museums-static/digitalegypt/religion/deitiesplaces.html"},
+    {"id":"MET_LISHT_IMIUT","url":"https://www.metmuseum.org/art/collection/search/698624"},
+    {"id":"MET_ANUBIS_SHRINE_AMULET","url":"https://www.metmuseum.org/art/collection/search/560647"},
+    {"id":"MET_JACKAL_SHRINE_BOX","url":"https://www.metmuseum.org/art/collection/search/547742"},
+    {"id":"ARCHIMEDE_OSIRIS_PHALLUS","url":"https://archimede.unistra.fr/revue-archimede/archimede-hors-serie-n-2-2022/archimede-hs-n2-2022-le-phallus-dosiris/"}
+  ],
+  "next_gate":"SUSPECT_TIMELINE_TO_CONTAINER_CLASS_PASS"
+}
