@@ -1,0 +1,78 @@
+{
+  "schema": "hrain.bm_1973_0501_23_internal_content_triage.v1",
+  "case_id": "BM-1973-0501-23-INTERNAL-CONTENT-001",
+  "created_at": "2026-08-16",
+  "object": {
+    "museum": "British Museum",
+    "museum_number": "1973,0501.23",
+    "type": "curved terracotta tumescent phallus made for insertion into a figure",
+    "date": "4th century BC to 2nd century AD (museum range)",
+    "provenance": "Egypt; Naukratis probable",
+    "dimensions_cm": {"length_max": 6.6, "thickness": 1.7},
+    "manufacture": "hand-modelled micaceous brown Nile silt; traces of red paint over white dressing; root damaged"
+  },
+  "source_bound_facts": [
+    "British Museum explicitly identifies the object as a terracotta phallus made for insertion into a mould-made figure.",
+    "The object is hand-modelled, not described as mould-made.",
+    "The public catalogue does not describe this specific object as hollow or solid.",
+    "The root is damaged, creating a potentially informative break surface for conservation examination.",
+    "A related British Museum object 1973,0501.45 explicitly states that both figure and inserted phallus were made in two-piece moulds and are hollow, showing that the catalogue does record hollow construction when known.",
+    "Another related object 1973,0501.22 is a much larger terracotta phallus probably applied to a Harpocrates figure, showing that detachable/applied terracotta phalli form a broader ritual/figurine technology rather than an Osiris-specific object class."
+  ],
+  "hypotheses": [
+    {
+      "id": "H1_ORDINARY_SOLID_INSERT",
+      "status": "PLAUSIBLE",
+      "statement": "1973,0501.23 is a simple hand-modelled terracotta insert with no internal cavity or secondary content."
+    },
+    {
+      "id": "H2_HOLLOW_OR_PARTIALLY_HOLLOW_INSERT",
+      "status": "UNRESOLVED",
+      "statement": "The object contains an intentional internal void due to manufacturing technique or weight reduction."
+    },
+    {
+      "id": "H3_INTERNAL_PACKET_OR_CORE",
+      "status": "UNRESOLVED_LOW_PRIOR",
+      "statement": "A distinct internal core, packet, metal element, organic inclusion, or separate object is enclosed within the terracotta body."
+    },
+    {
+      "id": "H4_OSIRIS_RELIC_INSIDE",
+      "status": "NOT_SUPPORTED",
+      "statement": "The object contains a physical relic of Osiris.",
+      "reason": "No Osirian attribution, Mendes provenance, reliquary wording, internal anomaly, imaging evidence, or independent relic linkage is currently source-bound for this object."
+    }
+  ],
+  "important_context": {
+    "terracotta_unusual_for_phallus": false,
+    "reason": "British Museum records multiple Late/Ptolemaic/Roman Egyptian terracotta phallic figures and separate inserted phalli, including 1973,0501.22, 1973,0501.23 and 1973,0501.45.",
+    "osiris_specific": false,
+    "reason_osiris": "The museum record does not identify 1973,0501.23 as Osiris; probable findspot is Naukratis, not Mendes."
+  },
+  "best_non_destructive_test": {
+    "gate": "BM_1973_0501_23_RADIOGRAPHY_OR_MICRO_CT_PASS",
+    "priority": "HIGH_FOR_INTERNAL_CONTENT_QUESTION",
+    "steps": [
+      "request/check existing British Museum conservation photography of the damaged root",
+      "check whether the break surface exposes a homogeneous ceramic core, void, or distinct inclusion",
+      "obtain existing X-radiograph or micro-CT if already performed",
+      "if no imaging exists, propose non-destructive X-radiography or micro-CT through museum conservation channels",
+      "compare density and wall profile with known hollow inserted phallus 1973,0501.45",
+      "do not drill, cut, sample, open, or physically alter the object"
+    ],
+    "positive_signal": "distinct internal object/packet, anomalous dense core, nested cavity, or intentionally sealed heterogeneous inclusion",
+    "negative_signal": "uniform ceramic density or ordinary manufacturing void without separate content"
+  },
+  "claim_ceiling": {
+    "contains_osiris_relic": false,
+    "hollow": "UNKNOWN",
+    "solid": "UNKNOWN",
+    "internal_content": "UNKNOWN",
+    "terracotta_insert_technology_supported": true,
+    "requires_non_destructive_imaging": true
+  },
+  "sources": [
+    "https://www.britishmuseum.org/collection/object/G_1973-0501-23",
+    "https://www.britishmuseum.org/collection/object/G_1973-0501-45",
+    "https://www.britishmuseum.org/collection/object/G_1973-0501-22"
+  ]
+}
