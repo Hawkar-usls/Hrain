@@ -25,13 +25,13 @@ jobs:
           from pathlib import Path
           s=Path('janus-network-v3.js').read_text(encoding='utf-8')
           sl=s.lower()
-          for token in ['janus-site-language-v1','святой кринж','пародийный слой','не трогать','source remains authoritative']:
+          for token in ['janus-site-language-v1','святой кринж','пародийный слой','не трогать','source remains authoritative','вымышленная ванесса шевченко']:
               assert token in sl, token
-          assert 'Вымышленная Ванесса Шевченко' in s
           forbidden=['/api/hrain/save','/api/hrain/event',"method:'DELETE'","method:'PUT'","method:'PATCH'"]
           for token in forbidden:
               assert token not in s, token
           print('RU_HOLY_CRINGE=PASS')
+          print('FICTIONAL_CAMEO_BOUNDARY=PASS')
           print('SOURCE_MUTATION=ABSENT')
           PY
           node --check janus-network-v3.js
