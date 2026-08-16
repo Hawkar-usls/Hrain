@@ -1,0 +1,127 @@
+{
+  "schema": "hrain.osiris_gender_deception_and_mandrel_test.v1",
+  "case_id": "OSIRIS-GENDER-DECEPTION-MANDREL-001",
+  "created_at": "2026-08-16",
+  "purpose": "Test three user-proposed branches without promoting them to fact: (A) a common mold/mandrel behind Egyptian gold phallic objects, (B) deliberate masculinization of female rulers/deities, and (C) whether iconographic absence of a laryngeal prominence can reveal concealed biological sex.",
+  "claim_ceiling": "Hypotheses only. No source currently establishes that Osiris or Seth were biologically female, that a phallic mold was taken from Osiris, that a false phallus detached during ritual, or that a state conspiracy concealed deity sex.",
+  "branches": {
+    "A_SHARED_MANDREL": {
+      "status": "TESTABLE_UNRESOLVED",
+      "known_controls": [
+        "Mendes 1902 Nesbanebdjedet gold phallus sheath, primary-source documented",
+        "Egyptian Museum Cairo JE 56935 gold sheet penis amulet",
+        "Egyptian Museum Cairo JE 56967 gold foil phallus amulet",
+        "Met 23.10.23 gold sheet phallus (?) amulet",
+        "published Qurna gilded resin penis-and-scrotum model"
+      ],
+      "minimum_measurements": [
+        "overall length",
+        "maximum width/diameter",
+        "base/socket geometry",
+        "foil thickness",
+        "seam/fold topology",
+        "rim profile",
+        "tool/die marks",
+        "surface micro-striations",
+        "alloy/XRF composition",
+        "radiographic construction features"
+      ],
+      "decision_rule": "Matching overall size alone is insufficient. Shared tooling requires homologous construction marks or repeatable three-dimensional geometry. Even a shared mandrel reconstructs a workshop standard, not Osiris anatomy, unless an independent inscription/provenance explicitly binds the template to an Osirian relic."
+    },
+    "B_FEMALE_RULER_OR_DEITY_MASCULINIZATION": {
+      "status": "PARTLY_REAL_PRECEDENT_BUT_BROAD_CONSPIRACY_UNSUPPORTED",
+      "positive_precedent": [
+        "Hatshepsut was a female pharaoh represented in many monumental statues as the ideal male king with false beard and male royal regalia.",
+        "Met notes that Hatshepsut's inscriptions still preserve feminine grammatical forms/personal name; the masculine image was royal ideology, not a demonstrated attempt to hide her sex.",
+        "The late Amarna succession includes a female pharaoh Neferneferuaten; candidate identity remains debated between Nefertiti and Meritaten in current scholarship."
+      ],
+      "counterevidence_to_total_masculinity_conspiracy": [
+        "Egyptian religion openly preserved powerful female deities including Sekhmet, a goddess of war, violence and protection.",
+        "UCL's creation synthesis explicitly calls Osiris and Seth gods/sons, Isis and Nephthys goddesses, with Osiris the elder son and Seth his brother.",
+        "Book of the Dead 42 explicitly maps the phallus to Osiris and the back to Seth."
+      ],
+      "conclusion": "Royal visual language could masculinize a known woman, so gender presentation and biological sex must be separated. The checked corpus does not support a hidden-female Osiris/Seth hypothesis."
+    },
+    "C_ADAMS_APPLE_ICONOGRAPHY": {
+      "status": "REJECT_AS_PRIMARY_SEX_TEST",
+      "reason": [
+        "The laryngeal prominence is sexually dimorphic on average but overlaps between individuals; it is more prominent in males, not exclusive to males.",
+        "Egyptian royal and divine art is strongly idealized and omits/reshapes anatomical details according to convention.",
+        "Therefore presence/absence of a carved or drawn laryngeal prominence cannot establish biological sex."
+      ],
+      "acceptable_for_mummies": "If preserved, laryngeal CT morphology can be recorded as a secondary feature, but pelvic morphology, skull, soft-tissue genital anatomy when preserved, and ancient DNA/sex-chromosome evidence have much higher evidentiary value."
+    },
+    "D_MALE_RULERS_FOUND_FEMALE_AUDIT": {
+      "status": "NO_CONFIRMED_ROYAL_SEX_REVERSAL_FOUND_IN_CURRENT_CHECKED_SET",
+      "checked_examples": [
+        {
+          "case": "Hatshepsut",
+          "result": "Female ruler who deliberately used male kingly iconography; not a male pharaoh later discovered to be female."
+        },
+        {
+          "case": "Neferneferuaten",
+          "result": "Female pharaoh attested in museum cataloguing; exact identity debated. This is a succession/identity problem, not a mummy sex reversal."
+        },
+        {
+          "case": "KV55 / probable Akhenaten",
+          "result": "CT reconstruction did not show feminine pelvic traits; genetic/pedigree work treats KV55 as male and probable father of Tutankhamun."
+        },
+        {
+          "case": "Tutankhamun",
+          "result": "Male; JAMA report notes a well-developed penis, despite stylized/feminized Amarna royal art."
+        },
+        {
+          "case": "Ramesses III",
+          "result": "Genetic study reports Y-chromosome lineage in Ramesses III and Unknown Man E."
+        },
+        {
+          "case": "Tiye / Elder Lady",
+          "result": "Unidentified female mummy later identified as Queen Tiye; not a king mis-sexed as male."
+        }
+      ],
+      "important_control": "Non-royal Egyptian mummies can be mis-sexed from iconography or incomplete morphology and later corrected by CT/DNA. Therefore the audit should remain open, but no checked royal case currently supplies the proposed pattern."
+    }
+  },
+  "propaganda_test": {
+    "hypothesis": "Masculine royal/divine imagery was used because male audiences would not mobilize for goddesses.",
+    "status": "WEAKENED_BY_COUNTEREXAMPLES",
+    "counterexamples": [
+      "Sekhmet was explicitly a female war deity and symbol of destructive/protective power.",
+      "Hatshepsut openly ruled as a female king while adopting masculine regalia.",
+      "Egyptian ritual texts can identify a male king with female deities such as Sekhmet/Bast in ideological language."
+    ],
+    "better_model": "Egyptian kingship had strongly masculine conventional imagery, but divine/royal gender could be symbolically fluid at the level of roles and identifications. This does not by itself imply hidden biological sex."
+  },
+  "new_gates": [
+    {
+      "id": "PHALLIC_MANDREL_FORENSICS_PASS",
+      "goal": "Acquire calibrated measurements and manufacturing signatures for the Mendes sheath, JE 56935, JE 56967, Met 23.10.23 and other comparable gold phallic objects."
+    },
+    {
+      "id": "ROYAL_MUMMY_BIOLOGICAL_SEX_AUDIT",
+      "goal": "Build a ruler-by-ruler table using CT, pelvis/skull morphology, preserved genital anatomy and DNA where available; record prior identification vs measured biological sex."
+    },
+    {
+      "id": "FEMALE_GENITAL_MIRROR_PROVENANCE_PASS",
+      "goal": "Run the same Mendes/Osiris/Banebdjedet provenance filters over vulva/cowrie/pubis/female-genital covers and fertility objects to detect search bias or mirrored ritual technology."
+    },
+    {
+      "id": "MODULAR_OSIRIS_GENITAL_ATTACHMENT_PASS",
+      "goal": "Catalog Osiris figures with separately made genitalia, insertion sockets, repairs, missing genital components or detachable parts and compare attachment geometry."
+    }
+  ],
+  "sources": [
+    "https://www.metmuseum.org/art/collection/search/544447",
+    "https://www.metmuseum.org/art/collection/search/544446",
+    "https://www.metmuseum.org/art/collection/search/567821",
+    "https://www.metmuseum.org/essays/art-architecture-and-the-city-in-the-reign-of-amenhotep-iv-akhenaten-ca-13531336-b-c",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/religion/deitiescreation.html",
+    "https://www.ucl.ac.uk/museums-static/digitalegypt/literature/religious/bd42.html",
+    "https://www.metmuseum.org/art/collection/search/544483",
+    "https://jamanetwork.com/journals/jama/fullarticle/185393",
+    "https://pubmed.ncbi.nlm.nih.gov/23247979/",
+    "https://pubmed.ncbi.nlm.nih.gov/349693/",
+    "https://pubmed.ncbi.nlm.nih.gov/30570975/",
+    "https://pubmed.ncbi.nlm.nih.gov/24814367/"
+  ]
+}
