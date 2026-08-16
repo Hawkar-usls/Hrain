@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
+import html as htmlmod
 import json
 import re
-import sys
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ARK = "bpt6k5774000v"
 TARGETS = ["53465", "53466", "53467", "53468", "53469"]
-UA = "JANUS-HRain-Mendes-CG-Extract/1.0"
+TARGET_PAGES = [82, 83, 84]
+UA = "JANUS-HRain-Mendes-CG-Extract/1.1"
 
 
 def fetch(url, timeout=35):
@@ -21,7 +23,27 @@ def text_of(data):
     return data.decode("utf-8", errors="replace")
 
 
-def extract_context(text, needle, radius=1200):
+def alto_to_text(xml_text):
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError:
+        return ""
+    words = []
+    for el in root.iter():
+        tag = el.tag.rsplit("}", 1)[-1]
+        if tag == "String":
+            val = el.attrib.get("CONTENT") or el.attrib.get("content")
+            if val:
+                words.append(htmlmod.unescape(val))
+        elif tag == "SP":
+            words.append(" ")
+        elif tag == "TextLine" and words and words[-1] != "\n":
+            words.append("\n")
+    text = " ".join(w for w in words if w not in {" ", "\n"})
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def extract_context(text, needle, radius=700):
     hits = []
     for m in re.finditer(re.escape(needle), text, flags=re.I):
         a = max(0, m.start() - radius)
@@ -31,66 +53,101 @@ def extract_context(text, needle, radius=1200):
 
 
 def main():
+    outdir = Path("/tmp/mendes-cg-extract")
+    outdir.mkdir(parents=True, exist_ok=True)
     out = {
-        "schema": "hrain.gallica.cg_extract.v1",
+        "schema": "hrain.gallica.cg_extract.v2",
         "ark": ARK,
         "targets": TARGETS,
+        "target_pages": TARGET_PAGES,
         "sources": {},
+        "pages": {},
         "entries": {},
         "errors": [],
     }
 
-    # 1) Gallica ContentSearch per exact CG number.
+    page_map = {n: [] for n in TARGETS}
+
+    # 1) Resolve exact target numbers to Gallica page IDs.
     for n in TARGETS:
         url = "https://gallica.bnf.fr/services/ContentSearch?" + urllib.parse.urlencode({"ark": ARK, "query": n})
         try:
             status, ctype, data = fetch(url)
             txt = text_of(data)
-            out["sources"][f"contentsearch_{n}"] = {"url": url, "status": status, "content_type": ctype, "raw": txt[:20000]}
+            page_ids = sorted(set(int(x) for x in re.findall(r"<p_id>PAG_(\d+)</p_id>", txt)))
+            page_map[n] = page_ids
+            out["sources"][f"contentsearch_{n}"] = {
+                "url": url,
+                "status": status,
+                "content_type": ctype,
+                "page_ids": page_ids,
+                "raw": txt[:10000],
+            }
         except Exception as e:
             out["errors"].append({"stage": "ContentSearch", "target": n, "error": repr(e)})
 
-    # 2) Whole-document OCR text; this is the strongest fallback if ContentSearch XML is awkward.
-    raw_url = f"https://gallica.bnf.fr/ark:/12148/{ARK}.texteBrut"
-    whole = ""
-    try:
-        status, ctype, data = fetch(raw_url, timeout=60)
-        whole = text_of(data)
-        out["sources"]["texteBrut"] = {"url": raw_url, "status": status, "content_type": ctype, "bytes": len(data)}
-        Path("/tmp/vernier_texteBrut.txt").write_text(whole, encoding="utf-8")
-    except Exception as e:
-        out["errors"].append({"stage": "texteBrut", "error": repr(e)})
+    # 2) Pull ALTO OCR for the three resolved pages.
+    combined_pages = []
+    for p in TARGET_PAGES:
+        url = f"https://gallica.bnf.fr/RequestDigitalElement?O={ARK}&E=ALTO&Deb={p}"
+        try:
+            status, ctype, data = fetch(url, timeout=45)
+            xml_text = text_of(data)
+            plain = alto_to_text(xml_text)
+            out["pages"][str(p)] = {
+                "url": url,
+                "status": status,
+                "content_type": ctype,
+                "xml_bytes": len(data),
+                "text": plain,
+            }
+            (outdir / f"PAG_{p}_ALTO.xml").write_text(xml_text, encoding="utf-8")
+            (outdir / f"PAG_{p}_OCR.txt").write_text(plain + "\n", encoding="utf-8")
+            combined_pages.append(f"[PAG_{p}] {plain}")
+        except Exception as e:
+            out["errors"].append({"stage": "ALTO", "page": p, "error": repr(e)})
 
-    # 3) Context extraction. Accept OCR variants with spaces/punctuation around digits.
-    if whole:
-        for n in TARGETS:
-            exact = extract_context(whole, n)
-            # also look for spaced OCR form e.g. 53 465
-            spaced = extract_context(whole, n[:2] + " " + n[2:])
-            out["entries"][n] = {"exact_contexts": exact[:8], "spaced_contexts": spaced[:8]}
+    combined = "\n".join(combined_pages)
+    (outdir / "MENDES_CG53465_53469_PAGES_82_84.txt").write_text(combined + "\n", encoding="utf-8")
 
-    # 4) Pagination endpoint for audit metadata.
+    # 3) Extract bounded contexts from the actual page OCR.
+    for n in TARGETS:
+        contexts = []
+        for p in page_map.get(n, []):
+            ptxt = (out.get("pages", {}).get(str(p)) or {}).get("text", "")
+            for ctx in extract_context(ptxt, n):
+                contexts.append({"page": p, "context": ctx})
+        out["entries"][n] = {"page_ids": page_map.get(n, []), "contexts": contexts}
+
+    # 4) Keep pagination metadata for mapping PAG order to printed page number.
     pag_url = f"https://gallica.bnf.fr/services/Pagination?ark={ARK}"
     try:
         status, ctype, data = fetch(pag_url)
-        out["sources"]["pagination"] = {"url": pag_url, "status": status, "content_type": ctype, "raw": text_of(data)[:30000]}
+        raw = text_of(data)
+        mapping = {}
+        for block in re.findall(r"<page>(.*?)</page>", raw, flags=re.S):
+            order = re.search(r"<ordre>(\d+)</ordre>", block)
+            numero = re.search(r"<numero>(.*?)</numero>", block)
+            if order and numero:
+                mapping[int(order.group(1))] = numero.group(1)
+        out["sources"]["pagination"] = {
+            "url": pag_url,
+            "status": status,
+            "content_type": ctype,
+            "target_mapping": {str(p): mapping.get(p) for p in TARGET_PAGES},
+        }
     except Exception as e:
         out["errors"].append({"stage": "Pagination", "error": repr(e)})
 
-    Path("/tmp/mendes-cg-extract").mkdir(parents=True, exist_ok=True)
-    Path("/tmp/mendes-cg-extract/MENDES_CG53465_53469_GALLICA_EXTRACT.json").write_text(
+    (outdir / "MENDES_CG53465_53469_GALLICA_EXTRACT.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    if whole:
-        # Keep a bounded companion around the target interval by searching the first and last exact hits.
-        positions = []
-        for n in TARGETS:
-            positions += [m.start() for m in re.finditer(re.escape(n), whole)]
-        if positions:
-            a = max(0, min(positions) - 5000)
-            b = min(len(whole), max(positions) + 12000)
-            Path("/tmp/mendes-cg-extract/MENDES_CG53465_53469_OCR_WINDOW.txt").write_text(whole[a:b], encoding="utf-8")
-    print(json.dumps({"ok": True, "errors": len(out["errors"]), "whole_text": bool(whole)}, ensure_ascii=False))
+    print(json.dumps({
+        "ok": True,
+        "errors": len(out["errors"]),
+        "page_map": page_map,
+        "ocr_chars": {p: len((out.get('pages', {}).get(str(p)) or {}).get('text','')) for p in TARGET_PAGES},
+    }, ensure_ascii=False))
 
 
 if __name__ == "__main__":
