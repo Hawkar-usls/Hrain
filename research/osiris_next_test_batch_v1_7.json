@@ -1,0 +1,172 @@
+{
+  "schema": "hrain.osiris_next_test_batch.v1",
+  "case_id": "OSIRIS-NEXT-TEST-BATCH-001",
+  "created_at": "2026-08-16",
+  "extends": [
+    "research/mendes_cg53465_53469_concordance_v1.json",
+    "research/osiris_gender_deception_and_mandrel_test_v1.json"
+  ],
+  "purpose": "Execute the most current next gates: phallic mandrel forensics, modular Osiris/genital attachment, female-genital mirror search, and royal biological-sex control, while keeping the Mendes CG 53465-53469 concordance as the primary archive blocker.",
+  "claim_ceiling": "No test in this batch identifies a literal Osiris relic, reconstructs Osiris anatomy, proves a shared mold, proves a hidden-female Osiris/Seth hypothesis, or proves a ceremonial phallus-detachment event.",
+  "tests": {
+    "PHALLIC_MANDREL_FORENSICS_PASS": {
+      "status": "BLOCKED_INSUFFICIENT_COMPARABLE_METROLOGY",
+      "objects": [
+        {
+          "id": "MENDES_1902_GOLD_PHALLUS_SHEATH",
+          "construction_class": "BODY_FITTING_SHEATH",
+          "material": "GOLD_FOIL",
+          "genital_specific_dimensions_cm": null,
+          "source": "Quibell 1902, Tell er-Roba burial of Nesbanebdjedet"
+        },
+        {
+          "id": "EMC_JE_56935",
+          "construction_class": "GOLD_PHALLIC_AMULET",
+          "material": "GOLD_SHEET",
+          "genital_specific_dimensions_cm": null,
+          "source": "Digital Giza / Egyptian Museum Cairo; title: Gold sheet amulet of penis"
+        },
+        {
+          "id": "EMC_JE_56967",
+          "construction_class": "GOLD_PHALLIC_AMULET",
+          "material": "GOLD_FOIL",
+          "genital_specific_dimensions_cm": null,
+          "source": "Digital Giza / Egyptian Museum Cairo; title: Gold foil amulet of phallus"
+        },
+        {
+          "id": "MET_23.10.23",
+          "construction_class": "GOLD_PHALLIC_AMULET",
+          "material": "GOLD_SHEET",
+          "genital_specific_dimensions_cm": {"length": 1.1, "height": 0.9},
+          "source": "Metropolitan Museum of Art"
+        },
+        {
+          "id": "BM_1973_0501_23",
+          "construction_class": "INSERT_COMPONENT",
+          "material": "TERRACOTTA",
+          "genital_specific_dimensions_cm": {"length": 6.6, "thickness": 1.7},
+          "source": "British Museum"
+        },
+        {
+          "id": "KHM_INV_10077_GENITAL_COMPONENT",
+          "construction_class": "INSERT_COMPONENT",
+          "material": "FIRED_CLAY",
+          "genital_specific_dimensions_cm": null,
+          "source": "Kunsthistorisches Museum Vienna"
+        },
+        {
+          "id": "LOUVRE_G2486_ME1427",
+          "construction_class": "WHOLE_PHALLIC_OSIRIS_FIGURE",
+          "material": "WOOD_WAX_BITUMEN",
+          "genital_specific_dimensions_cm": null,
+          "whole_object_dimensions_cm": {"height": 48.0, "width": 14.0, "depth": 9.0},
+          "source": "Musee du Louvre"
+        }
+      ],
+      "deterministic_pair_count": {
+        "objects": 7,
+        "all_pairwise_combinations": 21,
+        "admissible_shared_mandrel_comparisons": 0
+      },
+      "reason": "No two current objects share the same construction class/material family while also exposing sufficient genital-specific metrology. Overall size similarity alone would not establish a shared mold even if more dimensions were available.",
+      "next_required_measurements": [
+        "Mendes 1902 sheath length, maximum diameter/circumference, base geometry, foil thickness and seam topology",
+        "JE 56935 dimensions, foil thickness and reverse/seam construction",
+        "JE 56967 dimensions, foil thickness and reverse/seam construction",
+        "KHM 10077 inserted genital component length/diameter plus oval socket dimensions",
+        "microscopy/tool marks/XRF or radiography for any pair promoted to a shared-tooling comparison"
+      ]
+    },
+    "MODULAR_OSIRIS_GENITAL_ATTACHMENT_PASS": {
+      "status": "PASS_OBJECT_TECHNOLOGY_CONFIRMED",
+      "evidence": [
+        {
+          "id": "KHM_INV_10077",
+          "finding": "Osiris penis and testicles were made separately and inserted into an oval recess in the body.",
+          "osiris_specific": true
+        },
+        {
+          "id": "BM_1973_0501_23",
+          "finding": "Curved terracotta phallus made for insertion into a mould-made figure; length 6.60 cm, thickness 1.70 cm.",
+          "osiris_specific": false
+        },
+        {
+          "id": "BM_1973_0501_45",
+          "finding": "Figure had a large separately made phallus inserted into a hole; only a stump remains, fixed with plaster.",
+          "osiris_specific": false
+        },
+        {
+          "id": "BM_X__1595",
+          "finding": "Ptolemaic Egyptian figure preserves an empty socket for a removable phallus.",
+          "osiris_specific": false
+        }
+      ],
+      "conclusion": "Separately manufactured, inserted/removable phalli are a real Egyptian object technology, and an Osiris-specific example is directly documented. A removable component can also be lost or survive only as a stump/socket in other figures.",
+      "not_established": "No evidence currently ties a mechanical failure during a ceremony to the origin of the Osiris missing-phallus myth."
+    },
+    "FEMALE_GENITAL_MIRROR_PROVENANCE_PASS": {
+      "status": "MENDES_FEMALE_SYMBOLIC_CORPUS_SUPPORTED_GOLD_VULVA_NOT_FOUND",
+      "mendes_evidence": [
+        {
+          "id": "GEM_HATHOR_CAPITAL_MENDES",
+          "finding": "Grand Egyptian Museum records a Ptolemaic Hathor capital excavated at Mendes/Tell el-Ruba in 1892-1893."
+        },
+        {
+          "id": "MET_MENDES_TRIAD",
+          "finding": "Metropolitan Museum describes the Mendesian triad as Banebdjedet, goddess Hatmehyt and child god Harpocrates."
+        },
+        {
+          "id": "BM_X__1649_CURATORIAL_PARALLELS",
+          "finding": "British Museum curatorial notes cite 5th-3rd century BCE Mendes parallels for nude female shrine plaques of the Isis-Hathor class."
+        }
+      ],
+      "general_female_genital_controls": [
+        "Met cowrie/cowroid objects explicitly associated with resemblance to female genitalia and fertility",
+        "Egyptian female fertility figurines emphasizing pubic/genital area",
+        "Naukratis Ptolemaic terracotta women exposing/indicating the genital region"
+      ],
+      "result": "The mirrored search is not empty: Mendes contains substantial female divine/fertility symbolism. However no secure Mendes gold vulva/female-genital cover counterpart was located in the current pass.",
+      "next": "Search Mendes excavation publications and museum distribution records for female figurines, cowries/cowroids, Hathor/Isis plaques, pubic-triangle objects and female genital covers using the same provenance rules applied to phallic objects."
+    },
+    "ROYAL_MUMMY_BIOLOGICAL_SEX_AUDIT": {
+      "status": "NEGATIVE_CONTROL_RETAINED",
+      "result": "No confirmed case in the checked royal set has yet been found where an accepted male pharaoh mummy was scientifically reclassified as biologically female.",
+      "priority_effect": "Keep open as a falsification control, but lower immediate priority relative to the Mendes object/provenance gates."
+    },
+    "MENDES_CG53465_53469_CONCORDANCE": {
+      "status": "PRIMARY_ARCHIVE_BLOCKER",
+      "result": "The five Cairo Catalogue General records remain unresolved at individual-object level in public indexing.",
+      "next": "Object-card/OCR extraction or an authorized museum records request remains necessary before the Mendes gold sheath can be assigned an exact CG number."
+    }
+  },
+  "priority_order_after_batch": [
+    "CG53465_53469_OBJECT_CARD_OR_OCR_EXTRACTION_PASS",
+    "MENDES_PHALLUS_SHEATH_METROLOGY_REQUEST",
+    "KHM_10077_GENITAL_SOCKET_METROLOGY_REQUEST",
+    "JE56935_JE56967_METROLOGY_EXTRACTION",
+    "MENDES_FEMALE_GENITAL_MIRROR_OBJECT_INDEX",
+    "ROYAL_MUMMY_BIOLOGICAL_SEX_AUDIT_SECONDARY"
+  ],
+  "sources": [
+    "https://www.metmuseum.org/art/collection/search/561527",
+    "https://giza.fas.harvard.edu/institutions/2138/full/",
+    "https://www.khm.at/en/artworks/osirismumie-mit-erigiertem-phallus-316238",
+    "https://www.britishmuseum.org/collection/object/G_1973-0501-23",
+    "https://www.britishmuseum.org/collection/object/G_1973-0501-45",
+    "https://www.britishmuseum.org/collection/object/X__1595",
+    "https://collections.louvre.fr/en/ark:/53355/cl010341174",
+    "https://gem.eg/en/collection/artefacts/hathor-capital",
+    "https://www.britishmuseum.org/collection/object/X__1649",
+    "https://www.metmuseum.org/art/collection/search/570235"
+  ],
+  "current_verdict": {
+    "banana_found": false,
+    "shared_mandrel_supported": false,
+    "shared_mandrel_test_blocked": true,
+    "modular_phallus_attachment_technology_supported": true,
+    "osiris_specific_inserted_phallus_example_confirmed": true,
+    "female_mirror_branch_has_mendes_signal": true,
+    "gold_vulva_at_mendes_found": false,
+    "hidden_female_osiris_or_seth_supported": false
+  }
+}
