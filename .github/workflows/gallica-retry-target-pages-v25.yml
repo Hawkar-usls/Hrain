@@ -1,0 +1,31 @@
+name: Gallica paced retry target pages v2.5
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tools/gallica_retry_target_pages_v25.py'
+      - '.github/workflows/gallica-retry-target-pages-v25.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Fetch paced ALTO pages
+        run: python tools/gallica_retry_target_pages_v25.py
+      - name: Upload retry pages
+        uses: actions/upload-artifact@v4
+        with:
+          name: gallica-retry-target-pages-v25
+          path: /tmp/gallica-retry-v25/
+          if-no-files-found: error
+          retention-days: 3
