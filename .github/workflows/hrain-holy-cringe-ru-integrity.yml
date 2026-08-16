@@ -1,0 +1,37 @@
+name: HRaiN Holy Cringe ru integrity
+
+on:
+  pull_request:
+    paths:
+      - 'janus-network-v3.js'
+      - '.github/workflows/hrain-holy-cringe-ru-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'janus-network-v3.js'
+      - '.github/workflows/hrain-holy-cringe-ru-integrity.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate parody and source boundaries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('janus-network-v3.js').read_text(encoding='utf-8')
+          sl=s.lower()
+          for token in ['janus-site-language-v1','святой кринж','пародийный слой','не трогать','source remains authoritative','вымышленная ванесса шевченко']:
+              assert token in sl, token
+          forbidden=['/api/hrain/save','/api/hrain/event',"method:'DELETE'","method:'PUT'","method:'PATCH'"]
+          for token in forbidden:
+              assert token not in s, token
+          print('RU_HOLY_CRINGE=PASS')
+          print('FICTIONAL_CAMEO_BOUNDARY=PASS')
+          print('SOURCE_MUTATION=ABSENT')
+          PY
+          node --check janus-network-v3.js
