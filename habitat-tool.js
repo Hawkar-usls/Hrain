@@ -37,12 +37,13 @@ function handle(request) {
     packetId: `habitat-hrain-${requestId}`,
     capturedAt: request.captured_at || new Date().toISOString(),
     sourceRevision: goldpromptReceipt.source_revision,
-    goldpromptReceipt
+    goldpromptReceipt,
+    intentAnchor: request.intent_anchor,
+    intentHandoff
   });
 
-  if (packet.source.goldprompt_receipt_sha256 !== goldpromptReceipt.receipt_sha256) {
-    fail('HRAIN_PACKET_RECEIPT_BINDING_FAILED');
-  }
+  if (packet.source.goldprompt_receipt_sha256 !== goldpromptReceipt.receipt_sha256) fail('HRAIN_PACKET_RECEIPT_BINDING_FAILED');
+  if (packet.source.intent_id !== request.intent_anchor.intent_id || packet.source.intent_handoff_sha256 !== intentHandoff.handoff_sha256) fail('HRAIN_PACKET_INTENT_BINDING_FAILED');
 
   return {
     schema: RESPONSE_SCHEMA,
@@ -73,16 +74,10 @@ function runCli() {
       const request = JSON.parse(raw || '{}');
       process.stdout.write(JSON.stringify(handle(request)) + '\n');
     } catch (err) {
-      process.stderr.write(JSON.stringify({
-        schema: 'janus.habitat.hrain.error.v1',
-        status: 'REJECTED',
-        error: String(err && (err.code || err.message) || 'UNKNOWN')
-      }) + '\n');
+      process.stderr.write(JSON.stringify({schema:'janus.habitat.hrain.error.v1',status:'REJECTED',error:String(err && (err.code || err.message) || 'UNKNOWN')}) + '\n');
       process.exitCode = 2;
     }
   });
 }
-
 if (require.main === module) runCli();
-
 module.exports = Object.freeze({ REQUEST_SCHEMA, RESPONSE_SCHEMA, TOOL_ID, FACE_ID, handle });
