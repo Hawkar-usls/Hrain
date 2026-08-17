@@ -2,6 +2,7 @@
 const assert = require('assert');
 const tool = require('../habitat-tool.js');
 const goldprompt = require('../goldprompt-handshake.js');
+const intent = require('../intent-handoff.js');
 
 const TEST_SHA = 'a'.repeat(40);
 process.env.JANUS_SOURCE_REVISION = process.env.GITHUB_SHA || TEST_SHA;
@@ -11,11 +12,44 @@ assert.equal(goldprompt.STARTUP_CONTRACT_DIGEST, goldprompt.EXPECTED_CONTRACT_DI
 assert.equal(goldprompt.dependencyManifestDigest(), goldprompt.EXPECTED_DEPENDENCY_MANIFEST_DIGEST);
 assert.equal(goldprompt.STARTUP_DEPENDENCY_MANIFEST_DIGEST, goldprompt.EXPECTED_DEPENDENCY_MANIFEST_DIGEST);
 
+function fixtureAnchor() {
+  const anchor = {
+    schema: intent.ANCHOR_SCHEMA,
+    current_turn_digest: '1'.repeat(64),
+    requested_operation: 'COMPARE',
+    primary_entities: {
+      OSIRIS: ['осирис', 'осириса'],
+      JESUS_CHRIST: ['иисус', 'христос', 'христа']
+    },
+    must_answer_points: [
+      'Compare Osiris restoration with Christ resurrection',
+      'Distinguish resurrection from Second Coming'
+    ],
+    required_answer_evidence: [
+      ['осирис', 'осириса'],
+      ['иисус', 'христос'],
+      ['воскрес', 'resurrection'],
+      ['второе пришествие', 'second coming']
+    ],
+    operation_markers: ['сравн', 'различ', 'сход'],
+    optional_association_markers: ['bd101', 'janus'],
+    explicit_constraints: [],
+    allow_anaphoric_continuation: false,
+    context_priority: Object.keys(intent.CONTEXT_TIERS).map(k => intent.CONTEXT_TIERS[k])
+  };
+  anchor.intent_id = intent.sha256(anchor);
+  return anchor;
+}
+
+const intentAnchor = fixtureAnchor();
+assert.equal(intent.verifyAnchor(intentAnchor), true);
+
 const request = {
   schema: tool.REQUEST_SCHEMA,
   request_id: 'HABITAT-HRAIN-0001',
   operation: 'STRUCTURE_CONTEXT',
   captured_at: '2026-08-16T00:00:00Z',
+  intent_anchor: intentAnchor,
   workspace: {
     nodes: [
       { id: 'a', label: 'Origin', origin: 'USER' },
@@ -35,6 +69,13 @@ assert.equal(response.packet.graph.links.length, 1);
 assert.equal(response.source_mutation_allowed, false);
 assert.equal(response.world_effect_requested, false);
 assert.equal(response.authority_delta, 0);
+
+assert.deepEqual(response.intent_anchor, intentAnchor);
+assert.equal(response.intent_handoff.intent_id, intentAnchor.intent_id);
+assert.equal(response.intent_handoff.current_turn_digest, intentAnchor.current_turn_digest);
+assert.equal(response.intent_handoff.requested_operation, intentAnchor.requested_operation);
+assert.equal(response.intent_handoff.face_id, 'LEFT_HRAIN');
+assert.equal(intent.verifyHandoff(intentAnchor, response.intent_handoff, 'LEFT_HRAIN'), true);
 
 const receipt = response.goldprompt_receipt;
 assert.equal(receipt.schema, goldprompt.RECEIPT_SCHEMA);
@@ -68,10 +109,15 @@ assert.throws(() => goldprompt.resolveRuntimeSourceRevision({}), /TRUSTED_SOURCE
 assert.throws(() => goldprompt.resolveRuntimeSourceRevision({ JANUS_SOURCE_REVISION: 'TEST-REV' }), /JANUS_SOURCE_REVISION_INVALID/);
 
 assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0002', source_revision: 'b'.repeat(40) }), /CALLER_SOURCE_REVISION_FORBIDDEN/);
+assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0004', intent_anchor: undefined }), /INTENT_ANCHOR_REQUIRED_OR_INVALID/);
+const tamperedIntent = JSON.parse(JSON.stringify(intentAnchor));
+tamperedIntent.requested_operation = 'SUMMARIZE';
+assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0005', intent_anchor: tamperedIntent }), /INTENT_ANCHOR_REQUIRED_OR_INVALID/);
 assert.throws(() => tool.handle({
   schema: tool.REQUEST_SCHEMA,
   request_id: 'HABITAT-HRAIN-0003',
   operation: 'STRUCTURE_CONTEXT',
+  intent_anchor: intentAnchor,
   workspace: { nodes: [{ id: 'a', label: 'A' }], links: [{ source: 'a', target: 'missing' }] }
 }), /Dangling link/);
 
@@ -81,5 +127,8 @@ console.log('HRAIN_GOLDPROMPT_TRANSITIVE_PIN_BINDING=PASS');
 console.log('HRAIN_PACKET_EMBEDS_UPSTREAM_RECEIPT=PASS');
 console.log('HRAIN_GOLDPROMPT_CALLER_REVISION_OVERRIDE=REJECTED');
 console.log('HRAIN_GOLDPROMPT_FULL_POLICY_VERIFY=PASS');
+console.log('HRAIN_INTENT_LOCK=PASS');
+console.log('HRAIN_INTENT_HANDOFF_CONTINUITY=PASS');
+console.log('HRAIN_INTENT_REINTERPRETATION=REJECTED');
 console.log('HRAIN_SOURCE_MUTATION=FALSE');
 console.log('HRAIN_NETWORK_USED=FALSE');
