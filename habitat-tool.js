@@ -2,6 +2,7 @@
 'use strict';
 
 const bridge = require('./demihead-bridge.js');
+const goldprompt = require('./goldprompt-handshake.js');
 
 const REQUEST_SCHEMA = 'janus.habitat.hrain.request.v1';
 const RESPONSE_SCHEMA = 'janus.habitat.hrain.response.v1';
@@ -22,11 +23,18 @@ function handle(request) {
   if (request.operation !== 'STRUCTURE_CONTEXT') fail('HRAIN_HABITAT_OPERATION_UNSUPPORTED');
   if (!request.workspace || typeof request.workspace !== 'object') fail('HRAIN_HABITAT_WORKSPACE_REQUIRED');
 
+  const sourceRevision = typeof request.source_revision === 'string'
+    ? request.source_revision
+    : (process.env.GITHUB_SHA || process.env.JANUS_SOURCE_REVISION || null);
+
   const packet = bridge.buildPacket(request.workspace, {
     packetId: `habitat-hrain-${requestId}`,
     capturedAt: request.captured_at || new Date().toISOString(),
-    sourceRevision: typeof request.source_revision === 'string' ? request.source_revision : null
+    sourceRevision
   });
+
+  const goldpromptReceipt = goldprompt.buildReceipt({ sourceRevision });
+  if (!goldprompt.verifyReceipt(goldpromptReceipt)) fail('HRAIN_GOLDPROMPT_RECEIPT_SELF_VERIFY_FAILED');
 
   return {
     schema: RESPONSE_SCHEMA,
@@ -35,6 +43,7 @@ function handle(request) {
     tool: 'HRaiN',
     role: 'STRUCTURAL_CONTEXT',
     status: 'STRUCTURE_READY_OPTIONAL',
+    goldprompt_receipt: goldpromptReceipt,
     packet,
     may_be_ignored: true,
     authority_delta: 0,
