@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'habitat-tool.js'
+      - 'goldprompt-handshake.js'
       - 'demihead-bridge.js'
       - 'tools/test-habitat-tool.js'
       - '.github/workflows/hrain-habitat-tool.yml'
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'habitat-tool.js'
+      - 'goldprompt-handshake.js'
       - 'demihead-bridge.js'
       - 'tools/test-habitat-tool.js'
       - '.github/workflows/hrain-habitat-tool.yml'
@@ -26,17 +28,32 @@ jobs:
       - name: Syntax and unit tests
         run: |
           node --check habitat-tool.js
+          node --check goldprompt-handshake.js
           node --check demihead-bridge.js
           node tools/test-habitat-tool.js
-      - name: CLI smoke
+      - name: CLI smoke with live GoldPrompt handshake
+        env:
+          JANUS_SOURCE_REVISION: ${{ github.sha }}
         run: |
           printf '%s\n' '{"schema":"janus.habitat.hrain.request.v1","request_id":"CI-HRAIN-0001","operation":"STRUCTURE_CONTEXT","captured_at":"2026-08-16T00:00:00Z","workspace":{"nodes":[{"id":"a","label":"A"},{"id":"b","label":"B"}],"links":[{"source":"a","target":"b"}]}}' | node habitat-tool.js >/tmp/hrain.json
           node - <<'NODE'
           const fs=require('fs');
+          const gp=require('./goldprompt-handshake.js');
           const v=JSON.parse(fs.readFileSync('/tmp/hrain.json','utf8'));
           if(v.status!=='STRUCTURE_READY_OPTIONAL') throw new Error('status');
           if(v.packet.hemisphere!=='LEFT_HRAIN') throw new Error('hemisphere');
           if(v.source_mutation_allowed!==false) throw new Error('mutation boundary');
           if(v.network_used_by_tool!==false) throw new Error('network boundary');
+          if(!gp.verifyReceipt(v.goldprompt_receipt)) throw new Error('goldprompt receipt');
+          if(v.goldprompt_receipt.source_revision!==process.env.JANUS_SOURCE_REVISION) throw new Error('source revision');
+          fs.writeFileSync('hrain-goldprompt-startup-receipt.json', JSON.stringify(v.goldprompt_receipt,null,2)+'\n');
           console.log('HRAIN_HABITAT_CLI=PASS');
+          console.log('HRAIN_GOLDPROMPT_STARTUP_RECEIPT=PASS');
           NODE
+      - name: Upload GoldPrompt startup receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: hrain-goldprompt-startup-receipt
+          path: hrain-goldprompt-startup-receipt.json
+          if-no-files-found: error
+          retention-days: 30
