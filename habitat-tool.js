@@ -23,7 +23,6 @@ function handle(request) {
   if (request.operation !== 'STRUCTURE_CONTEXT') fail('HRAIN_HABITAT_OPERATION_UNSUPPORTED');
   if (Object.prototype.hasOwnProperty.call(request, 'source_revision')) fail('HRAIN_CALLER_SOURCE_REVISION_FORBIDDEN');
 
-  // Runtime provenance is resolved only from process-level trusted metadata.
   const goldpromptReceipt = goldprompt.buildRuntimeReceipt();
   if (!goldprompt.verifyReceipt(goldpromptReceipt)) fail('HRAIN_GOLDPROMPT_RECEIPT_SELF_VERIFY_FAILED');
 
@@ -31,8 +30,13 @@ function handle(request) {
   const packet = bridge.buildPacket(request.workspace, {
     packetId: `habitat-hrain-${requestId}`,
     capturedAt: request.captured_at || new Date().toISOString(),
-    sourceRevision: goldpromptReceipt.source_revision
+    sourceRevision: goldpromptReceipt.source_revision,
+    goldpromptReceipt
   });
+
+  if (packet.source.goldprompt_receipt_sha256 !== goldpromptReceipt.receipt_sha256) {
+    fail('HRAIN_PACKET_RECEIPT_BINDING_FAILED');
+  }
 
   return {
     schema: RESPONSE_SCHEMA,

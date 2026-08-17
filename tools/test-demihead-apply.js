@@ -14,10 +14,7 @@ function clone(value) {
 }
 
 async function makeEnvelope(workspace, overrides = {}) {
-  const graph = bridge.buildPacket(workspace, {
-    capturedAt: '2026-08-16T10:00:00Z',
-    packetId: 'hrain-apply-test-base'
-  }).graph;
+  const graph = bridge.normalizeWorkspace(workspace);
   const proposal = {
     schema: apply.PROPOSAL_SCHEMA,
     proposal_id: 'proposal-hrain-test-0001',
@@ -63,7 +60,7 @@ async function main() {
     ],
     links: [{source: 1, target: 2}]
   };
-  const graph = bridge.buildPacket(workspace, {capturedAt:'2026-08-16T10:00:00Z', packetId:'base'}).graph;
+  const graph = bridge.normalizeWorkspace(workspace);
   const envelope = await makeEnvelope(workspace);
   await apply.verifyEnvelope(envelope);
 
@@ -81,7 +78,7 @@ async function main() {
   assert(added.parentId === null, 'v1 proposal must add a top-level HRain node');
   assert(Array.isArray(added.chatHistory) && added.chatHistory.length === 0, 'HRain compatibility fields missing');
 
-  const afterGraph = bridge.buildPacket(prepared.workspace, {capturedAt:'2026-08-16T10:00:01Z', packetId:'after'}).graph;
+  const afterGraph = bridge.normalizeWorkspace(prepared.workspace);
   const afterSha = await apply.sha256Json(afterGraph);
   const receipt = apply.buildReceipt({
     proposalId: prepared.proposal_id,
@@ -118,12 +115,12 @@ async function main() {
 
   const changedWorkspace = clone(workspace);
   changedWorkspace.nodes[0].label = 'Context changed after proposal';
-  const changedGraph = bridge.buildPacket(changedWorkspace, {capturedAt:'2026-08-16T10:00:02Z', packetId:'changed'}).graph;
+  const changedGraph = bridge.normalizeWorkspace(changedWorkspace);
   await expectRefusal(() => apply.prepareAcceptedMutation(changedWorkspace, changedGraph, envelope), 'BASE_WORKSPACE_CHANGED_REPROPOSE_REQUIRED');
 
   const duplicateWorkspace = clone(workspace);
   duplicateWorkspace.nodes.push({id:'dh-node-hrain-test-0001', label:'Already here', x:0, y:0});
-  const duplicateGraph = bridge.buildPacket(duplicateWorkspace, {capturedAt:'2026-08-16T10:00:02Z', packetId:'duplicate'}).graph;
+  const duplicateGraph = bridge.normalizeWorkspace(duplicateWorkspace);
   const duplicateEnvelope = await makeEnvelope(duplicateWorkspace);
   await expectRefusal(() => apply.prepareAcceptedMutation(duplicateWorkspace, duplicateGraph, duplicateEnvelope), 'PROPOSED_NODE_ID_ALREADY_EXISTS');
 
