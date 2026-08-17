@@ -17,22 +17,11 @@ function fixtureAnchor() {
     schema: intent.ANCHOR_SCHEMA,
     current_turn_digest: '1'.repeat(64),
     requested_operation: 'COMPARE',
-    primary_entities: {
-      OSIRIS: ['осирис', 'осириса'],
-      JESUS_CHRIST: ['иисус', 'христос', 'христа']
-    },
-    must_answer_points: [
-      'Compare Osiris restoration with Christ resurrection',
-      'Distinguish resurrection from Second Coming'
-    ],
-    required_answer_evidence: [
-      ['осирис', 'осириса'],
-      ['иисус', 'христос'],
-      ['воскрес', 'resurrection'],
-      ['второе пришествие', 'second coming']
-    ],
-    operation_markers: ['сравн', 'различ', 'сход'],
-    optional_association_markers: ['bd101', 'janus'],
+    primary_entities: {OSIRIS:['осирис','осириса'],JESUS_CHRIST:['иисус','христос','христа']},
+    must_answer_points: ['Compare Osiris restoration with Christ resurrection','Distinguish resurrection from Second Coming'],
+    required_answer_evidence: [['осирис','осириса'],['иисус','христос'],['воскрес','resurrection'],['второе пришествие','second coming']],
+    operation_markers: ['сравн','различ','сход'],
+    optional_association_markers: ['bd101','janus'],
     explicit_constraints: [],
     allow_anaphoric_continuation: false,
     context_priority: Object.keys(intent.CONTEXT_TIERS).map(k => intent.CONTEXT_TIERS[k])
@@ -43,25 +32,15 @@ function fixtureAnchor() {
 
 const intentAnchor = fixtureAnchor();
 assert.equal(intent.verifyAnchor(intentAnchor), true);
-
 const request = {
-  schema: tool.REQUEST_SCHEMA,
-  request_id: 'HABITAT-HRAIN-0001',
-  operation: 'STRUCTURE_CONTEXT',
-  captured_at: '2026-08-16T00:00:00Z',
-  intent_anchor: intentAnchor,
-  workspace: {
-    nodes: [
-      { id: 'a', label: 'Origin', origin: 'USER' },
-      { id: 'b', label: 'Hypothesis', origin: 'LOCAL_FALLBACK' }
-    ],
-    links: [{ source: 'a', target: 'b' }]
-  }
+  schema: tool.REQUEST_SCHEMA, request_id: 'HABITAT-HRAIN-0001', operation: 'STRUCTURE_CONTEXT',
+  captured_at: '2026-08-16T00:00:00Z', intent_anchor: intentAnchor,
+  workspace: {nodes:[{id:'a',label:'Origin',origin:'USER'},{id:'b',label:'Hypothesis',origin:'LOCAL_FALLBACK'}],links:[{source:'a',target:'b'}]}
 };
 const response = tool.handle(request);
 assert.equal(response.status, 'STRUCTURE_READY_OPTIONAL');
 assert.equal(response.tool_id, 'JANUS.HRAIN.STRUCTURE.LOCAL');
-assert.equal(response.packet.schema, 'janus.demihead.hemisphere_packet.v2');
+assert.equal(response.packet.schema, 'janus.demihead.hemisphere_packet.v3');
 assert.equal(response.packet.hemisphere, 'LEFT_HRAIN');
 assert.equal(response.packet.role, 'STRUCTURAL_CONTEXT');
 assert.equal(response.packet.graph.nodes.length, 2);
@@ -76,6 +55,10 @@ assert.equal(response.intent_handoff.current_turn_digest, intentAnchor.current_t
 assert.equal(response.intent_handoff.requested_operation, intentAnchor.requested_operation);
 assert.equal(response.intent_handoff.face_id, 'LEFT_HRAIN');
 assert.equal(intent.verifyHandoff(intentAnchor, response.intent_handoff, 'LEFT_HRAIN'), true);
+assert.deepEqual(response.packet.intent_anchor, intentAnchor);
+assert.deepEqual(response.packet.intent_handoff, response.intent_handoff);
+assert.equal(response.packet.source.intent_id, intentAnchor.intent_id);
+assert.equal(response.packet.source.intent_handoff_sha256, response.intent_handoff.handoff_sha256);
 
 const receipt = response.goldprompt_receipt;
 assert.equal(receipt.schema, goldprompt.RECEIPT_SCHEMA);
@@ -95,36 +78,24 @@ assert.equal(response.packet.source.goldprompt_receipt_sha256, receipt.receipt_s
 assert.deepEqual(response.packet.goldprompt_receipt, receipt);
 assert.equal(goldprompt.verifyReceipt(receipt), true);
 
-function rehash(candidate) {
-  const payload = { ...candidate };
-  delete payload.receipt_sha256;
-  return { ...payload, receipt_sha256: goldprompt.sha256(payload) };
-}
-assert.equal(goldprompt.verifyReceipt(rehash({ ...receipt, authority_weight: 1 })), false);
-assert.equal(goldprompt.verifyReceipt(rehash({ ...receipt, user_exit_and_release_control_accepted: false })), false);
-assert.equal(goldprompt.verifyReceipt(rehash({ ...receipt, capability_scope: ['PROPOSE_STRUCTURAL_CONTEXT'] })), false);
-assert.equal(goldprompt.verifyReceipt(rehash({ ...receipt, dependency_manifest_digest_sha256: '0'.repeat(64) })), false);
-assert.equal(goldprompt.verifyReceipt(rehash({ ...receipt, extra_authority_hint: true })), false);
-assert.throws(() => goldprompt.resolveRuntimeSourceRevision({}), /TRUSTED_SOURCE_REVISION_REQUIRED/);
-assert.throws(() => goldprompt.resolveRuntimeSourceRevision({ JANUS_SOURCE_REVISION: 'TEST-REV' }), /JANUS_SOURCE_REVISION_INVALID/);
-
-assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0002', source_revision: 'b'.repeat(40) }), /CALLER_SOURCE_REVISION_FORBIDDEN/);
-assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0004', intent_anchor: undefined }), /INTENT_ANCHOR_REQUIRED_OR_INVALID/);
-const tamperedIntent = JSON.parse(JSON.stringify(intentAnchor));
-tamperedIntent.requested_operation = 'SUMMARIZE';
-assert.throws(() => tool.handle({ ...request, request_id: 'HABITAT-HRAIN-0005', intent_anchor: tamperedIntent }), /INTENT_ANCHOR_REQUIRED_OR_INVALID/);
-assert.throws(() => tool.handle({
-  schema: tool.REQUEST_SCHEMA,
-  request_id: 'HABITAT-HRAIN-0003',
-  operation: 'STRUCTURE_CONTEXT',
-  intent_anchor: intentAnchor,
-  workspace: { nodes: [{ id: 'a', label: 'A' }], links: [{ source: 'a', target: 'missing' }] }
-}), /Dangling link/);
+function rehash(candidate) { const payload={...candidate}; delete payload.receipt_sha256; return {...payload,receipt_sha256:goldprompt.sha256(payload)}; }
+assert.equal(goldprompt.verifyReceipt(rehash({...receipt,authority_weight:1})),false);
+assert.equal(goldprompt.verifyReceipt(rehash({...receipt,user_exit_and_release_control_accepted:false})),false);
+assert.equal(goldprompt.verifyReceipt(rehash({...receipt,capability_scope:['PROPOSE_STRUCTURAL_CONTEXT']})),false);
+assert.equal(goldprompt.verifyReceipt(rehash({...receipt,dependency_manifest_digest_sha256:'0'.repeat(64)})),false);
+assert.equal(goldprompt.verifyReceipt(rehash({...receipt,extra_authority_hint:true})),false);
+assert.throws(()=>goldprompt.resolveRuntimeSourceRevision({}),/TRUSTED_SOURCE_REVISION_REQUIRED/);
+assert.throws(()=>goldprompt.resolveRuntimeSourceRevision({JANUS_SOURCE_REVISION:'TEST-REV'}),/JANUS_SOURCE_REVISION_INVALID/);
+assert.throws(()=>tool.handle({...request,request_id:'HABITAT-HRAIN-0002',source_revision:'b'.repeat(40)}),/CALLER_SOURCE_REVISION_FORBIDDEN/);
+assert.throws(()=>tool.handle({...request,request_id:'HABITAT-HRAIN-0004',intent_anchor:undefined}),/INTENT_ANCHOR_REQUIRED_OR_INVALID/);
+const tamperedIntent=JSON.parse(JSON.stringify(intentAnchor)); tamperedIntent.requested_operation='SUMMARIZE';
+assert.throws(()=>tool.handle({...request,request_id:'HABITAT-HRAIN-0005',intent_anchor:tamperedIntent}),/INTENT_ANCHOR_REQUIRED_OR_INVALID/);
+assert.throws(()=>tool.handle({schema:tool.REQUEST_SCHEMA,request_id:'HABITAT-HRAIN-0003',operation:'STRUCTURE_CONTEXT',intent_anchor:intentAnchor,workspace:{nodes:[{id:'a',label:'A'}],links:[{source:'a',target:'missing'}]}}),/Dangling link/);
 
 console.log('HRAIN_HABITAT_TOOL=PASS');
 console.log('HRAIN_GOLDPROMPT_HANDSHAKE_V1_1=PASS');
 console.log('HRAIN_GOLDPROMPT_TRANSITIVE_PIN_BINDING=PASS');
-console.log('HRAIN_PACKET_EMBEDS_UPSTREAM_RECEIPT=PASS');
+console.log('HRAIN_PACKET_V3_EMBEDS_RECEIPT_AND_INTENT=PASS');
 console.log('HRAIN_GOLDPROMPT_CALLER_REVISION_OVERRIDE=REJECTED');
 console.log('HRAIN_GOLDPROMPT_FULL_POLICY_VERIFY=PASS');
 console.log('HRAIN_INTENT_LOCK=PASS');
