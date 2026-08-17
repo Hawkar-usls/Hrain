@@ -7,6 +7,8 @@
 
   const PACKET_SCHEMA = 'janus.demihead.hemisphere_packet.v2';
   const BRIDGE_CONTRACT = 'JANUS_DEMIHEAD_BICAMERAL_BRIDGE_V2';
+  const UNATTESTED_PACKET_SCHEMA = 'janus.demihead.hemisphere_packet.v1';
+  const UNATTESTED_BRIDGE_CONTRACT = 'JANUS_DEMIHEAD_BICAMERAL_BRIDGE_V1';
   const REQUEST_TYPE = 'JANUS_DEMIHEAD_REQUEST_PACKET_V2';
   const RESPONSE_TYPE = 'JANUS_DEMIHEAD_HEMISPHERE_PACKET_V2';
   const HEMISPHERE = 'LEFT_HRAIN';
@@ -39,7 +41,6 @@
     const raw = workspace && typeof workspace === 'object' ? workspace : {};
     const sourceNodes = Array.isArray(raw.nodes) ? raw.nodes : [];
     const sourceLinks = Array.isArray(raw.links) ? raw.links : [];
-
     const ids = new Set();
     const nodes = sourceNodes.map((node) => {
       if (!node || typeof node !== 'object') throw new Error('Every node must be an object');
@@ -53,7 +54,6 @@
       if (typeof node.type === 'string' && node.type) out.type = node.type.slice(0, 64);
       return out;
     });
-
     const seen = new Set();
     const links = sourceLinks.map((link) => {
       if (!link || typeof link !== 'object') throw new Error('Every link must be an object');
@@ -67,22 +67,17 @@
       seen.add(edgeKey);
       return { source, target };
     });
-
     return { nodes, links };
   }
 
   function validateGoldPromptReceipt(receipt, sourceRevision) {
-    if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt)) {
-      throw new Error('GoldPrompt receipt must be an object');
-    }
+    if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt)) throw new Error('GoldPrompt receipt must be an object');
     if (receipt.face_id !== HEMISPHERE) throw new Error('GoldPrompt receipt Face mismatch');
     if (receipt.repository !== REPOSITORY) throw new Error('GoldPrompt receipt repository mismatch');
     if (receipt.source_revision !== sourceRevision) throw new Error('GoldPrompt receipt/source revision mismatch');
     if (receipt.compliance_state !== 'COMPLIANT') throw new Error('GoldPrompt receipt must be COMPLIANT');
     if (receipt.authority_weight !== 0) throw new Error('GoldPrompt receipt cannot add authority');
-    if (typeof receipt.receipt_sha256 !== 'string' || !SHA256_RE.test(receipt.receipt_sha256)) {
-      throw new Error('GoldPrompt receipt SHA-256 required');
-    }
+    if (typeof receipt.receipt_sha256 !== 'string' || !SHA256_RE.test(receipt.receipt_sha256)) throw new Error('GoldPrompt receipt SHA-256 required');
     return JSON.parse(JSON.stringify(receipt));
   }
 
@@ -108,37 +103,43 @@
       },
       goldprompt_receipt: goldpromptReceipt,
       graph: normalizeWorkspace(workspace),
+      control: { read_only_transfer: true, direct_cross_hemisphere_mutation: false, authority_delta: 0, mass_effect_budget_delta: 0 }
+    };
+  }
+
+  function buildUnattestedPacket(workspace, options) {
+    const opts = options || {};
+    return {
+      schema: UNATTESTED_PACKET_SCHEMA,
+      packet_id: opts.packetId || `hrain-left-unattested-${Date.now()}`,
+      hemisphere: HEMISPHERE,
+      role: ROLE,
+      captured_at: opts.capturedAt || new Date().toISOString(),
+      source: {
+        repository: REPOSITORY,
+        bridge_contract: UNATTESTED_BRIDGE_CONTRACT,
+        source_revision: null,
+        workspace_mode: WORKSPACE_MODE
+      },
+      graph: normalizeWorkspace(workspace),
       control: {
         read_only_transfer: true,
         direct_cross_hemisphere_mutation: false,
         authority_delta: 0,
-        mass_effect_budget_delta: 0
+        mass_effect_budget_delta: 0,
+        proof_state: 'UNATTESTED_LOCAL_EXPORT'
       }
     };
   }
 
   function buildResponse(requestId, workspace, options) {
-    return {
-      type: RESPONSE_TYPE,
-      request_id: validateRequestId(requestId),
-      packet: buildPacket(workspace, options)
-    };
+    return { type: RESPONSE_TYPE, request_id: validateRequestId(requestId), packet: buildPacket(workspace, options) };
   }
 
   return {
-    PACKET_SCHEMA,
-    BRIDGE_CONTRACT,
-    REQUEST_TYPE,
-    RESPONSE_TYPE,
-    HEMISPHERE,
-    ROLE,
-    REPOSITORY,
-    WORKSPACE_MODE,
-    validateRequestId,
-    normalizeOrigin,
-    normalizeWorkspace,
-    validateGoldPromptReceipt,
-    buildPacket,
-    buildResponse
+    PACKET_SCHEMA, BRIDGE_CONTRACT, UNATTESTED_PACKET_SCHEMA, UNATTESTED_BRIDGE_CONTRACT,
+    REQUEST_TYPE, RESPONSE_TYPE, HEMISPHERE, ROLE, REPOSITORY, WORKSPACE_MODE,
+    validateRequestId, normalizeOrigin, normalizeWorkspace, validateGoldPromptReceipt,
+    buildPacket, buildUnattestedPacket, buildResponse
   };
 });
