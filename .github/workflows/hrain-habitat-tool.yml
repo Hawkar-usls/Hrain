@@ -5,6 +5,7 @@ on:
     paths:
       - 'habitat-tool.js'
       - 'goldprompt-handshake.js'
+      - 'intent-handoff.js'
       - 'demihead-bridge.js'
       - 'tools/test-habitat-tool.js'
       - '.github/workflows/hrain-habitat-tool.yml'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'habitat-tool.js'
       - 'goldprompt-handshake.js'
+      - 'intent-handoff.js'
       - 'demihead-bridge.js'
       - 'tools/test-habitat-tool.js'
       - '.github/workflows/hrain-habitat-tool.yml'
@@ -37,17 +39,38 @@ jobs:
         run: |
           node --check habitat-tool.js
           node --check goldprompt-handshake.js
+          node --check intent-handoff.js
           node --check demihead-bridge.js
           node tools/test-habitat-tool.js
-      - name: CLI smoke with pinned GoldPrompt provenance
+      - name: CLI smoke with pinned GoldPrompt provenance and intent lock
         run: |
-          printf '%s\n' '{"schema":"janus.habitat.hrain.request.v1","request_id":"CI-HRAIN-0001","operation":"STRUCTURE_CONTEXT","captured_at":"2026-08-16T00:00:00Z","workspace":{"nodes":[{"id":"a","label":"A"},{"id":"b","label":"B"}],"links":[{"source":"a","target":"b"}]}}' | node habitat-tool.js >/tmp/hrain.json
+          node - <<'NODE' >/tmp/hrain-request.json
+          const intent=require('./intent-handoff.js');
+          const anchor={
+            schema:intent.ANCHOR_SCHEMA,
+            current_turn_digest:'1'.repeat(64),
+            requested_operation:'COMPARE',
+            primary_entities:{OSIRIS:['osiris'],JESUS_CHRIST:['jesus','christ']},
+            must_answer_points:['Compare Osiris restoration with Christ resurrection','Distinguish resurrection from Second Coming'],
+            required_answer_evidence:[['osiris'],['christ'],['resurrection'],['second coming']],
+            operation_markers:['compare'],
+            optional_association_markers:['bd101','janus'],
+            explicit_constraints:[],
+            allow_anaphoric_continuation:false,
+            context_priority:Object.keys(intent.CONTEXT_TIERS).map(k=>intent.CONTEXT_TIERS[k])
+          };
+          anchor.intent_id=intent.sha256(anchor);
+          const request={schema:'janus.habitat.hrain.request.v1',request_id:'CI-HRAIN-0001',operation:'STRUCTURE_CONTEXT',captured_at:'2026-08-16T00:00:00Z',intent_anchor:anchor,workspace:{nodes:[{id:'a',label:'A'},{id:'b',label:'B'}],links:[{source:'a',target:'b'}]}};
+          process.stdout.write(JSON.stringify(request));
+          NODE
+          node habitat-tool.js </tmp/hrain-request.json >/tmp/hrain.json
           node - <<'NODE'
           const fs=require('fs');
           const gp=require('./goldprompt-handshake.js');
+          const intent=require('./intent-handoff.js');
           const v=JSON.parse(fs.readFileSync('/tmp/hrain.json','utf8'));
           if(v.status!=='STRUCTURE_READY_OPTIONAL') throw new Error('status');
-          if(v.packet.schema!=='janus.demihead.hemisphere_packet.v2') throw new Error('packet schema');
+          if(v.packet.schema!=='janus.demihead.hemisphere_packet.v3') throw new Error('packet schema');
           if(v.packet.hemisphere!=='LEFT_HRAIN') throw new Error('hemisphere');
           if(v.source_mutation_allowed!==false) throw new Error('mutation boundary');
           if(v.network_used_by_tool!==false) throw new Error('network boundary');
@@ -57,19 +80,21 @@ jobs:
           if(v.packet.source.source_revision!==v.goldprompt_receipt.source_revision) throw new Error('packet/receipt revision mismatch');
           if(v.packet.source.goldprompt_receipt_sha256!==v.goldprompt_receipt.receipt_sha256) throw new Error('packet/receipt sha mismatch');
           if(JSON.stringify(v.packet.goldprompt_receipt)!==JSON.stringify(v.goldprompt_receipt)) throw new Error('embedded receipt mismatch');
+          if(!intent.verifyAnchor(v.intent_anchor)) throw new Error('intent anchor');
+          if(!intent.verifyHandoff(v.intent_anchor,v.intent_handoff,'LEFT_HRAIN')) throw new Error('intent handoff');
+          if(v.packet.source.intent_id!==v.intent_anchor.intent_id) throw new Error('packet intent id');
+          if(v.packet.source.intent_handoff_sha256!==v.intent_handoff.handoff_sha256) throw new Error('packet intent handoff');
+          if(JSON.stringify(v.packet.intent_anchor)!==JSON.stringify(v.intent_anchor)) throw new Error('embedded intent anchor');
+          if(JSON.stringify(v.packet.intent_handoff)!==JSON.stringify(v.intent_handoff)) throw new Error('embedded intent handoff');
           fs.writeFileSync('hrain-goldprompt-startup-receipt.json', JSON.stringify(v.goldprompt_receipt,null,2)+'\n');
-          const envelope={
-            schema:'janus.goldprompt.face_message_envelope.v1',
-            face_id:v.goldprompt_receipt.face_id,
-            source_revision:v.goldprompt_receipt.source_revision,
-            packet:v.packet
-          };
+          const envelope={schema:'janus.goldprompt.face_message_envelope.v2',face_id:v.goldprompt_receipt.face_id,source_revision:v.goldprompt_receipt.source_revision,intent_id:v.intent_anchor.intent_id,packet:v.packet};
           envelope.envelope_sha256=gp.sha256(envelope);
           fs.writeFileSync('hrain-goldprompt-message-envelope.json',JSON.stringify(envelope,null,2)+'\n');
           console.log('HRAIN_HABITAT_CLI=PASS');
           console.log('HRAIN_GOLDPROMPT_STARTUP_RECEIPT_V1_1=PASS');
           console.log('HRAIN_GOLDPROMPT_TRANSITIVE_PIN=PASS');
           console.log('HRAIN_PACKET_RECEIPT_BINDING=PASS');
+          console.log('HRAIN_PACKET_INTENT_BINDING=PASS');
           NODE
       - name: Attest HRaiN receipt and message envelope
         id: attest
@@ -88,20 +113,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),crypto=require('crypto');
           const digest=p=>'sha256:'+crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
-          const ref={
-            schema:'janus.goldprompt.origin_attestation_ref.v1',
-            provider:'GITHUB_ACTIONS_OIDC_SIGSTORE',
-            repository:process.env.GITHUB_REPOSITORY,
-            workflow_run_id:process.env.GITHUB_RUN_ID,
-            source_revision:process.env.GITHUB_SHA.toLowerCase(),
-            attestation_id:process.env.ATTESTATION_ID,
-            attestation_url:process.env.ATTESTATION_URL,
-            subjects:{
-              'hrain-goldprompt-startup-receipt.json':digest('hrain-goldprompt-startup-receipt.json'),
-              'hrain-goldprompt-message-envelope.json':digest('hrain-goldprompt-message-envelope.json')
-            },
-            authority_delta:0
-          };
+          const ref={schema:'janus.goldprompt.origin_attestation_ref.v1',provider:'GITHUB_ACTIONS_OIDC_SIGSTORE',repository:process.env.GITHUB_REPOSITORY,workflow_run_id:process.env.GITHUB_RUN_ID,source_revision:process.env.GITHUB_SHA.toLowerCase(),attestation_id:process.env.ATTESTATION_ID,attestation_url:process.env.ATTESTATION_URL,subjects:{'hrain-goldprompt-startup-receipt.json':digest('hrain-goldprompt-startup-receipt.json'),'hrain-goldprompt-message-envelope.json':digest('hrain-goldprompt-message-envelope.json')},authority_delta:0};
           fs.writeFileSync('hrain-goldprompt-origin-attestation-ref.json',JSON.stringify(ref,null,2)+'\n');
           NODE
       - name: Upload GoldPrompt startup receipt
