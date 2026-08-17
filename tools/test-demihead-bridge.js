@@ -16,16 +16,20 @@ const workspace = {
   links: [{source: 1, target: 2}]
 };
 
-const packet = bridge.buildPacket(workspace, {
+// Browser/local compatibility path is deliberately unattested. The strict v2
+// path is exercised by tools/test-habitat-tool.js with a real Face receipt.
+const packet = bridge.buildUnattestedPacket(workspace, {
   capturedAt: '2026-08-16T08:53:00Z',
   packetId: 'hrain-ci-left'
 });
 
-assert(packet.schema === 'janus.demihead.hemisphere_packet.v1', 'wrong packet schema');
+assert(packet.schema === bridge.UNATTESTED_PACKET_SCHEMA, 'wrong unattested packet schema');
 assert(packet.hemisphere === 'LEFT_HRAIN', 'wrong hemisphere');
 assert(packet.role === 'STRUCTURAL_CONTEXT', 'wrong role');
 assert(packet.source.repository === 'Hawkar-usls/Hrain', 'wrong repository');
-assert(packet.source.bridge_contract === 'JANUS_DEMIHEAD_BICAMERAL_BRIDGE_V1', 'wrong bridge contract');
+assert(packet.source.bridge_contract === bridge.UNATTESTED_BRIDGE_CONTRACT, 'wrong unattested bridge contract');
+assert(packet.source.source_revision === null, 'browser export must not invent trusted revision');
+assert(!Object.prototype.hasOwnProperty.call(packet, 'goldprompt_receipt'), 'browser export must not invent GoldPrompt receipt');
 assert(packet.graph.nodes[0].origin === 'LEGACY_UNKNOWN', 'legacy node origin must remain unknown');
 assert(packet.graph.nodes[1].origin === 'USER', 'explicit origin must be preserved');
 assert(packet.control.read_only_transfer === true, 'transfer must be read-only');
@@ -35,13 +39,14 @@ assert(packet.control.mass_effect_budget_delta === 0, 'mass effect delta must re
 
 const requestId = 'req-20260816-0001';
 assert(bridge.validateRequestId(requestId) === requestId, 'valid request id rejected');
-const response = bridge.buildResponse(requestId, workspace, {
+const response = bridge.buildUnattestedResponse(requestId, workspace, {
   capturedAt: '2026-08-16T08:53:00Z',
   packetId: 'hrain-ci-response'
 });
-assert(response.type === bridge.RESPONSE_TYPE, 'response type mismatch');
+assert(response.type === bridge.UNATTESTED_RESPONSE_TYPE, 'unattested response type mismatch');
 assert(response.request_id === requestId, 'response must echo exact request id');
 assert(response.packet.hemisphere === 'LEFT_HRAIN', 'response packet hemisphere mismatch');
+assert(response.proof_state === 'UNATTESTED_LOCAL_EXPORT', 'unattested proof-state boundary missing');
 
 for (const invalidRequestId of [undefined, null, '', 'short', 'contains space', '*', 'x'.repeat(129)]) {
   let refused = false;
@@ -51,7 +56,7 @@ for (const invalidRequestId of [undefined, null, '', 'short', 'contains space', 
 
 let failedClosed = false;
 try {
-  bridge.buildPacket({nodes: [{id: 1, label: 'A'}], links: [{source: 1, target: 2}]});
+  bridge.buildUnattestedPacket({nodes: [{id: 1, label: 'A'}], links: [{source: 1, target: 2}]});
 } catch (_) {
   failedClosed = true;
 }
@@ -68,13 +73,16 @@ for (const forbidden of [
 ]) {
   assert(!sidecar.includes(forbidden), `sidecar contains forbidden write/network surface: ${forbidden}`);
 }
-assert(sidecar.includes('bridge.REQUEST_TYPE'), 'request message contract missing');
-assert(sidecar.includes('bridge.RESPONSE_TYPE'), 'response message contract missing');
+assert(sidecar.includes('bridge.UNATTESTED_REQUEST_TYPE'), 'unattested request message contract missing');
+assert(sidecar.includes('bridge.UNATTESTED_RESPONSE_TYPE'), 'unattested response message contract missing');
 assert(sidecar.includes('bridge.validateRequestId(event.data.request_id)'), 'request id validation missing');
 assert(sidecar.includes('request_id: requestId'), 'exact request id echo missing');
-assert(!sidecar.includes("postMessage({type: bridge.RESPONSE_TYPE, request_id: requestId, packet: current}, '*')"), 'wildcard packet postMessage forbidden');
+assert(sidecar.includes('BROWSER_EXPORT != RUNTIME_ATTESTATION'), 'browser/runtime proof boundary missing');
+assert(!sidecar.includes("postMessage({type: bridge.UNATTESTED_RESPONSE_TYPE, request_id: requestId, packet: current, proof_state:'UNATTESTED_LOCAL_EXPORT'}, '*')"), 'wildcard packet postMessage forbidden');
 
 console.log('HRAIN_DEMIHEAD_LEFT_HEMISPHERE_BRIDGE=PASS');
+console.log('BROWSER_EXPORT_ATTESTED=false');
+console.log('STRICT_V2_TESTED_BY_HABITAT=true');
 console.log('REQUEST_ID_BINDING=PASS');
 console.log('LEGACY_UNKNOWN_PRESERVED=true');
 console.log('DIRECT_CROSS_HEMISPHERE_MUTATION=false');
