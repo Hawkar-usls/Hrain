@@ -3,10 +3,12 @@
 
 const bridge = require('./demihead-bridge.js');
 const goldprompt = require('./goldprompt-handshake.js');
+const intent = require('./intent-handoff.js');
 
 const REQUEST_SCHEMA = 'janus.habitat.hrain.request.v1';
 const RESPONSE_SCHEMA = 'janus.habitat.hrain.response.v1';
 const TOOL_ID = 'JANUS.HRAIN.STRUCTURE.LOCAL';
+const FACE_ID = 'LEFT_HRAIN';
 const REQUEST_ID_RE = /^[A-Za-z0-9._:-]{8,128}$/;
 
 function fail(message) {
@@ -22,6 +24,10 @@ function handle(request) {
   if (!REQUEST_ID_RE.test(requestId)) fail('HRAIN_HABITAT_REQUEST_ID_INVALID');
   if (request.operation !== 'STRUCTURE_CONTEXT') fail('HRAIN_HABITAT_OPERATION_UNSUPPORTED');
   if (Object.prototype.hasOwnProperty.call(request, 'source_revision')) fail('HRAIN_CALLER_SOURCE_REVISION_FORBIDDEN');
+
+  if (!intent.verifyAnchor(request.intent_anchor)) fail('HRAIN_GOLDPROMPT_INTENT_ANCHOR_REQUIRED_OR_INVALID');
+  const intentHandoff = intent.buildHandoff(request.intent_anchor, FACE_ID, 2);
+  if (!intent.verifyHandoff(request.intent_anchor, intentHandoff, FACE_ID)) fail('HRAIN_GOLDPROMPT_INTENT_HANDOFF_SELF_VERIFY_FAILED');
 
   const goldpromptReceipt = goldprompt.buildRuntimeReceipt();
   if (!goldprompt.verifyReceipt(goldpromptReceipt)) fail('HRAIN_GOLDPROMPT_RECEIPT_SELF_VERIFY_FAILED');
@@ -45,6 +51,8 @@ function handle(request) {
     tool: 'HRaiN',
     role: 'STRUCTURAL_CONTEXT',
     status: 'STRUCTURE_READY_OPTIONAL',
+    intent_anchor: request.intent_anchor,
+    intent_handoff: intentHandoff,
     goldprompt_receipt: goldpromptReceipt,
     packet,
     may_be_ignored: true,
@@ -77,4 +85,4 @@ function runCli() {
 
 if (require.main === module) runCli();
 
-module.exports = Object.freeze({ REQUEST_SCHEMA, RESPONSE_SCHEMA, TOOL_ID, handle });
+module.exports = Object.freeze({ REQUEST_SCHEMA, RESPONSE_SCHEMA, TOOL_ID, FACE_ID, handle });
