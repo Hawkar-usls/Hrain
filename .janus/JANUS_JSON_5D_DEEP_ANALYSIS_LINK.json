@@ -1,0 +1,38 @@
+{
+  "schema": "janus.hrain.deep_analysis_5d_link.v1",
+  "source_repository": "Hawkar-usls/Hrain",
+  "hemisphere": "LEFT_HRAIN",
+  "role": "STRUCTURAL_CONTEXT",
+  "target_repository": "Hawkar-usls/-Terminal-for-Janus",
+  "target_contract": "contracts/JANUS_JSON_5D_DEEP_ANALYSIS_PROTOCOL-v1.0.json",
+  "accepted_axis": "D3_STRUCTURAL",
+  "workspace_shape": {
+    "nodes": "[{id,label,origin,type?}]",
+    "links": "[{source,target}]"
+  },
+  "deep_operations": [
+    "TOPOLOGY_SCAN",
+    "DEPENDENCY_SCAN",
+    "CYCLE_SCAN",
+    "BOTTLENECK_SCAN",
+    "MIRROR_STRUCTURE_SCAN",
+    "GRAPH_PATCH_PROPOSAL"
+  ],
+  "graph_growth": {
+    "may_propose_non_tail_node": true,
+    "may_propose_splice": true,
+    "may_propose_branch": true,
+    "may_propose_cross_link": true,
+    "source_mutation": false,
+    "patch_requires_anchor_reason_provenance": true
+  },
+  "control": {
+    "read_only_transfer": true,
+    "direct_cross_hemisphere_mutation": false,
+    "automatic_graph_merge": false,
+    "authority_delta": 0,
+    "mass_effect_budget_delta": 0,
+    "structure_is_command": false,
+    "structure_is_truth": false
+  }
+}
