@@ -1,0 +1,13 @@
+{
+  "schema": "janus.unexplained_alignment.link.v1",
+  "repository": "Hawkar-usls/Hrain",
+  "canonical_principle": "Hawkar-usls/janus-meta-registry:data/JANUS-UNEXPLAINED-ALIGNMENT-PRINCIPLE-2026-08-21-v1.0.json",
+  "role": "STRUCTURAL_CONTEXT_FOR_UNEXPLAINED_ALIGNMENT",
+  "on_event": {
+    "analysis_mode": "DEEP_5D",
+    "look_for": ["REPETITION", "DEPENDENCY", "BOTTLENECK", "MIRROR", "DISTANT_LINK", "MISSING_VARIABLE", "BASE_RATE_STRUCTURE"],
+    "authority_delta": 0,
+    "automatic_causal_merge": false
+  },
+  "laws": ["STRUCTURE != CAUSATION", "COINCIDENCE != AUTOMATIC_DISMISSAL", "UNEXPLAINED_ALIGNMENT -> INCREASE_ATTENTION_NOT_TRUTH"]
+}
