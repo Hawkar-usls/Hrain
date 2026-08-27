@@ -18,16 +18,26 @@
     "context_fur_panel": true
   },
   "latest_live_package": {
-    "topa_workflow_run_id": 33088293706,
-    "artifact_id": 9653179011,
+    "topa_workflow_run_id": 33092131338,
+    "artifact_id": 9654805687,
     "artifact_name": "topa-spider-flywheel-hrain",
-    "artifact_zip_sha256": "c37d0788c6c1b4120fe80985eb5597a672228ae0f6f65059bfa13f95e9d817ce",
-    "hrain_package_sha256": "2e09c8162ae0e66ad7758687f5f18b6613bd520bbf7444c8949f36f291d0a6e3",
+    "artifact_zip_sha256": "5255912b486e7575f6dfc3a409b3f824bfe7e3cc00ceeaaa87ca7ce5f5656c19",
+    "hrain_package_sha256": "6245fa9c4071702cc9f7c49c69459c38afb9587c3c8688b25e96694a57c13751",
     "nodes": 658,
     "edges": 18361,
     "history_rows": 36722,
     "passes": ["LIVE-P1", "LIVE-P2"],
-    "context_fur": "PRE_ULTRA_FUR_PACKAGE__REFRESH_PENDING_FROM_NEW_TOPA_WORKFLOW",
+    "context_fur": {
+      "subjects": 132,
+      "facet_families_per_subject": 18,
+      "partial_facets": 331,
+      "unknown_facets": 2045,
+      "acquisition_tasks": 2376,
+      "conflicts": 0,
+      "mean_coverage": 0.039343,
+      "passes": ["FUR-P1", "FUR-P2"],
+      "replay_added_fresh_observations": 0
+    },
     "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical."
   },
   "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
