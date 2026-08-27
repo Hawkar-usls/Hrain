@@ -151,14 +151,43 @@
     }));
   }
 
+  function nodeFur(node) {
+    if (!node || typeof node !== 'object') return null;
+    if (!node.context_fur) return null;
+    return {
+      coverage: node.fur_coverage || {score:0},
+      facets: node.context_fur || {},
+      history: node.fur_history || [],
+      acquisitionQueue: node.fur_acquisition_queue || []
+    };
+  }
+
+  function furSummary(node) {
+    const f=nodeFur(node);
+    if(!f) return {available:false,coverage:0,statusCounts:{},pending:0,conflicts:0};
+    const statusCounts={}; let conflicts=0;
+    for(const facet of Object.values(f.facets||{})) {
+      const s=facet.status||'UNKNOWN'; statusCounts[s]=(statusCounts[s]||0)+1;
+      conflicts += (facet.conflicts||[]).length;
+    }
+    return {available:true,coverage:Number(f.coverage?.score||0),statusCounts,pending:(f.acquisitionQueue||[]).length,conflicts};
+  }
+
+  function furFacet(node, name) {
+    const f=nodeFur(node); return f?.facets?.[name] || null;
+  }
+
   window.HRainSpiderBridge = {
     laws: [
       'HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH',
       'GRAPH_EDGE_IS_NOT_CAUSATION',
       'REPLAY_IS_NOT_NEW_EVIDENCE',
-      'HRAIN_DOES_NOT_WRITE_BACK_TO_ARCHIVE_SOURCE'
+      'HRAIN_DOES_NOT_WRITE_BACK_TO_ARCHIVE_SOURCE',
+      'CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH',
+      'UNKNOWN_STAYS_UNKNOWN'
     ],
     importFile, validatePackage, putPackage, getPackage, clearPackage,
-    passIds, edgeAtPass, visibleGraph, relations, edgeHistory
+    passIds, edgeAtPass, visibleGraph, relations, edgeHistory,
+    nodeFur, furSummary, furFacet
   };
 })();
