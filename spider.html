@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HRAiN — SPIDER Mode</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="spider-bridge.js"></script>
+<style>
+:root{--bg:#030508;--panel:rgba(8,12,16,.92);--fg:#e6edf3;--dim:#7d8590;--green:#00ffa3;--cyan:#00d8ff;--warn:#ffc107;--bad:#ff2a6d;--border:rgba(255,255,255,.12)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif}canvas{position:absolute;inset:0;width:100%;height:100%}.bar{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;backdrop-filter:blur(12px)}button,.file,select,input{background:#0a1118;color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}button,.file{cursor:pointer}.file input{display:none}.grow{flex:1;min-width:150px}.stat{font-size:12px;color:var(--dim)}#side{position:fixed;right:14px;top:86px;bottom:14px;width:min(380px,42vw);z-index:9;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;backdrop-filter:blur(12px)}h1{font-size:15px;margin:0 8px 0 0;color:var(--green);letter-spacing:1px}h2{font-size:14px;margin:10px 0}.pill{display:inline-block;margin:2px;padding:3px 7px;border:1px solid var(--border);border-radius:999px;font-size:11px}.mono{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all}.row{padding:7px 0;border-bottom:1px solid var(--border)}#empty{color:var(--dim)}@media(max-width:800px){#side{width:calc(100% - 28px);top:auto;height:34vh}.bar{max-height:28vh;overflow:auto}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="bar">
+  <h1>HRAiN / SPIDER</h1>
+  <label class="file">LOAD PACKAGE<input id="file" type="file" accept="application/json,.json"></label>
+  <button id="clear">CLEAR LOCAL</button>
+  <select id="pass"><option>CURRENT</option></select>
+  <select id="relation"><option>ALL</option></select>
+  <label class="stat">MIN <span id="minv">0.30</span><input id="min" type="range" min="0" max="0.9" step="0.01" value="0.30"></label>
+  <input id="search" class="grow" placeholder="node / phrase / id">
+  <span id="stats" class="stat">no package</span>
+</div>
+<div id="side"><div id="empty">Загрузи пакет TOPA SPIDER. Весь граф хранится локально; экран показывает только выбранный срез.</div><div id="details"></div></div>
+<script>
+const B=window.HRainSpiderBridge, canvas=document.getElementById('c'),ctx=canvas.getContext('2d');let pkg=null,graph={nodes:[],edges:[]},sim=null,transform=d3.zoomIdentity,selected=null;
+function resize(){const d=devicePixelRatio||1;canvas.width=innerWidth*d;canvas.height=innerHeight*d;ctx.setTransform(d,0,0,d,0,0);draw()}addEventListener('resize',resize);resize();
+const zoom=d3.zoom().scaleExtent([.08,8]).on('zoom',e=>{transform=e.transform;draw()});d3.select(canvas).call(zoom);
+function w(e){return Number(e.weight||0)}
+function edgeColor(e){if(e.movement==='STRENGTHENED')return '#00ffa3';if(String(e.movement||'').startsWith('WEAKENED'))return '#ff2a6d';if(e.relation==='SOURCE_LINEAGE')return '#00d8ff';return '#7d8590'}
+function nodeColor(n){if(n.type==='document')return '#00ffa3';if(n.type==='date')return '#ffc107';if(n.type==='tag')return '#00d8ff';return '#d300ff'}
+function draw(){ctx.clearRect(0,0,innerWidth,innerHeight);ctx.save();ctx.translate(transform.x,transform.y);ctx.scale(transform.k,transform.k);ctx.globalAlpha=.7;for(const e of graph.edges){const s=typeof e.source==='object'?e.source:graph.nodes.find(n=>n.id===e.source),t=typeof e.target==='object'?e.target:graph.nodes.find(n=>n.id===e.target);if(!s||!t)continue;ctx.strokeStyle=edgeColor(e);ctx.lineWidth=Math.max(.25,2.6*w(e))/Math.sqrt(transform.k);ctx.beginPath();ctx.moveTo(s.x||0,s.y||0);ctx.lineTo(t.x||0,t.y||0);ctx.stroke()}ctx.globalAlpha=1;for(const n of graph.nodes){ctx.fillStyle=nodeColor(n);ctx.beginPath();ctx.arc(n.x||0,n.y||0,(selected&&selected.id===n.id?6:3.2)/Math.sqrt(transform.k),0,Math.PI*2);ctx.fill()}ctx.restore()}
+function rebuild(){if(!pkg)return;const opts={passId:pass.value,minWeight:+min.value,relation:relation.value,query:search.value,maxEdges:4500};graph=B.visibleGraph(pkg,opts);if(sim)sim.stop();const links=graph.edges.map(e=>({...e}));const nodes=graph.nodes.map(n=>({...n}));graph={nodes,edges:links};sim=d3.forceSimulation(nodes).force('link',d3.forceLink(links).id(d=>d.id).distance(d=>50+80*(1-w(d))).strength(d=>.02+.15*w(d))).force('charge',d3.forceManyBody().strength(-18)).force('center',d3.forceCenter(innerWidth*.42,innerHeight*.53)).force('collide',d3.forceCollide(5)).alphaDecay(.035).on('tick',draw);stats.textContent=`${nodes.length} nodes · ${links.length} visible edges · ${pkg.stats?.edges||0} total`;draw()}
+function populate(){pass.innerHTML='<option>CURRENT</option>'+B.passIds(pkg).map(x=>`<option>${esc(x)}</option>`).join('');relation.innerHTML='<option>ALL</option>'+B.relations(pkg).map(x=>`<option>${esc(x)}</option>`).join('');rebuild()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+file.onchange=async()=>{if(!file.files[0])return;try{pkg=await B.importFile(file.files[0]);populate()}catch(e){alert(e.message)}};clear.onclick=async()=>{await B.clearPackage();pkg=null;graph={nodes:[],edges:[]};if(sim)sim.stop();stats.textContent='no package';details.innerHTML='';draw()};
+[min,pass,relation].forEach(el=>el.oninput=()=>{minv.textContent=(+min.value).toFixed(2);rebuild()});let timer;search.oninput=()=>{clearTimeout(timer);timer=setTimeout(rebuild,180)};
+canvas.addEventListener('click',ev=>{if(!graph.nodes.length)return;const p=transform.invert([ev.clientX,ev.clientY]);let best=null,bd=18/transform.k;for(const n of graph.nodes){const d=Math.hypot((n.x||0)-p[0],(n.y||0)-p[1]);if(d<bd){bd=d;best=n}}selected=best;showDetails(best);draw()});
+function showDetails(n){if(!n){details.innerHTML='';return}const incident=graph.edges.filter(e=>String(e.source.id||e.source)===String(n.id)||String(e.target.id||e.target)===String(n.id)).sort((a,b)=>w(b)-w(a)).slice(0,30);details.innerHTML=`<h2>${esc(n.label||n.id)}</h2><div class="mono">${esc(n.id)}</div><div class="pill">${esc(n.type||'node')}</div><h2>Edges</h2>`+incident.map(e=>`<div class="row"><b>${esc(e.relation)}</b> · ${w(e).toFixed(3)} · ${esc(e.movement||'')}<br><span class="mono">${esc(e.edge_key||'')}</span>${(e.history||[]).length?`<details><summary>history ${(e.history||[]).length}</summary>${(e.history||[]).map(h=>`<div class="stat">${esc(h.pass_id)} → ${Number(h.weight||0).toFixed(3)} ${esc(h.movement||'')}</div>`).join('')}</details>`:''}</div>`).join('')}
+(async()=>{pkg=await B.getPackage();if(pkg){try{B.validatePackage(pkg);populate()}catch(e){console.warn(e)}}})();
+</script>
+</body>
+</html>
