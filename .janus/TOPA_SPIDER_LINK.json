@@ -14,6 +14,18 @@
     "bridge": "spider-bridge.js",
     "storage": "IndexedDB browser-local package cache"
   },
+  "latest_live_package": {
+    "topa_workflow_run_id": 33088293706,
+    "artifact_id": 9653179011,
+    "artifact_name": "topa-spider-flywheel-hrain",
+    "artifact_zip_sha256": "c37d0788c6c1b4120fe80985eb5597a672228ae0f6f65059bfa13f95e9d817ce",
+    "hrain_package_sha256": "2e09c8162ae0e66ad7758687f5f18b6613bd520bbf7444c8949f36f291d0a6e3",
+    "nodes": 658,
+    "edges": 18361,
+    "history_rows": 36722,
+    "passes": ["LIVE-P1", "LIVE-P2"],
+    "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical."
+  },
   "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
   "writeback": false,
   "laws": [
