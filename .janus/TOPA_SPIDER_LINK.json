@@ -1,0 +1,26 @@
+{
+  "schema": "hawkar.hrain.topa_spider_link.v1",
+  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-27-v1.0",
+  "status": "ACTIVE_READ_ONLY_SOURCE_BINDING",
+  "source_repository": "Hawkar-usls/TOPA",
+  "source_components": {
+    "spider_engine": "tools/topa_spider_v2.py",
+    "flywheel": "tools/topa_spider_flywheel.py",
+    "hrain_packer": "tools/topa_spider_hrain_pack.py",
+    "protocol": "protocols/TOPA_SPIDER_TIME_FLYWHEEL_HRAIN_PROTOCOL_v1.0.json"
+  },
+  "hrain_components": {
+    "mode": "spider.html",
+    "bridge": "spider-bridge.js",
+    "storage": "IndexedDB browser-local package cache"
+  },
+  "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
+  "writeback": false,
+  "laws": [
+    "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
+    "HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH",
+    "GRAPH_EDGE_IS_NOT_CAUSATION",
+    "REPLAY_IS_NOT_NEW_EVIDENCE",
+    "NO_DIRECT_ARCHIVE_WRITEBACK"
+  ]
+}
