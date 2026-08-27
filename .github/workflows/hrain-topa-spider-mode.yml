@@ -1,0 +1,37 @@
+name: Validate HRAiN TOPA SPIDER Mode
+
+on:
+  push:
+    paths:
+      - 'spider.html'
+      - 'spider-bridge.js'
+      - '.janus/TOPA_SPIDER_LINK.json'
+      - '.github/workflows/hrain-topa-spider-mode.yml'
+  workflow_dispatch:
+
+jobs:
+  spider-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: node --check spider-bridge.js
+      - name: Link contract
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const j=JSON.parse(fs.readFileSync('.janus/TOPA_SPIDER_LINK.json','utf8'));
+          if(j.writeback!==false) throw new Error('SPIDER bridge must remain no-writeback');
+          if(!j.laws.includes('REPLAY_IS_NOT_NEW_EVIDENCE')) throw new Error('missing replay firewall');
+          if(!j.hrain_components || j.hrain_components.mode!=='spider.html') throw new Error('bad mode binding');
+          console.log('HRAIN_TOPA_SPIDER_LINK=PASS');
+          JS
+      - name: HTML bindings
+        run: |
+          grep -q 'spider-bridge.js' spider.html
+          grep -q 'HRAiN / SPIDER' spider.html
+          grep -q 'IndexedDB' .janus/TOPA_SPIDER_LINK.json
+          echo HRAIN_SPIDER_HTML_BINDING=PASS
