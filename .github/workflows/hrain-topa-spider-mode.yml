@@ -26,12 +26,18 @@ jobs:
           const j=JSON.parse(fs.readFileSync('.janus/TOPA_SPIDER_LINK.json','utf8'));
           if(j.writeback!==false) throw new Error('SPIDER bridge must remain no-writeback');
           if(!j.laws.includes('REPLAY_IS_NOT_NEW_EVIDENCE')) throw new Error('missing replay firewall');
+          if(!j.laws.includes('CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH')) throw new Error('missing context-fur firewall');
           if(!j.hrain_components || j.hrain_components.mode!=='spider.html') throw new Error('bad mode binding');
+          if(j.hrain_components.context_fur_panel!==true) throw new Error('context fur panel not bound');
+          if(!j.source_components.context_fur) throw new Error('context fur engine not bound');
           console.log('HRAIN_TOPA_SPIDER_LINK=PASS');
           JS
       - name: HTML bindings
         run: |
           grep -q 'spider-bridge.js' spider.html
           grep -q 'HRAiN / SPIDER' spider.html
+          grep -q 'Context Fur' spider.html
+          grep -q 'nodeFur' spider-bridge.js
+          grep -q 'furSummary' spider-bridge.js
           grep -q 'IndexedDB' .janus/TOPA_SPIDER_LINK.json
-          echo HRAIN_SPIDER_HTML_BINDING=PASS
+          echo HRAIN_SPIDER_CONTEXT_FUR_BINDING=PASS
