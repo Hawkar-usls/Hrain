@@ -6,13 +6,16 @@
   "source_components": {
     "spider_engine": "tools/topa_spider_v2.py",
     "flywheel": "tools/topa_spider_flywheel.py",
+    "context_fur": "tools/topa_spider_context_fur.py",
     "hrain_packer": "tools/topa_spider_hrain_pack.py",
-    "protocol": "protocols/TOPA_SPIDER_TIME_FLYWHEEL_HRAIN_PROTOCOL_v1.0.json"
+    "flywheel_protocol": "protocols/TOPA_SPIDER_TIME_FLYWHEEL_HRAIN_PROTOCOL_v1.0.json",
+    "context_fur_protocol": "protocols/TOPA_SPIDER_ULTRA_CONTEXT_FUR_PROTOCOL_v1.0.json"
   },
   "hrain_components": {
     "mode": "spider.html",
     "bridge": "spider-bridge.js",
-    "storage": "IndexedDB browser-local package cache"
+    "storage": "IndexedDB browser-local package cache",
+    "context_fur_panel": true
   },
   "latest_live_package": {
     "topa_workflow_run_id": 33088293706,
@@ -24,6 +27,7 @@
     "edges": 18361,
     "history_rows": 36722,
     "passes": ["LIVE-P1", "LIVE-P2"],
+    "context_fur": "PRE_ULTRA_FUR_PACKAGE__REFRESH_PENDING_FROM_NEW_TOPA_WORKFLOW",
     "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical."
   },
   "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
@@ -33,6 +37,8 @@
     "HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH",
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "REPLAY_IS_NOT_NEW_EVIDENCE",
+    "CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH",
+    "UNKNOWN_STAYS_UNKNOWN",
     "NO_DIRECT_ARCHIVE_WRITEBACK"
   ]
 }
