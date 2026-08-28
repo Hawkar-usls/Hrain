@@ -1,21 +1,29 @@
 {
   "schema": "hawkar.hrain.topa_spider_link.v1",
-  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-27-v1.1",
+  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-28-v1.2",
   "status": "ACTIVE_HRAIN_RESIDENT_READ_ONLY_SOURCE_BINDING",
   "identity": {
     "canonical_name": "HRAiN SPIDER",
     "nickname": "FRIENDLY NEIGHBOR",
     "role": "GRAPH_RELATIONSHIP_WEAVER",
+    "topa_default_identity": "TOPA_DETECTIVE_SPIDER",
     "home_contract": ".janus/SPIDER_HOME.json"
   },
   "source_repository": "Hawkar-usls/TOPA",
   "source_components": {
+    "activation_protocol": "protocols/TOPA_DETECTIVE_SPIDER_ACTIVATION_v1.0.json",
+    "activation_resolver": "tools/topa_detective_spider.py",
     "spider_engine": "tools/topa_spider_v2.py",
     "flywheel": "tools/topa_spider_flywheel.py",
     "context_fur": "tools/topa_spider_context_fur.py",
     "hrain_packer": "tools/topa_spider_hrain_pack.py",
     "flywheel_protocol": "protocols/TOPA_SPIDER_TIME_FLYWHEEL_HRAIN_PROTOCOL_v1.0.json",
     "context_fur_protocol": "protocols/TOPA_SPIDER_ULTRA_CONTEXT_FUR_PROTOCOL_v1.0.json"
+  },
+  "activation_profiles": {
+    "DETECTIVE": {"default": true, "topa_core": true, "spider": true},
+    "TOPA_CORE_ONLY": {"default": false, "topa_core": true, "spider": false},
+    "SPIDER_STANDALONE": {"default": false, "topa_core": false, "spider": true}
   },
   "hrain_components": {
     "mode": "spider.html",
@@ -27,10 +35,11 @@
   },
   "responsibility_split": {
     "spider": "DISCOVER_AND_WEAVE_RELATIONSHIPS",
-    "topa": "CALIBRATE_AND_FALSIFY_RELATIONSHIP_CLAIMS",
+    "topa_core": "CALIBRATE_AND_FALSIFY_RELATIONSHIP_CLAIMS",
+    "topa_detective_spider": "DEFAULT_COMPOSITION_OF_TOPA_CORE_PLUS_SPIDER",
     "hrain": "HOST_VISUALIZE_AND_INSPECT_THE_WEB"
   },
-  "relationship": "SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS",
+  "relationship": "TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER__BOTH_REMAIN_SEPARATELY_ADDRESSABLE",
   "latest_live_package": {
     "topa_workflow_run_id": 33092131338,
     "artifact_id": 9654805687,
@@ -58,8 +67,10 @@
   "residence_authority": "HRAIN_HOSTS_SPIDER_VISUALIZATION_AND_LOCAL_INSPECTION_STATE_ONLY",
   "writeback": false,
   "laws": [
-    "SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS",
-    "TOPA_IS_NOT_THE_SPIDER",
+    "TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER",
+    "TOPA_CORE_IS_NOT_THE_SPIDER_ENGINE",
+    "SPIDER_CAN_RUN_WITHOUT_TOPA_CORE",
+    "TOPA_CORE_CAN_RUN_WITHOUT_SPIDER_WHEN_EXPLICITLY_REQUESTED",
     "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
     "HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH",
     "GRAPH_EDGE_IS_NOT_CAUSATION",
