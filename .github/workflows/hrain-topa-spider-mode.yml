@@ -21,7 +21,7 @@ jobs:
           node-version: '22'
       - name: JavaScript syntax
         run: node --check spider-bridge.js
-      - name: Link contract
+      - name: Residence and activation contract
         run: |
           node - <<'JS'
           const fs=require('fs');
@@ -30,13 +30,17 @@ jobs:
           if(j.writeback!==false) throw new Error('SPIDER bridge must remain no-writeback');
           if(!j.laws.includes('REPLAY_IS_NOT_NEW_EVIDENCE')) throw new Error('missing replay firewall');
           if(!j.laws.includes('CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH')) throw new Error('missing context-fur firewall');
-          if(!j.laws.includes('TOPA_IS_NOT_THE_SPIDER')) throw new Error('Spider/TOPA role split missing');
+          if(!j.laws.includes('TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER')) throw new Error('Detective default missing Spider');
+          if(!j.laws.includes('TOPA_CORE_IS_NOT_THE_SPIDER_ENGINE')) throw new Error('component separation missing');
           if(!j.hrain_components || j.hrain_components.mode!=='spider.html') throw new Error('bad mode binding');
           if(j.hrain_components.context_fur_panel!==true) throw new Error('context fur panel not bound');
           if(!j.source_components.context_fur) throw new Error('context fur engine not bound');
           if(h.status!=='ACTIVE_RESIDENT') throw new Error('Spider is not an active HRAiN resident');
           if(h.identity?.role!=='GRAPH_RELATIONSHIP_WEAVER') throw new Error('bad Spider role');
-          if(h.relationship!=='SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS') throw new Error('bad responsibility split');
+          if(h.relationship!=='TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER__BOTH_REMAIN_SEPARATELY_ADDRESSABLE') throw new Error('bad activation relationship');
+          if(h.activation_profiles?.DETECTIVE?.topa_core!==true || h.activation_profiles?.DETECTIVE?.spider!==true) throw new Error('Detective profile must activate both');
+          if(h.activation_profiles?.TOPA_CORE_ONLY?.spider!==false) throw new Error('TOPA core-only profile broken');
+          if(h.activation_profiles?.SPIDER_STANDALONE?.topa_core!==false) throw new Error('Spider standalone profile broken');
           if(h.residence?.mode!=='spider.html' || h.residence?.bridge!=='spider-bridge.js') throw new Error('bad HRAiN residence paths');
           if(h.engine_source?.graph_weaver!=='tools/topa_spider_v2.py') throw new Error('bad source engine binding');
           console.log('HRAIN_FRIENDLY_NEIGHBOR_SPIDER_HOME=PASS');
@@ -50,5 +54,5 @@ jobs:
           grep -q 'furSummary' spider-bridge.js
           grep -q 'IndexedDB' .janus/TOPA_SPIDER_LINK.json
           grep -q 'FRIENDLY NEIGHBOR' .janus/SPIDER_HOME.json
-          grep -q 'TOPA_IS_NOT_THE_SPIDER' docs/SPIDER_FRIENDLY_NEIGHBOR.md
+          grep -q 'TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER' .janus/SPIDER_HOME.json
           echo HRAIN_SPIDER_CONTEXT_FUR_BINDING=PASS
