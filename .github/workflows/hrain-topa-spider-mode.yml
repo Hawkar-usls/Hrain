@@ -32,18 +32,25 @@ jobs:
           if(!j.laws.includes('CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH')) throw new Error('missing context-fur firewall');
           if(!j.laws.includes('TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER')) throw new Error('Detective default missing Spider');
           if(!j.laws.includes('TOPA_CORE_IS_NOT_THE_SPIDER_ENGINE')) throw new Error('component separation missing');
+          if(!j.laws.includes('ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT')) throw new Error('attention/evidence separation missing');
+          if(!j.laws.includes('REPLAY_SATURATES_AND_FATIGUES')) throw new Error('replay fatigue contract missing');
+          if(!j.laws.includes('NO_FIXED_HYPOTHESIS_CENTER')) throw new Error('dynamic focus contract missing');
           if(!j.hrain_components || j.hrain_components.mode!=='spider.html') throw new Error('bad mode binding');
           if(j.hrain_components.context_fur_panel!==true) throw new Error('context fur panel not bound');
+          if(j.hrain_components.attention_ecosystem!==true) throw new Error('attention ecosystem not bound');
           if(!j.source_components.context_fur) throw new Error('context fur engine not bound');
+          if(j.source_components.attention_ecosystem!=='tools/topa_spider_attention_ecosystem.py') throw new Error('attention engine not bound');
+          if(j.source_components.attention_protocol!=='protocols/TOPA_SPIDER_SPIRAL_ATTENTION_ECOSYSTEM_v1.0.json') throw new Error('attention protocol not bound');
           if(h.status!=='ACTIVE_RESIDENT') throw new Error('Spider is not an active HRAiN resident');
-          if(h.identity?.role!=='GRAPH_RELATIONSHIP_WEAVER') throw new Error('bad Spider role');
+          if(h.identity?.role!=='GRAPH_RELATIONSHIP_WEAVER_AND_DYNAMIC_ATTENTION_ECOLOGY') throw new Error('bad Spider role');
           if(h.relationship!=='TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER__BOTH_REMAIN_SEPARATELY_ADDRESSABLE') throw new Error('bad activation relationship');
           if(h.activation_profiles?.DETECTIVE?.topa_core!==true || h.activation_profiles?.DETECTIVE?.spider!==true) throw new Error('Detective profile must activate both');
           if(h.activation_profiles?.TOPA_CORE_ONLY?.spider!==false) throw new Error('TOPA core-only profile broken');
           if(h.activation_profiles?.SPIDER_STANDALONE?.topa_core!==false) throw new Error('Spider standalone profile broken');
           if(h.residence?.mode!=='spider.html' || h.residence?.bridge!=='spider-bridge.js') throw new Error('bad HRAiN residence paths');
           if(h.engine_source?.graph_weaver!=='tools/topa_spider_v2.py') throw new Error('bad source engine binding');
-          console.log('HRAIN_FRIENDLY_NEIGHBOR_SPIDER_HOME=PASS');
+          if(h.engine_source?.attention_ecosystem!=='tools/topa_spider_attention_ecosystem.py') throw new Error('bad attention source binding');
+          console.log('HRAIN_FRIENDLY_NEIGHBOR_SPIDER_ATTENTION_HOME=PASS');
           JS
       - name: HTML bindings
         run: |
@@ -55,4 +62,6 @@ jobs:
           grep -q 'IndexedDB' .janus/TOPA_SPIDER_LINK.json
           grep -q 'FRIENDLY NEIGHBOR' .janus/SPIDER_HOME.json
           grep -q 'TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER' .janus/SPIDER_HOME.json
-          echo HRAIN_SPIDER_CONTEXT_FUR_BINDING=PASS
+          grep -q 'ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT' .janus/SPIDER_HOME.json
+          grep -q 'FOCUS_MAY_MIGRATE_OR_DIE' .janus/SPIDER_HOME.json
+          echo HRAIN_SPIDER_CONTEXT_FUR_AND_ATTENTION_BINDING=PASS
