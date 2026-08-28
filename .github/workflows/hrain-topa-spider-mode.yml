@@ -6,6 +6,8 @@ on:
       - 'spider.html'
       - 'spider-bridge.js'
       - '.janus/TOPA_SPIDER_LINK.json'
+      - '.janus/SPIDER_HOME.json'
+      - 'docs/SPIDER_FRIENDLY_NEIGHBOR.md'
       - '.github/workflows/hrain-topa-spider-mode.yml'
   workflow_dispatch:
 
@@ -24,13 +26,20 @@ jobs:
           node - <<'JS'
           const fs=require('fs');
           const j=JSON.parse(fs.readFileSync('.janus/TOPA_SPIDER_LINK.json','utf8'));
+          const h=JSON.parse(fs.readFileSync('.janus/SPIDER_HOME.json','utf8'));
           if(j.writeback!==false) throw new Error('SPIDER bridge must remain no-writeback');
           if(!j.laws.includes('REPLAY_IS_NOT_NEW_EVIDENCE')) throw new Error('missing replay firewall');
           if(!j.laws.includes('CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH')) throw new Error('missing context-fur firewall');
+          if(!j.laws.includes('TOPA_IS_NOT_THE_SPIDER')) throw new Error('Spider/TOPA role split missing');
           if(!j.hrain_components || j.hrain_components.mode!=='spider.html') throw new Error('bad mode binding');
           if(j.hrain_components.context_fur_panel!==true) throw new Error('context fur panel not bound');
           if(!j.source_components.context_fur) throw new Error('context fur engine not bound');
-          console.log('HRAIN_TOPA_SPIDER_LINK=PASS');
+          if(h.status!=='ACTIVE_RESIDENT') throw new Error('Spider is not an active HRAiN resident');
+          if(h.identity?.role!=='GRAPH_RELATIONSHIP_WEAVER') throw new Error('bad Spider role');
+          if(h.relationship!=='SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS') throw new Error('bad responsibility split');
+          if(h.residence?.mode!=='spider.html' || h.residence?.bridge!=='spider-bridge.js') throw new Error('bad HRAiN residence paths');
+          if(h.engine_source?.graph_weaver!=='tools/topa_spider_v2.py') throw new Error('bad source engine binding');
+          console.log('HRAIN_FRIENDLY_NEIGHBOR_SPIDER_HOME=PASS');
           JS
       - name: HTML bindings
         run: |
@@ -40,4 +49,6 @@ jobs:
           grep -q 'nodeFur' spider-bridge.js
           grep -q 'furSummary' spider-bridge.js
           grep -q 'IndexedDB' .janus/TOPA_SPIDER_LINK.json
+          grep -q 'FRIENDLY NEIGHBOR' .janus/SPIDER_HOME.json
+          grep -q 'TOPA_IS_NOT_THE_SPIDER' docs/SPIDER_FRIENDLY_NEIGHBOR.md
           echo HRAIN_SPIDER_CONTEXT_FUR_BINDING=PASS
