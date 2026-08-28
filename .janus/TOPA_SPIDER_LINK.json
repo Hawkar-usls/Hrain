@@ -1,7 +1,13 @@
 {
   "schema": "hawkar.hrain.topa_spider_link.v1",
-  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-27-v1.0",
-  "status": "ACTIVE_READ_ONLY_SOURCE_BINDING",
+  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-27-v1.1",
+  "status": "ACTIVE_HRAIN_RESIDENT_READ_ONLY_SOURCE_BINDING",
+  "identity": {
+    "canonical_name": "HRAiN SPIDER",
+    "nickname": "FRIENDLY NEIGHBOR",
+    "role": "GRAPH_RELATIONSHIP_WEAVER",
+    "home_contract": ".janus/SPIDER_HOME.json"
+  },
   "source_repository": "Hawkar-usls/TOPA",
   "source_components": {
     "spider_engine": "tools/topa_spider_v2.py",
@@ -14,9 +20,17 @@
   "hrain_components": {
     "mode": "spider.html",
     "bridge": "spider-bridge.js",
+    "home_contract": ".janus/SPIDER_HOME.json",
+    "documentation": "docs/SPIDER_FRIENDLY_NEIGHBOR.md",
     "storage": "IndexedDB browser-local package cache",
     "context_fur_panel": true
   },
+  "responsibility_split": {
+    "spider": "DISCOVER_AND_WEAVE_RELATIONSHIPS",
+    "topa": "CALIBRATE_AND_FALSIFY_RELATIONSHIP_CLAIMS",
+    "hrain": "HOST_VISUALIZE_AND_INSPECT_THE_WEB"
+  },
+  "relationship": "SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS",
   "latest_live_package": {
     "topa_workflow_run_id": 33092131338,
     "artifact_id": 9654805687,
@@ -38,14 +52,18 @@
       "passes": ["FUR-P1", "FUR-P2"],
       "replay_added_fresh_observations": 0
     },
-    "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical."
+    "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical engine/calibration sources while HRAiN is the Spider residence."
   },
   "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
+  "residence_authority": "HRAIN_HOSTS_SPIDER_VISUALIZATION_AND_LOCAL_INSPECTION_STATE_ONLY",
   "writeback": false,
   "laws": [
+    "SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS",
+    "TOPA_IS_NOT_THE_SPIDER",
     "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
     "HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH",
     "GRAPH_EDGE_IS_NOT_CAUSATION",
+    "SPIDER_DISCOVERY_PRIORITY_IS_NOT_TRUTH",
     "REPLAY_IS_NOT_NEW_EVIDENCE",
     "CONTEXT_COMPLETENESS_IS_NOT_CLAIM_STRENGTH",
     "UNKNOWN_STAYS_UNKNOWN",
