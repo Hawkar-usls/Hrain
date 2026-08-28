@@ -1,12 +1,12 @@
 {
   "schema": "hawkar.hrain.spider_home.v1",
-  "artifact_id": "HRAIN-FRIENDLY-NEIGHBOR-SPIDER-HOME-2026-08-28-v1.1",
+  "artifact_id": "HRAIN-FRIENDLY-NEIGHBOR-SPIDER-HOME-2026-08-28-v1.2",
   "status": "ACTIVE_RESIDENT",
   "identity": {
     "canonical_name": "HRAiN SPIDER",
     "nickname": "FRIENDLY NEIGHBOR",
     "user_metaphor": "OSCORP SPIDER",
-    "role": "GRAPH_RELATIONSHIP_WEAVER",
+    "role": "GRAPH_RELATIONSHIP_WEAVER_AND_DYNAMIC_ATTENTION_ECOLOGY",
     "topa_identity": "TOPA_DETECTIVE_SPIDER"
   },
   "residence": {
@@ -23,25 +23,15 @@
     "activation_resolver": "tools/topa_detective_spider.py",
     "graph_weaver": "tools/topa_spider_v2.py",
     "flywheel": "tools/topa_spider_flywheel.py",
+    "attention_ecosystem": "tools/topa_spider_attention_ecosystem.py",
+    "attention_protocol": "protocols/TOPA_SPIDER_SPIRAL_ATTENTION_ECOSYSTEM_v1.0.json",
     "context_fur": "tools/topa_spider_context_fur.py",
     "hrain_packer": "tools/topa_spider_hrain_pack.py"
   },
   "activation_profiles": {
-    "DETECTIVE": {
-      "default": true,
-      "topa_core": true,
-      "spider": true
-    },
-    "TOPA_CORE_ONLY": {
-      "default": false,
-      "topa_core": true,
-      "spider": false
-    },
-    "SPIDER_STANDALONE": {
-      "default": false,
-      "topa_core": false,
-      "spider": true
-    }
+    "DETECTIVE": {"default": true, "topa_core": true, "spider": true},
+    "TOPA_CORE_ONLY": {"default": false, "topa_core": true, "spider": false},
+    "SPIDER_STANDALONE": {"default": false, "topa_core": false, "spider": true}
   },
   "responsibility_split": {
     "SPIDER": [
@@ -49,22 +39,28 @@
       "weave nodes and typed edges",
       "preserve provenance and edge history",
       "surface missing context and acquisition queues",
-      "rank relationships for discovery"
+      "rank relationships for discovery",
+      "run bounded spiral attention passes",
+      "temporarily amplify repeated patterns for inspection",
+      "apply replay saturation/fatigue when repetition adds no new information",
+      "maintain dynamic node attention centers that may migrate or die"
     ],
     "TOPA_CORE": [
-      "calibrate relationship weights",
+      "calibrate relationship claims",
       "attack unsupported or replay-inflated confidence",
       "preserve falsification boundaries",
-      "prevent graph density from being treated as evidence"
+      "prevent graph density or attention from being treated as evidence"
     ],
     "TOPA_DETECTIVE_SPIDER": [
       "activate TOPA core and Spider together by default",
-      "use Spider relationships as discovery input without promoting them to truth",
+      "use Spider relationships and attention as discovery input without promoting them to truth",
       "retain the ability to run either capability independently"
     ],
     "HRAIN": [
       "host and visualize the web",
-      "let the human inspect neighborhoods and edge history",
+      "show edge discovery weights separately from volatile attention weights",
+      "show focus rank/state/age and spiral-ring traces",
+      "let the human inspect focus migration and stale-pattern decay",
       "keep browser-local state separate from source authority"
     ]
   },
@@ -80,6 +76,11 @@
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
     "GRAPH_DENSITY_IS_NOT_EVIDENCE",
     "REPLAY_IS_NOT_NEW_EVIDENCE",
+    "ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT",
+    "REPETITION_MAY_TRIGGER_INSPECTION_BUT_NOT_TRUTH",
+    "REPLAY_SATURATES_AND_FATIGUES",
+    "NO_FIXED_HYPOTHESIS_CENTER",
+    "FOCUS_MAY_MIGRATE_OR_DIE",
     "UNKNOWN_STAYS_UNKNOWN",
     "SPIDER_DISCOVERY_PRIORITY_IS_NOT_TRUTH",
     "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
