@@ -1,11 +1,11 @@
 {
   "schema": "hawkar.hrain.topa_spider_link.v1",
-  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-28-v1.2",
+  "artifact_id": "HRAIN-TOPA-SPIDER-LINK-2026-08-28-v1.3",
   "status": "ACTIVE_HRAIN_RESIDENT_READ_ONLY_SOURCE_BINDING",
   "identity": {
     "canonical_name": "HRAiN SPIDER",
     "nickname": "FRIENDLY NEIGHBOR",
-    "role": "GRAPH_RELATIONSHIP_WEAVER",
+    "role": "GRAPH_RELATIONSHIP_WEAVER_AND_DYNAMIC_ATTENTION_ECOLOGY",
     "topa_default_identity": "TOPA_DETECTIVE_SPIDER",
     "home_contract": ".janus/SPIDER_HOME.json"
   },
@@ -15,9 +15,11 @@
     "activation_resolver": "tools/topa_detective_spider.py",
     "spider_engine": "tools/topa_spider_v2.py",
     "flywheel": "tools/topa_spider_flywheel.py",
+    "attention_ecosystem": "tools/topa_spider_attention_ecosystem.py",
     "context_fur": "tools/topa_spider_context_fur.py",
     "hrain_packer": "tools/topa_spider_hrain_pack.py",
     "flywheel_protocol": "protocols/TOPA_SPIDER_TIME_FLYWHEEL_HRAIN_PROTOCOL_v1.0.json",
+    "attention_protocol": "protocols/TOPA_SPIDER_SPIRAL_ATTENTION_ECOSYSTEM_v1.0.json",
     "context_fur_protocol": "protocols/TOPA_SPIDER_ULTRA_CONTEXT_FUR_PROTOCOL_v1.0.json"
   },
   "activation_profiles": {
@@ -31,39 +33,48 @@
     "home_contract": ".janus/SPIDER_HOME.json",
     "documentation": "docs/SPIDER_FRIENDLY_NEIGHBOR.md",
     "storage": "IndexedDB browser-local package cache",
-    "context_fur_panel": true
+    "context_fur_panel": true,
+    "attention_ecosystem": true,
+    "focus_fields": ["attention_score", "focus_rank", "focus_state", "focus_age", "spiral_ring_trace"]
   },
   "responsibility_split": {
-    "spider": "DISCOVER_AND_WEAVE_RELATIONSHIPS",
-    "topa_core": "CALIBRATE_AND_FALSIFY_RELATIONSHIP_CLAIMS",
+    "spider": "DISCOVER_WEAVE_AND_RUN_VOLATILE_ATTENTION_ECOLOGY",
+    "topa_core": "CALIBRATE_AND_FALSIFY_RELATIONSHIP_CLAIMS_WITHOUT_TREATING_ATTENTION_AS_EVIDENCE",
     "topa_detective_spider": "DEFAULT_COMPOSITION_OF_TOPA_CORE_PLUS_SPIDER",
-    "hrain": "HOST_VISUALIZE_AND_INSPECT_THE_WEB"
+    "hrain": "HOST_VISUALIZE_AND_INSPECT_WEB_PLUS_FOCUS_MIGRATION"
   },
   "relationship": "TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER__BOTH_REMAIN_SEPARATELY_ADDRESSABLE",
   "latest_live_package": {
-    "topa_workflow_run_id": 33092131338,
-    "artifact_id": 9654805687,
-    "artifact_name": "topa-spider-flywheel-hrain",
-    "artifact_zip_sha256": "5255912b486e7575f6dfc3a409b3f824bfe7e3cc00ceeaaa87ca7ce5f5656c19",
-    "hrain_package_sha256": "6245fa9c4071702cc9f7c49c69459c38afb9587c3c8688b25e96694a57c13751",
-    "nodes": 658,
-    "edges": 18361,
-    "history_rows": 36722,
+    "topa_workflow_run_id": 33149291935,
+    "topa_head_sha": "7cd9225d78c881093d8f00df33124d5dba1e8c90",
+    "artifact_id": 9677042347,
+    "artifact_name": "topa-spider-flywheel-attention-hrain",
+    "artifact_zip_sha256": "26c72d8d3bba732312c4ce9994d21ac2ad6a12b5c99e89ab56c5b9f875cc2dd3",
+    "hrain_package_sha256": "e4eb79c68db2fc4cba7b6a0bbb3f046efda44a61a5446587f57696412f72b40f",
+    "nodes": 654,
+    "edges": 18386,
+    "history_rows": 36772,
     "passes": ["LIVE-P1", "LIVE-P2"],
+    "attention_ecosystem": {
+      "rows": 19040,
+      "node_attention_rows": 654,
+      "edge_attention_rows": 18386,
+      "active_focus_nodes": 5,
+      "spiral_rings": 3,
+      "passes": ["ATTENTION-P1", "ATTENTION-P2"],
+      "live_p2_focus_threshold": 0.28,
+      "live_p2_primary_focus_score": 0.421678,
+      "note": "Two live passes only establish integration; long replay saturation/decay is validated by engine self-test, not inferred from this two-pass live snapshot."
+    },
     "context_fur": {
       "subjects": 132,
-      "facet_families_per_subject": 18,
-      "partial_facets": 331,
-      "unknown_facets": 2045,
-      "acquisition_tasks": 2376,
-      "conflicts": 0,
-      "mean_coverage": 0.039343,
+      "mean_coverage": 0.039088,
       "passes": ["FUR-P1", "FUR-P2"],
       "replay_added_fresh_observations": 0
     },
     "retention_note": "GitHub Actions artifact is an execution snapshot; TOPA source files/protocols remain canonical engine/calibration sources while HRAiN is the Spider residence."
   },
-  "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_AND_CALIBRATION_STATE",
+  "source_authority": "TOPA_REMAINS_SOURCE_OF_EVIDENCE_CALIBRATION_AND_ATTENTION_ENGINE_STATE",
   "residence_authority": "HRAIN_HOSTS_SPIDER_VISUALIZATION_AND_LOCAL_INSPECTION_STATE_ONLY",
   "writeback": false,
   "laws": [
@@ -73,6 +84,11 @@
     "TOPA_CORE_CAN_RUN_WITHOUT_SPIDER_WHEN_EXPLICITLY_REQUESTED",
     "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
     "HRAIN_VISUAL_WEIGHT_IS_NOT_TRUTH",
+    "ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT",
+    "REPETITION_MAY_TRIGGER_INSPECTION_BUT_NOT_TRUTH",
+    "REPLAY_SATURATES_AND_FATIGUES",
+    "NO_FIXED_HYPOTHESIS_CENTER",
+    "FOCUS_MAY_MIGRATE_OR_DIE",
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SPIDER_DISCOVERY_PRIORITY_IS_NOT_TRUTH",
     "REPLAY_IS_NOT_NEW_EVIDENCE",
