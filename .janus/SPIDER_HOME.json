@@ -1,12 +1,13 @@
 {
   "schema": "hawkar.hrain.spider_home.v1",
-  "artifact_id": "HRAIN-FRIENDLY-NEIGHBOR-SPIDER-HOME-2026-08-28-v1.0",
+  "artifact_id": "HRAIN-FRIENDLY-NEIGHBOR-SPIDER-HOME-2026-08-28-v1.1",
   "status": "ACTIVE_RESIDENT",
   "identity": {
     "canonical_name": "HRAiN SPIDER",
     "nickname": "FRIENDLY NEIGHBOR",
     "user_metaphor": "OSCORP SPIDER",
-    "role": "GRAPH_RELATIONSHIP_WEAVER"
+    "role": "GRAPH_RELATIONSHIP_WEAVER",
+    "topa_identity": "TOPA_DETECTIVE_SPIDER"
   },
   "residence": {
     "repository": "Hawkar-usls/Hrain",
@@ -18,10 +19,29 @@
   },
   "engine_source": {
     "repository": "Hawkar-usls/TOPA",
+    "activation_protocol": "protocols/TOPA_DETECTIVE_SPIDER_ACTIVATION_v1.0.json",
+    "activation_resolver": "tools/topa_detective_spider.py",
     "graph_weaver": "tools/topa_spider_v2.py",
     "flywheel": "tools/topa_spider_flywheel.py",
     "context_fur": "tools/topa_spider_context_fur.py",
     "hrain_packer": "tools/topa_spider_hrain_pack.py"
+  },
+  "activation_profiles": {
+    "DETECTIVE": {
+      "default": true,
+      "topa_core": true,
+      "spider": true
+    },
+    "TOPA_CORE_ONLY": {
+      "default": false,
+      "topa_core": true,
+      "spider": false
+    },
+    "SPIDER_STANDALONE": {
+      "default": false,
+      "topa_core": false,
+      "spider": true
+    }
   },
   "responsibility_split": {
     "SPIDER": [
@@ -31,11 +51,16 @@
       "surface missing context and acquisition queues",
       "rank relationships for discovery"
     ],
-    "TOPA": [
+    "TOPA_CORE": [
       "calibrate relationship weights",
       "attack unsupported or replay-inflated confidence",
       "preserve falsification boundaries",
       "prevent graph density from being treated as evidence"
+    ],
+    "TOPA_DETECTIVE_SPIDER": [
+      "activate TOPA core and Spider together by default",
+      "use Spider relationships as discovery input without promoting them to truth",
+      "retain the ability to run either capability independently"
     ],
     "HRAIN": [
       "host and visualize the web",
@@ -43,17 +68,20 @@
       "keep browser-local state separate from source authority"
     ]
   },
-  "relationship": "SPIDER_WEAVES__TOPA_TESTS__HRAIN_HOSTS",
+  "relationship": "TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER__BOTH_REMAIN_SEPARATELY_ADDRESSABLE",
   "writeback": false,
   "authority_delta": 0,
   "laws": [
+    "TOPA_DETECTIVE_DEFAULT_INCLUDES_SPIDER",
+    "TOPA_CORE_IS_NOT_THE_SPIDER_ENGINE",
+    "SPIDER_CAN_RUN_WITHOUT_TOPA_CORE",
+    "TOPA_CORE_CAN_RUN_WITHOUT_SPIDER_WHEN_EXPLICITLY_REQUESTED",
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
     "GRAPH_DENSITY_IS_NOT_EVIDENCE",
     "REPLAY_IS_NOT_NEW_EVIDENCE",
     "UNKNOWN_STAYS_UNKNOWN",
     "SPIDER_DISCOVERY_PRIORITY_IS_NOT_TRUTH",
-    "TOPA_IS_NOT_THE_SPIDER",
     "HRAIN_VISUALIZATION_HAS_ZERO_SOURCE_AUTHORITY",
     "NO_DIRECT_ARCHIVE_WRITEBACK"
   ]
