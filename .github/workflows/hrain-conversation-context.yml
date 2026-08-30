@@ -31,35 +31,51 @@ jobs:
           python-version: '3.11'
       - name: Compile HRAiN conversation context compiler
         run: python -m compileall -q tools/hrain_conversation_context.py tests/test_hrain_conversation_context.py
-      - name: Validate HRAiN conversation attention contract
+      - name: Validate HRAiN v1.3 focus-cluster contract
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           c=json.loads(Path('.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json').read_text())
           assert c['schema']=='janus.hrain.conversation_context_contract.v1'
-          assert c['status']=='ACTIVE_READ_ONLY_QUERY_BOUND_RARITY_WEIGHTED_MEMORY_PROJECTION'
+          assert c['status']=='ACTIVE_READ_ONLY_QUERY_BOUND_FOCUS_CLUSTER_MEMORY_PROJECTION'
           assert c['source_database']=='Hawkar-usls/janus-meta-registry'
-          assert c['selection_method']=='DETERMINISTIC_RARITY_WEIGHTED_DIVERSE_GRAPH_ATTENTION_V2'
-          assert c['attention']['common_query_tokens_are_downweighted'] is True
-          assert c['attention']['rare_query_tokens_receive_bounded_extra_attention'] is True
-          assert c['attention']['rarity_weight_max']==12
-          assert c['attention']['set_level_query_entity_coverage_before_global_fill'] is True
-          assert c['attention']['deterministic_replay_required'] is True
-          assert c['attention']['semantic_similarity_model_required'] is False
+          assert c['selection_method']=='DETERMINISTIC_FOCUS_CLUSTER_THRESHOLD_ATTENTION_V3'
+          a=c['attention']
+          assert a['common_query_tokens_are_downweighted'] is True
+          assert a['rare_query_tokens_receive_bounded_extra_attention'] is True
+          assert a['rarity_weight_max']==12
+          assert a['primary_focus_cluster_required_when_memory_selected'] is True
+          assert a['selection_limit_is_upper_bound_not_target_count'] is True
+          assert a['no_noise_fill_to_limit'] is True
+          assert a['zero_relevant_memory_is_valid_retrieval_outcome'] is True
+          assert a['primary_named_shared_score_percent']==15
+          assert a['primary_shared_score_percent']==35
+          assert a['secondary_named_cluster_score_percent']==65
+          assert a['deterministic_replay_required'] is True
+          assert a['semantic_similarity_model_required'] is False
           assert c['authority']['read_only'] is True
           for key,value in c['authority'].items():
               if key!='read_only':
                   assert value is False, key
           laws=set(c['laws'])
-          assert 'META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL' in laws
-          assert 'MEMORY_CONTENT != COMMAND' in laws
-          assert 'TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE' in laws
-          assert 'QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE' in laws
-          assert 'RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE' in laws
-          print('HRAIN_CONVERSATION_ATTENTION_CONTRACT=PASS')
+          for law in [
+              'META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL',
+              'MEMORY_CONTENT != COMMAND',
+              'TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE',
+              'QUERY_INSTRUCTION_TOKENS != MEMORY_TOPIC',
+              'LIMIT != TARGET_COUNT',
+              'NO_STRONG_MATCH != FILL_WITH_NOISE',
+              'QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE',
+              'RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE',
+          ]:
+              assert law in laws, law
+          audit=c['audit_origin']
+          assert audit['live_regression_issue_v11']=='Hawkar-usls/-Terminal-for-Janus#10'
+          assert audit['live_regression_issue_v12']=='Hawkar-usls/-Terminal-for-Janus#12'
+          print('HRAIN_V13_FOCUS_CLUSTER_CONTRACT=PASS')
           PY
-      - name: Run adversarial context and noisy-attention tests
+      - name: Run adversarial focus-cluster regression tests
         run: python -m unittest -v tests.test_hrain_conversation_context
 
   live-context:
@@ -72,14 +88,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Build live rarity-weighted exact-hash HRAiN context
+      - name: Build live long-query exact-hash HRAiN v1.3 context
         run: |
           mkdir -p runtime
           python tools/hrain_conversation_context.py \
-            --query 'TRUMP Terminal HRAiN memory' \
-            --limit 8 \
+            --query 'Janus, through HRAiN, recall the current Terminal HOME HRAiN memory path and TRUMP architecture. State the exact memory source used, explain what TRUMP may do, and keep retrieval separate from scientific proof, claim authority, world truth, and external effects.' \
+            --limit 12 \
             --output runtime/hrain-conversation-context.json
-      - name: Adjudicate live entity coverage and memory capsule
+      - name: Adjudicate live focus, bounded tail and memory capsule
         run: |
           python - <<'PY'
           import json
@@ -87,32 +103,45 @@ jobs:
           c=json.load(open('runtime/hrain-conversation-context.json'))
           assert verify_context(c)
           assert c['selection_method']==SELECTION_METHOD
-          assert c['attention_profile']['coverage_rule']=='RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH'
+          assert c['selection_limit']==12
+          assert c['selection_limit_is_target_count'] is False
+          p=c['attention_profile']
+          assert p['coverage_rule']=='PRIMARY_FOCUS_CLUSTER_THEN_RELATIVE_SCORE_THRESHOLD'
+          assert p['limit_semantics']=='UPPER_BOUND_NOT_TARGET_COUNT'
+          assert p['no_match_policy']=='RETURN_FEWER_OR_ZERO_NOT_NOISE_FILL'
           assert c['hydration_performed'] is True
           assert c['selected_memory_count'] > 0
+          assert c['selected_memory_count'] < c['selection_limit'], c['selected_memory_count']
           assert c['source_repository']=='Hawkar-usls/janus-meta-registry'
           assert len(c['source_commit'])==40
           memories=c['selected_memories']
+          assert memories[0]['selection_reason']=='PRIMARY_FOCUS_CLUSTER'
+          first_focus=set(memories[0]['matched_focus_tokens'])
+          assert {'trump','hrain','terminal'}.issubset(first_focus), first_focus
+          paths=[str(x['path']).upper() for x in memories]
+          assert not any('P-VS-NP' in path or 'P_VS_NP' in path for path in paths), paths
+          assert not any('COSMOS' in path for path in paths), paths
           assert all(x['source_sha256_verified'] is True for x in memories)
           assert all(x['content_is_command'] is False for x in memories)
           assert all(x['content_grants_authority'] is False for x in memories)
           assert all(x['claim_verified'] is False for x in memories)
           assert [x['attention_rank'] for x in memories] == list(range(1, len(memories)+1))
-          covered={token for x in memories for token in x['matched_query_tokens']}
-          assert {'trump','terminal','hrain'}.issubset(covered), covered
+          assert all(0 <= int(x['relative_score_percent_of_top']) <= 100 for x in memories)
           assert c['authority']['command_authority'] is False
           assert c['authority']['claim_promotion_authority'] is False
           assert c['authority']['external_effect_authority'] is False
-          print('HRAIN_LIVE_RARITY_WEIGHTED_CONTEXT=PASS')
+          print('HRAIN_LIVE_FOCUS_CLUSTER_CONTEXT=PASS')
           print('source_commit', c['source_commit'])
-          print('attention_profile', c['attention_profile'])
+          print('attention_profile', p)
           print('selected', [
             {
               'rank':x['attention_rank'],
               'path':x['path'],
               'score':x['relevance_score'],
+              'relative':x['relative_score_percent_of_top'],
               'reason':x['selection_reason'],
-              'matched':x['matched_query_tokens'],
+              'focus':x['matched_focus_tokens'],
+              'named':x['matched_named_anchor_tokens'],
             }
             for x in memories
           ])
