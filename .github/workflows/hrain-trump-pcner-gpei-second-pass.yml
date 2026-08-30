@@ -1,0 +1,104 @@
+name: HRAiN x TRUMP PCNER_GPEI Second Pass
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_TRUMP_PCNER_GPEI_SECOND_PASS_CONTRACT.json'
+      - 'tools/hrain_trump_pcner_gpei_second_pass.py'
+      - '.github/workflows/hrain-trump-pcner-gpei-second-pass.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  second-pass:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate frozen second-pass contract and tooling
+        run: |
+          python -m json.tool .janus/HRAIN_TRUMP_PCNER_GPEI_SECOND_PASS_CONTRACT.json >/dev/null
+          python -m py_compile tools/hrain_trump_meta_registry_audit.py tools/hrain_trump_pcner_gpei_second_pass.py
+
+      - name: Wake candidate TRUMP and preserve scientific ceiling
+        run: |
+          git clone --depth 1 https://github.com/Hawkar-usls/Janus-Demiurge.git /tmp/janus-demiurge
+          python /tmp/janus-demiurge/trump/trump_candidate.py status >/dev/null
+          python /tmp/janus-demiurge/trump/trump_candidate.py verify-source >/dev/null
+          python /tmp/janus-demiurge/trump/trump_candidate.py selftest >/dev/null
+          python - <<'PY'
+          import json
+          m=json.load(open('/tmp/janus-demiurge/trump/TRUMP_MANIFEST.json', encoding='utf-8'))
+          a=m['activation']
+          assert m['status']=='CANDIDATE_RUNTIME_TISSUE'
+          assert a['proof_authority'] is False
+          assert a['scientific_claim_promotion_authority'] is False
+          assert m['scientific_boundary']['P_VS_NP']=='OPEN'
+          print('TRUMP_CANDIDATE_WAKE_SOURCE_VERIFY_SELFTEST=PASS')
+          print('TRUMP_AUTHORITY_CEILING=PRESERVED')
+          PY
+
+      - name: Freeze current HRAiN full-memory catalog source
+        run: |
+          git clone --filter=blob:none --branch main --single-branch https://github.com/Hawkar-usls/janus-meta-registry.git /tmp/meta-catalog
+          SOURCE_COMMIT=$(python - <<'PY'
+          import json
+          print(json.load(open('/tmp/meta-catalog/assets/hrain-full-memory/manifest.json', encoding='utf-8'))['source_commit'])
+          PY
+          )
+          git -C /tmp/meta-catalog fetch --depth 1 origin "$SOURCE_COMMIT"
+          git -C /tmp/meta-catalog worktree add --detach /tmp/meta-source "$SOURCE_COMMIT"
+          printf '%s\n' "$SOURCE_COMMIT" > /tmp/meta-source/.janus-source-commit
+          mkdir -p artifacts
+          printf '%s\n' "$SOURCE_COMMIT" > artifacts/meta-registry-frozen-source.txt
+          git -C /tmp/meta-catalog rev-parse HEAD > artifacts/meta-registry-catalog-head.txt
+
+      - name: Rebuild exact first-pass ranking over frozen source
+        run: |
+          python tools/hrain_trump_meta_registry_audit.py \
+            --catalog-dir /tmp/meta-catalog \
+            --source-dir /tmp/meta-source \
+            --output artifacts/first-pass.json \
+            --top 150 | tee artifacts/first-pass-summary.txt
+
+      - name: Run mechanic to formula to assumption to SAT-transfer to counterexample attack
+        run: |
+          python tools/hrain_trump_pcner_gpei_second_pass.py \
+            --first-pass artifacts/first-pass.json \
+            --source-dir /tmp/meta-source \
+            --output artifacts/pcner-gpei-second-pass.json \
+            --limit 150 | tee artifacts/pcner-gpei-second-pass-summary.txt
+
+      - name: Enforce fail-closed scientific terminal
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('artifacts/pcner-gpei-second-pass.json', encoding='utf-8'))
+          assert r['terminal']=='PCNER_GPEI_SECOND_PASS_COMPLETE__CONDITIONAL_SURVIVORS_ONLY__P_VS_NP_OPEN'
+          assert not r['integrity']['errors']
+          assert r['authority']['proof_authority'] is False
+          assert r['authority']['scientific_claim_promotion_authority'] is False
+          assert r['scientific_boundary']['P_VS_NP']=='OPEN'
+          assert r['scientific_boundary']['P_equals_NP_proved'] is False
+          print('HRAIN_TRUMP_PCNER_GPEI_SECOND_PASS=PASS')
+          print('TERMINAL_COUNTS=', r['summary']['terminal_counts'])
+          print('CONDITIONAL_SURVIVORS=', r['summary']['conditional_survivor_count'])
+          print('ATTACK_CANDIDATES=', r['summary']['counterexample_attack_candidate_count'])
+          print('SURVIVORS=', r['summary']['survivor_paths'][:20])
+          PY
+
+      - name: Upload sealed second-pass receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hrain-trump-pcner-gpei-second-pass
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30
