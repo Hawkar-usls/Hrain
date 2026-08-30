@@ -2,6 +2,7 @@
   "schema": "janus.hrain.meta_registry_trump_audit_contract.v1",
   "status": "ACTIVE_READ_ONLY_FULL_CURRENT_AUDIT_BINDING",
   "component": "HRAIN_META_REGISTRY_TRUMP_AUDIT",
+  "activation_generation": 1,
   "source_database": "Hawkar-usls/janus-meta-registry",
   "full_current_manifest": "assets/hrain-full-memory/manifest.json",
   "hrain_role": "STRUCTURAL_MEMORY_REASONING_AND_QUERY_BOUND_CONTEXT_ORGAN",
