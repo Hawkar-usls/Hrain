@@ -32,6 +32,7 @@ _SCORE_FIELDS = (
     ("status", 3),
     ("surface", 2),
 )
+_STRUCTURAL_FIELDS = ("label", "lineageKey", "path")
 
 
 class HrainContextError(RuntimeError):
@@ -103,11 +104,19 @@ def _field_tokens(node: Mapping[str, Any], field: str) -> set[str]:
     return set(tokenize(str(node.get(field) or "")))
 
 
-def _node_tokens(node: Mapping[str, Any]) -> set[str]:
+def _tokens_for_fields(node: Mapping[str, Any], fields: Iterable[str]) -> set[str]:
     out: set[str] = set()
-    for field, _ in _SCORE_FIELDS:
+    for field in fields:
         out.update(_field_tokens(node, field))
     return out
+
+
+def _node_tokens(node: Mapping[str, Any]) -> set[str]:
+    return _tokens_for_fields(node, (field for field, _ in _SCORE_FIELDS))
+
+
+def _structural_tokens(node: Mapping[str, Any]) -> set[str]:
+    return _tokens_for_fields(node, _STRUCTURAL_FIELDS)
 
 
 def selectable_nodes(projection: Mapping[str, Any]) -> Iterable[Mapping[str, Any]]:
@@ -123,11 +132,7 @@ def selectable_nodes(projection: Mapping[str, Any]) -> Iterable[Mapping[str, Any
 
 
 def _rarity_weight(document_count: int, document_frequency: int) -> int:
-    """Integer inverse-frequency attention weight; deterministic and bounded.
-
-    A token present in most memory nodes receives weight 1. Rare tokens receive
-    up to 12. This is attention only, never evidence weight.
-    """
+    """Integer inverse-frequency attention weight; deterministic and bounded."""
     if document_count < 1 or document_frequency < 1:
         return 0
     return max(1, min(12, (document_count + (2 * document_frequency) - 1) // (2 * document_frequency)))
@@ -138,21 +143,27 @@ def attention_profile(projection: Mapping[str, Any], query: str) -> Dict[str, An
     nodes = [dict(node) for node in selectable_nodes(projection)]
     query_tokens = tokenize(query)
     node_tokens = [_node_tokens(node) for node in nodes]
+    structural_tokens = [_structural_tokens(node) for node in nodes]
     stats: list[Dict[str, Any]] = []
     for ordinal, token in enumerate(query_tokens):
         df = sum(1 for tokens in node_tokens if token in tokens)
+        structural_df = sum(1 for tokens in structural_tokens if token in tokens)
         rarity = _rarity_weight(len(nodes), df)
+        coverage_eligible = bool(df > 0 and structural_df > 0 and rarity > 1)
         stats.append({
             "token": token,
             "query_ordinal": ordinal,
             "document_frequency": df,
+            "structural_document_frequency": structural_df,
             "rarity_weight": rarity,
-            "informative": bool(df > 0 and rarity > 1),
+            "informative": coverage_eligible,
+            "coverage_eligible": coverage_eligible,
         })
     return {
         "selectable_document_count": len(nodes),
         "query_tokens": list(query_tokens),
         "token_stats": stats,
+        "coverage_rule": "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH",
         "law": "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE",
     }
 
@@ -176,11 +187,6 @@ def relevance_score(
     *,
     token_rarity: Mapping[str, int] | None = None,
 ) -> int:
-    """Score one node. Optional rarity map lets tests/consumers use v2 scoring.
-
-    Without a rarity map every query token has weight 1, preserving the simple
-    public helper semantics from v1.
-    """
     tokens = tokenize(query)
     if not tokens:
         return 0
@@ -196,8 +202,6 @@ def relevance_score(
                 token_weight = max(1, int(rarity.get(token, 1)))
                 score += field_weight * token_weight
                 matched.add(token)
-    # Distinct-query coverage prevents one repeated/generic concept from
-    # dominating an object that covers several independent query entities.
     coverage = len(matched)
     score += 6 * coverage * coverage
     return score
@@ -232,20 +236,16 @@ def select_nodes(projection: Mapping[str, Any], query: str, *, limit: int = 12) 
     if not ranked:
         return []
 
-    token_stats = {
-        str(row["token"]): row
-        for row in profile["token_stats"]
-        if int(row.get("document_frequency") or 0) > 0
-    }
-    # Rarest query entities receive one coverage slot before global fill. This
-    # is set-level diversity, not a scientific confidence mechanism.
-    informative = sorted(
-        token_stats.values(),
-        key=lambda row: (-int(row["rarity_weight"]), int(row["document_frequency"]), int(row["query_ordinal"])),
+    coverage_tokens = [
+        row for row in profile["token_stats"]
+        if isinstance(row, Mapping) and row.get("coverage_eligible") is True
+    ]
+    coverage_tokens.sort(
+        key=lambda row: (-int(row["rarity_weight"]), int(row["structural_document_frequency"]), int(row["query_ordinal"])),
     )
     chosen: list[tuple[Dict[str, Any], str]] = []
     chosen_paths: set[str] = set()
-    for token_row in informative:
+    for token_row in coverage_tokens:
         if len(chosen) >= limit:
             break
         token = str(token_row["token"])
@@ -260,7 +260,7 @@ def select_nodes(projection: Mapping[str, Any], query: str, *, limit: int = 12) 
         )
         if candidate is None:
             continue
-        chosen.append((candidate, f"QUERY_TOKEN_COVERAGE:{token}"))
+        chosen.append((candidate, f"RARE_STRUCTURAL_QUERY_TOKEN_COVERAGE:{token}"))
         chosen_paths.add(str(candidate["path_sort"]))
 
     for row in ranked:
@@ -412,6 +412,7 @@ def build_context(
             "MEMORY_CONTENT != AUTHORITY",
             "HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT",
             "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE",
+            "RARE_SUMMARY_WORD != MEMORY_ENTITY",
             "QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE",
             "RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE",
             "RETRIEVED_MEMORY != WORLD_TRUTH",
@@ -440,7 +441,11 @@ def verify_context(context: Mapping[str, Any]) -> bool:
         return False
     if body.get("selection_method") == SELECTION_METHOD:
         profile = body.get("attention_profile")
-        if not isinstance(profile, Mapping) or profile.get("law") != "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE":
+        if not isinstance(profile, Mapping):
+            return False
+        if profile.get("law") != "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE":
+            return False
+        if profile.get("coverage_rule") != "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH":
             return False
         for rank, row in enumerate(memories, start=1):
             if not isinstance(row, Mapping):
@@ -448,6 +453,8 @@ def verify_context(context: Mapping[str, Any]) -> bool:
             if int(row.get("attention_rank") or 0) != rank:
                 return False
             if not isinstance(row.get("matched_query_tokens"), list):
+                return False
+            if not str(row.get("selection_reason") or ""):
                 return False
             if row.get("claim_verified") is not False:
                 return False
