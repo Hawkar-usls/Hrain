@@ -1,0 +1,101 @@
+name: HRAiN x TRUMP Full Meta Registry Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_META_REGISTRY_TRUMP_AUDIT_CONTRACT.json'
+      - 'tools/hrain_trump_meta_registry_audit.py'
+      - '.github/workflows/hrain-trump-meta-registry-audit.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_META_REGISTRY_TRUMP_AUDIT_CONTRACT.json'
+      - 'tools/hrain_trump_meta_registry_audit.py'
+      - '.github/workflows/hrain-trump-meta-registry-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-current-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate HRAiN x TRUMP audit contract
+        run: |
+          python -m json.tool .janus/HRAIN_META_REGISTRY_TRUMP_AUDIT_CONTRACT.json >/dev/null
+          python -m py_compile tools/hrain_trump_meta_registry_audit.py
+
+      - name: Wake exact candidate TRUMP and preserve its authority ceiling
+        run: |
+          git clone --depth 1 https://github.com/Hawkar-usls/Janus-Demiurge.git /tmp/janus-demiurge
+          mkdir -p artifacts
+          python /tmp/janus-demiurge/trump/trump_candidate.py status > artifacts/trump-status.json
+          python /tmp/janus-demiurge/trump/trump_candidate.py verify-source > artifacts/trump-source-verification.json
+          python /tmp/janus-demiurge/trump/trump_candidate.py selftest > artifacts/trump-selftest.json
+          python - <<'PY'
+          import json
+          for name in ('trump-status.json','trump-source-verification.json','trump-selftest.json'):
+              r=json.load(open('artifacts/'+name, encoding='utf-8'))
+              assert r['authority']['proof_authority'] is False
+              assert r['authority']['scientific_claim_promotion_authority'] is False
+              assert r['scientific_boundary']['P_VS_NP']=='OPEN'
+          print('TRUMP_CANDIDATE_WAKE_AND_SELFTEST=PASS')
+          PY
+
+      - name: Freeze full-current Meta Registry catalog and its exact source commit
+        run: |
+          git clone --filter=blob:none --branch main --single-branch https://github.com/Hawkar-usls/janus-meta-registry.git /tmp/meta-catalog
+          SOURCE_COMMIT=$(python - <<'PY'
+          import json
+          print(json.load(open('/tmp/meta-catalog/assets/hrain-full-memory/manifest.json', encoding='utf-8'))['source_commit'])
+          PY
+          )
+          git -C /tmp/meta-catalog fetch --depth 1 origin "$SOURCE_COMMIT"
+          git -C /tmp/meta-catalog worktree add --detach /tmp/meta-source "$SOURCE_COMMIT"
+          printf '%s\n' "$SOURCE_COMMIT" > /tmp/meta-source/.janus-source-commit
+          echo "META_REGISTRY_CATALOG_HEAD=$(git -C /tmp/meta-catalog rev-parse HEAD)"
+          echo "META_REGISTRY_FROZEN_SOURCE=$SOURCE_COMMIT"
+
+      - name: Run TRUMP full-current structural and semantic-mechanics audit
+        run: |
+          python tools/hrain_trump_meta_registry_audit.py \
+            --catalog-dir /tmp/meta-catalog \
+            --source-dir /tmp/meta-source \
+            --output artifacts/hrain-trump-meta-registry-audit.json \
+            --top 150 | tee artifacts/hrain-trump-meta-registry-audit-summary.txt
+
+      - name: Enforce fail-closed terminal
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('artifacts/hrain-trump-meta-registry-audit.json', encoding='utf-8'))
+          assert r['terminal']=='FULL_CURRENT_STRUCTURAL_INTEGRITY_AUDITED__SEMANTIC_MECHANICS_RANKED__AUTHORITY_UNCHANGED'
+          assert not r['integrity']['errors']
+          assert r['integrity']['objects_expected']==r['integrity']['objects_verified']
+          assert r['source']['coverage_complete'] is True
+          assert r['authority']['proof_authority'] is False
+          assert r['scientific_boundary']['P_VS_NP']=='OPEN'
+          print('HRAIN_META_REGISTRY_FULL_CURRENT_TRUMP_AUDIT=PASS')
+          print('OBJECTS_VERIFIED=', r['integrity']['objects_verified'])
+          print('BYTES_VERIFIED=', r['integrity']['bytes_verified'])
+          print('MECHANIC_CANDIDATES=', r['trump_mechanic_projection']['candidate_file_count'])
+          print('AXIS_FILE_COUNTS=', r['trump_mechanic_projection']['axis_file_counts'])
+          print('ATTENTION_FLAGS=', r['trump_mechanic_projection']['attention_flag_count'])
+          PY
+
+      - name: Upload sealed audit receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hrain-trump-meta-registry-audit
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30
