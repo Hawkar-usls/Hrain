@@ -17,12 +17,22 @@ DEFAULT_PROJECTION_URL = (
     "https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/"
     "main/assets/hrain-registry-index.json"
 )
+SELECTION_METHOD = "DETERMINISTIC_RARITY_WEIGHTED_DIVERSE_GRAPH_ATTENTION_V2"
 MAX_OBJECT_BYTES = 262_144
 MAX_TOTAL_HYDRATED_BYTES = 1_048_576
 MAX_EXCERPT_CHARS = 6_000
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _HASH64 = re.compile(r"^[0-9a-f]{64}$")
-_TOKEN = re.compile(r"[\w-]+", re.UNICODE)
+_TOKEN = re.compile(r"[\w]+", re.UNICODE)
+_SCORE_FIELDS = (
+    ("label", 10),
+    ("lineageKey", 9),
+    ("path", 8),
+    ("summary", 5),
+    ("status", 3),
+    ("surface", 2),
+)
+_STRUCTURAL_FIELDS = ("label", "lineageKey", "path")
 
 
 class HrainContextError(RuntimeError):
@@ -41,7 +51,7 @@ def sha256_bytes(value: bytes) -> str:
 def _read_url(url: str, *, max_bytes: int) -> bytes:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "JANUS-HRAiN-Conversation-Context/1.0"},
+        headers={"User-Agent": "JANUS-HRAiN-Conversation-Context/1.2"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         data = response.read(max_bytes + 1)
@@ -90,34 +100,23 @@ def tokenize(text: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(token.lower() for token in _TOKEN.findall(str(text)) if len(token) > 1))
 
 
-def _field_text(node: Mapping[str, Any], field: str) -> str:
-    return str(node.get(field) or "").lower()
+def _field_tokens(node: Mapping[str, Any], field: str) -> set[str]:
+    return set(tokenize(str(node.get(field) or "")))
 
 
-def relevance_score(node: Mapping[str, Any], query: str) -> int:
-    tokens = tokenize(query)
-    if not tokens:
-        return 0
-    weighted_fields = (
-        ("label", 9),
-        ("lineageKey", 8),
-        ("summary", 6),
-        ("status", 5),
-        ("path", 5),
-        ("surface", 3),
-    )
-    score = 0
-    for field, weight in weighted_fields:
-        hay = _field_text(node, field)
-        if not hay:
-            continue
-        for token in tokens:
-            if token in hay:
-                score += weight
-        normalized_query = " ".join(tokens)
-        if normalized_query and normalized_query in hay:
-            score += weight * 2
-    return score
+def _tokens_for_fields(node: Mapping[str, Any], fields: Iterable[str]) -> set[str]:
+    out: set[str] = set()
+    for field in fields:
+        out.update(_field_tokens(node, field))
+    return out
+
+
+def _node_tokens(node: Mapping[str, Any]) -> set[str]:
+    return _tokens_for_fields(node, (field for field, _ in _SCORE_FIELDS))
+
+
+def _structural_tokens(node: Mapping[str, Any]) -> set[str]:
+    return _tokens_for_fields(node, _STRUCTURAL_FIELDS)
 
 
 def selectable_nodes(projection: Mapping[str, Any]) -> Iterable[Mapping[str, Any]]:
@@ -132,21 +131,154 @@ def selectable_nodes(projection: Mapping[str, Any]) -> Iterable[Mapping[str, Any
         yield node
 
 
+def _rarity_weight(document_count: int, document_frequency: int) -> int:
+    """Integer inverse-frequency attention weight; deterministic and bounded."""
+    if document_count < 1 or document_frequency < 1:
+        return 0
+    return max(1, min(12, (document_count + (2 * document_frequency) - 1) // (2 * document_frequency)))
+
+
+def attention_profile(projection: Mapping[str, Any], query: str) -> Dict[str, Any]:
+    validate_projection(projection)
+    nodes = [dict(node) for node in selectable_nodes(projection)]
+    query_tokens = tokenize(query)
+    node_tokens = [_node_tokens(node) for node in nodes]
+    structural_tokens = [_structural_tokens(node) for node in nodes]
+    stats: list[Dict[str, Any]] = []
+    for ordinal, token in enumerate(query_tokens):
+        df = sum(1 for tokens in node_tokens if token in tokens)
+        structural_df = sum(1 for tokens in structural_tokens if token in tokens)
+        rarity = _rarity_weight(len(nodes), df)
+        coverage_eligible = bool(df > 0 and structural_df > 0 and rarity > 1)
+        stats.append({
+            "token": token,
+            "query_ordinal": ordinal,
+            "document_frequency": df,
+            "structural_document_frequency": structural_df,
+            "rarity_weight": rarity,
+            "informative": coverage_eligible,
+            "coverage_eligible": coverage_eligible,
+        })
+    return {
+        "selectable_document_count": len(nodes),
+        "query_tokens": list(query_tokens),
+        "token_stats": stats,
+        "coverage_rule": "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH",
+        "law": "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE",
+    }
+
+
+def _rarity_map(profile: Mapping[str, Any]) -> Dict[str, int]:
+    return {
+        str(row.get("token")): int(row.get("rarity_weight") or 0)
+        for row in profile.get("token_stats") or []
+        if isinstance(row, Mapping)
+    }
+
+
+def _matched_tokens(node: Mapping[str, Any], query_tokens: Iterable[str]) -> list[str]:
+    available = _node_tokens(node)
+    return [token for token in query_tokens if token in available]
+
+
+def relevance_score(
+    node: Mapping[str, Any],
+    query: str,
+    *,
+    token_rarity: Mapping[str, int] | None = None,
+) -> int:
+    tokens = tokenize(query)
+    if not tokens:
+        return 0
+    rarity = dict(token_rarity or {})
+    score = 0
+    matched: set[str] = set()
+    for field, field_weight in _SCORE_FIELDS:
+        hay_tokens = _field_tokens(node, field)
+        if not hay_tokens:
+            continue
+        for token in tokens:
+            if token in hay_tokens:
+                token_weight = max(1, int(rarity.get(token, 1)))
+                score += field_weight * token_weight
+                matched.add(token)
+    coverage = len(matched)
+    score += 6 * coverage * coverage
+    return score
+
+
+def _ranked_nodes(projection: Mapping[str, Any], query: str) -> tuple[list[Dict[str, Any]], Dict[str, Any]]:
+    profile = attention_profile(projection, query)
+    rarity = _rarity_map(profile)
+    query_tokens = tuple(profile["query_tokens"])
+    ranked: list[Dict[str, Any]] = []
+    for ordinal, raw in enumerate(selectable_nodes(projection)):
+        node = dict(raw)
+        matched = _matched_tokens(node, query_tokens)
+        score = relevance_score(node, query, token_rarity=rarity)
+        ranked.append({
+            "score": score,
+            "ordinal": ordinal,
+            "path_sort": str(node.get("path") or ""),
+            "node": node,
+            "matched_tokens": matched,
+            "coverage_count": len(matched),
+        })
+    ranked.sort(key=lambda row: (-int(row["score"]), -int(row["coverage_count"]), int(row["ordinal"]), str(row["path_sort"])))
+    return ranked, profile
+
+
 def select_nodes(projection: Mapping[str, Any], query: str, *, limit: int = 12) -> list[Dict[str, Any]]:
     validate_projection(projection)
     if limit < 1 or limit > 32:
         raise HrainContextError("HRAIN_CONTEXT_SELECTION_LIMIT_OUT_OF_RANGE")
-    ranked = []
-    for ordinal, node in enumerate(selectable_nodes(projection)):
-        score = relevance_score(node, query)
-        ranked.append((score, ordinal, str(node.get("path") or ""), dict(node)))
+    ranked, profile = _ranked_nodes(projection, query)
     if not ranked:
         return []
-    positives = [row for row in ranked if row[0] > 0]
-    source = positives if positives else ranked
-    source.sort(key=lambda row: (-row[0], row[1], row[2]))
-    selected = []
-    for score, _, _, node in source[:limit]:
+
+    coverage_tokens = [
+        row for row in profile["token_stats"]
+        if isinstance(row, Mapping) and row.get("coverage_eligible") is True
+    ]
+    coverage_tokens.sort(
+        key=lambda row: (-int(row["rarity_weight"]), int(row["structural_document_frequency"]), int(row["query_ordinal"])),
+    )
+    chosen: list[tuple[Dict[str, Any], str]] = []
+    chosen_paths: set[str] = set()
+    for token_row in coverage_tokens:
+        if len(chosen) >= limit:
+            break
+        token = str(token_row["token"])
+        candidate = next(
+            (
+                row for row in ranked
+                if int(row["score"]) > 0
+                and token in row["matched_tokens"]
+                and str(row["path_sort"]) not in chosen_paths
+            ),
+            None,
+        )
+        if candidate is None:
+            continue
+        chosen.append((candidate, f"RARE_STRUCTURAL_QUERY_TOKEN_COVERAGE:{token}"))
+        chosen_paths.add(str(candidate["path_sort"]))
+
+    for row in ranked:
+        if len(chosen) >= limit:
+            break
+        path = str(row["path_sort"])
+        if path in chosen_paths:
+            continue
+        if int(row["score"]) <= 0 and chosen:
+            continue
+        chosen.append((row, "GLOBAL_RARITY_WEIGHTED_SCORE" if int(row["score"]) > 0 else "DETERMINISTIC_FALLBACK_NO_QUERY_MATCH"))
+        chosen_paths.add(path)
+
+    rarity = _rarity_map(profile)
+    selected: list[Dict[str, Any]] = []
+    for rank, (ranked_row, reason) in enumerate(chosen, start=1):
+        node = ranked_row["node"]
+        matched = list(ranked_row["matched_tokens"])
         selected.append({
             "id": node.get("id"),
             "label": node.get("label"),
@@ -157,7 +289,12 @@ def select_nodes(projection: Mapping[str, Any], query: str, *, limit: int = 12) 
             "summary": node.get("summary"),
             "commit_sha": node.get("commitSha"),
             "source_sha256": node.get("sourceSha256"),
-            "relevance_score": score,
+            "relevance_score": int(ranked_row["score"]),
+            "attention_rank": rank,
+            "selection_reason": reason,
+            "matched_query_tokens": matched,
+            "matched_query_token_rarity": {token: int(rarity.get(token, 0)) for token in matched},
+            "query_coverage_count": int(ranked_row["coverage_count"]),
             "content_trust": "MEMORY_DATA_NOT_CONTROL_SIGNAL",
             "claim_verified": False,
         })
@@ -240,6 +377,7 @@ def build_context(
     registry_root: str | Path | None = None,
 ) -> Dict[str, Any]:
     validate_projection(projection)
+    profile = attention_profile(projection, query)
     selected = select_nodes(projection, query, limit=limit)
     memories = hydrate_selected(selected, registry_root=registry_root) if hydrate else selected
     body: Dict[str, Any] = {
@@ -252,7 +390,8 @@ def build_context(
         "source_projection_sha256": projection_sha256,
         "source_commit": projection.get("sourceCommit"),
         "projection_generated_at": projection.get("generatedAt"),
-        "selection_method": "DETERMINISTIC_WEIGHTED_LEXICAL_GRAPH_NODE_SELECTION_V1",
+        "selection_method": SELECTION_METHOD,
+        "attention_profile": profile,
         "selection_limit": limit,
         "selected_memory_count": len(memories),
         "selected_memories": memories,
@@ -272,6 +411,10 @@ def build_context(
             "MEMORY_CONTENT != COMMAND",
             "MEMORY_CONTENT != AUTHORITY",
             "HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT",
+            "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE",
+            "RARE_SUMMARY_WORD != MEMORY_ENTITY",
+            "QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE",
+            "RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE",
             "RETRIEVED_MEMORY != WORLD_TRUTH",
             "HASH_VERIFIED_OBJECT != CLAIM_VERIFIED",
         ],
@@ -288,6 +431,33 @@ def verify_context(context: Mapping[str, Any]) -> bool:
     if _HASH64.fullmatch(claimed) is None or canonical_hash(body) != claimed:
         return False
     authority = body.get("authority") or {}
+    memories = body.get("selected_memories")
+    if not isinstance(memories, list) or int(body.get("selected_memory_count") or 0) != len(memories):
+        return False
+    if body.get("selection_method") not in {
+        "DETERMINISTIC_WEIGHTED_LEXICAL_GRAPH_NODE_SELECTION_V1",
+        SELECTION_METHOD,
+    }:
+        return False
+    if body.get("selection_method") == SELECTION_METHOD:
+        profile = body.get("attention_profile")
+        if not isinstance(profile, Mapping):
+            return False
+        if profile.get("law") != "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE":
+            return False
+        if profile.get("coverage_rule") != "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH":
+            return False
+        for rank, row in enumerate(memories, start=1):
+            if not isinstance(row, Mapping):
+                return False
+            if int(row.get("attention_rank") or 0) != rank:
+                return False
+            if not isinstance(row.get("matched_query_tokens"), list):
+                return False
+            if not str(row.get("selection_reason") or ""):
+                return False
+            if row.get("claim_verified") is not False:
+                return False
     return all([
         body.get("schema") == OUTPUT_SCHEMA,
         body.get("status") == "HRAIN_QUERY_BOUND_CONTEXT_READY",
@@ -331,7 +501,9 @@ def main() -> int:
     print(json.dumps({
         "status": context["status"],
         "source_commit": context["source_commit"],
+        "selection_method": context["selection_method"],
         "selected_memory_count": context["selected_memory_count"],
+        "selected_paths": [row.get("path") for row in context["selected_memories"]],
         "hydration_performed": context["hydration_performed"],
         "context_hash": context["context_hash"],
     }, ensure_ascii=False, sort_keys=True))

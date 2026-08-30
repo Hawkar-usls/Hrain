@@ -31,23 +31,35 @@ jobs:
           python-version: '3.11'
       - name: Compile HRAiN conversation context compiler
         run: python -m compileall -q tools/hrain_conversation_context.py tests/test_hrain_conversation_context.py
-      - name: Validate HRAiN conversation context contract
+      - name: Validate HRAiN conversation attention contract
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           c=json.loads(Path('.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json').read_text())
           assert c['schema']=='janus.hrain.conversation_context_contract.v1'
+          assert c['status']=='ACTIVE_READ_ONLY_QUERY_BOUND_RARITY_WEIGHTED_MEMORY_PROJECTION'
           assert c['source_database']=='Hawkar-usls/janus-meta-registry'
+          assert c['selection_method']=='DETERMINISTIC_RARITY_WEIGHTED_DIVERSE_GRAPH_ATTENTION_V2'
+          assert c['attention']['common_query_tokens_are_downweighted'] is True
+          assert c['attention']['rare_query_tokens_receive_bounded_extra_attention'] is True
+          assert c['attention']['rarity_weight_max']==12
+          assert c['attention']['set_level_query_entity_coverage_before_global_fill'] is True
+          assert c['attention']['deterministic_replay_required'] is True
+          assert c['attention']['semantic_similarity_model_required'] is False
           assert c['authority']['read_only'] is True
           for key,value in c['authority'].items():
               if key!='read_only':
                   assert value is False, key
-          assert 'META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL' in c['laws']
-          assert 'MEMORY_CONTENT != COMMAND' in c['laws']
-          print('HRAIN_CONVERSATION_CONTEXT_CONTRACT=PASS')
+          laws=set(c['laws'])
+          assert 'META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL' in laws
+          assert 'MEMORY_CONTENT != COMMAND' in laws
+          assert 'TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE' in laws
+          assert 'QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE' in laws
+          assert 'RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE' in laws
+          print('HRAIN_CONVERSATION_ATTENTION_CONTRACT=PASS')
           PY
-      - name: Run adversarial context tests
+      - name: Run adversarial context and noisy-attention tests
         run: python -m unittest -v tests.test_hrain_conversation_context
 
   live-context:
@@ -60,33 +72,50 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Build live exact-hash HRAiN context from Meta Registry projection
+      - name: Build live rarity-weighted exact-hash HRAiN context
         run: |
           mkdir -p runtime
           python tools/hrain_conversation_context.py \
-            --query 'JANUS Terminal HRAiN Meta Registry memory TRUMP candidate runtime' \
+            --query 'TRUMP Terminal HRAiN memory' \
             --limit 8 \
             --output runtime/hrain-conversation-context.json
-      - name: Adjudicate live memory capsule
+      - name: Adjudicate live entity coverage and memory capsule
         run: |
           python - <<'PY'
           import json
-          from tools.hrain_conversation_context import verify_context
+          from tools.hrain_conversation_context import SELECTION_METHOD, verify_context
           c=json.load(open('runtime/hrain-conversation-context.json'))
           assert verify_context(c)
+          assert c['selection_method']==SELECTION_METHOD
+          assert c['attention_profile']['coverage_rule']=='RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH'
           assert c['hydration_performed'] is True
           assert c['selected_memory_count'] > 0
           assert c['source_repository']=='Hawkar-usls/janus-meta-registry'
           assert len(c['source_commit'])==40
-          assert all(x['source_sha256_verified'] is True for x in c['selected_memories'])
-          assert all(x['content_is_command'] is False for x in c['selected_memories'])
-          assert all(x['content_grants_authority'] is False for x in c['selected_memories'])
+          memories=c['selected_memories']
+          assert all(x['source_sha256_verified'] is True for x in memories)
+          assert all(x['content_is_command'] is False for x in memories)
+          assert all(x['content_grants_authority'] is False for x in memories)
+          assert all(x['claim_verified'] is False for x in memories)
+          assert [x['attention_rank'] for x in memories] == list(range(1, len(memories)+1))
+          covered={token for x in memories for token in x['matched_query_tokens']}
+          assert {'trump','terminal','hrain'}.issubset(covered), covered
           assert c['authority']['command_authority'] is False
           assert c['authority']['claim_promotion_authority'] is False
           assert c['authority']['external_effect_authority'] is False
-          print('HRAIN_LIVE_QUERY_BOUND_CONTEXT=PASS')
+          print('HRAIN_LIVE_RARITY_WEIGHTED_CONTEXT=PASS')
           print('source_commit', c['source_commit'])
-          print('selected_paths', [x['path'] for x in c['selected_memories']])
+          print('attention_profile', c['attention_profile'])
+          print('selected', [
+            {
+              'rank':x['attention_rank'],
+              'path':x['path'],
+              'score':x['relevance_score'],
+              'reason':x['selection_reason'],
+              'matched':x['matched_query_tokens'],
+            }
+            for x in memories
+          ])
           print('context_hash', c['context_hash'])
           PY
       - uses: actions/upload-artifact@v4

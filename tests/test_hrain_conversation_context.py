@@ -8,6 +8,8 @@ from pathlib import Path
 
 from tools.hrain_conversation_context import (
     HrainContextError,
+    SELECTION_METHOD,
+    attention_profile,
     build_context,
     canonical_hash,
     relevance_score,
@@ -30,6 +32,7 @@ def projection_for(root: Path):
         "title": "Intellect Observer machine psychology",
         "status": "ACTIVE_RESEARCH",
     }, sort_keys=True) + "\n", encoding="utf-8")
+
     def row(path: Path, *, label: str, summary: str, lineage: str, status: str):
         raw = path.read_bytes()
         return {
@@ -45,6 +48,7 @@ def projection_for(root: Path):
             "status": status,
             "summary": summary,
         }
+
     nodes = [
         row(trump, label="JANUS TRUMP candidate", summary="candidate tissue for theorem research", lineage="JANUS-TRUMP", status="CANDIDATE_RUNTIME_TISSUE"),
         row(io, label="IO Intellect Observer", summary="machine psychology branch", lineage="JANUS-IO", status="ACTIVE_RESEARCH"),
@@ -69,6 +73,56 @@ def projection_for(root: Path):
     return projection
 
 
+def noisy_projection():
+    nodes = []
+
+    def node(index: int, *, label: str, path: str, summary: str, lineage: str):
+        return {
+            "id": f"obj:{index:020d}",
+            "label": label,
+            "surface": "other",
+            "lineageKey": lineage,
+            "path": path,
+            "sourceSha256": f"{index + 1:064x}"[-64:],
+            "commitSha": f"{index + 1:040x}"[-40:],
+            "readOnly": True,
+            "deleteAllowed": False,
+            "status": "ACTIVE",
+            "summary": summary,
+        }
+
+    for i in range(12):
+        nodes.append(node(
+            i,
+            label=f"JANUS generic archive {i}",
+            path=f"data/JANUS-GENERIC-{i}.json",
+            summary="JANUS archive current system research memory",
+            lineage=f"JANUS-GENERIC-{i}",
+        ))
+    nodes.extend([
+        node(20, label="JANUS TRUMP candidate runtime", path="data/JANUS-TRUMP-RUNTIME.json", summary="TRUMP candidate tissue theorem boundary", lineage="JANUS-TRUMP"),
+        node(21, label="Terminal control link", path=".janus/TERMINAL_CONTROL_LINK.json", summary="Terminal human interface conversation architecture", lineage="JANUS-TERMINAL"),
+        node(22, label="HRAiN memory contract", path="data/JANUS-HRAIN-FULL-MEMORY-CONTRACT.json", summary="HRAiN memory projection and retrieval contract", lineage="JANUS-HRAIN-MEMORY"),
+    ])
+    return {
+        "schema": "janus.hrain.registry_graph_index.v1_0",
+        "status": "AUTO_GENERATED_READ_ONLY_ACTIVE_REGISTRY_PROJECTION",
+        "generatedAt": "2026-08-30T23:00:00+03:00",
+        "sourceCommit": "a" * 40,
+        "repository": "Hawkar-usls/janus-meta-registry",
+        "mutationPolicy": {
+            "interfaceWriteAuthority": False,
+            "interfaceDeleteAuthority": False,
+            "appendOnlyFromInterface": True,
+            "sourceMutationEndpoint": None,
+        },
+        "objectCount": len(nodes),
+        "nodeCount": len(nodes),
+        "linkCount": 0,
+        "nodes": nodes,
+    }
+
+
 class HrainConversationContextTests(unittest.TestCase):
     def test_query_selects_relevant_memory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -90,7 +144,61 @@ class HrainConversationContextTests(unittest.TestCase):
                 registry_root=tmp,
             )
             self.assertIn("HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT", context["laws"])
+            self.assertIn("TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE", context["laws"])
             self.assertFalse(context["selected_memories"][0]["claim_verified"])
+
+    def test_rare_structural_entities_beat_loud_generic_janus_noise(self):
+        projection = noisy_projection()
+        selected = select_nodes(projection, "JANUS TRUMP Terminal HRAiN memory", limit=3)
+        paths = [row["path"] for row in selected]
+        self.assertTrue(any("TRUMP" in path for path in paths), paths)
+        self.assertTrue(any("TERMINAL" in path for path in paths), paths)
+        self.assertTrue(any("HRAIN" in path for path in paths), paths)
+        self.assertFalse(any("GENERIC" in path for path in paths), paths)
+        self.assertTrue(all(row["selection_reason"].startswith("RARE_STRUCTURAL_QUERY_TOKEN_COVERAGE:") for row in selected))
+
+    def test_attention_profile_downweights_common_token_and_explains_rarity(self):
+        profile = attention_profile(noisy_projection(), "JANUS TRUMP Terminal HRAiN memory")
+        stats = {row["token"]: row for row in profile["token_stats"]}
+        self.assertEqual(stats["janus"]["document_frequency"], 15)
+        self.assertEqual(stats["janus"]["rarity_weight"], 1)
+        self.assertFalse(stats["janus"]["coverage_eligible"])
+        self.assertGreater(stats["trump"]["rarity_weight"], stats["janus"]["rarity_weight"])
+        self.assertGreater(stats["terminal"]["rarity_weight"], stats["janus"]["rarity_weight"])
+        self.assertGreater(stats["hrain"]["rarity_weight"], stats["janus"]["rarity_weight"])
+        self.assertEqual(stats["terminal"]["structural_document_frequency"], 1)
+        self.assertTrue(stats["terminal"]["coverage_eligible"])
+        self.assertEqual(profile["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
+        self.assertEqual(profile["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
+
+    def test_rare_summary_word_cannot_take_entity_coverage_slot(self):
+        projection = noisy_projection()
+        projection["nodes"][0]["summary"] += " briefly"
+        selected = select_nodes(projection, "briefly TRUMP Terminal", limit=2)
+        paths = [row["path"] for row in selected]
+        self.assertTrue(any("TRUMP" in path for path in paths), paths)
+        self.assertTrue(any("TERMINAL" in path for path in paths), paths)
+        self.assertFalse(any("GENERIC" in path for path in paths), paths)
+        profile = attention_profile(projection, "briefly TRUMP Terminal")
+        briefly = next(row for row in profile["token_stats"] if row["token"] == "briefly")
+        self.assertGreater(briefly["rarity_weight"], 1)
+        self.assertEqual(briefly["structural_document_frequency"], 0)
+        self.assertFalse(briefly["coverage_eligible"])
+
+    def test_selected_memory_explains_matched_query_tokens_and_rank(self):
+        selected = select_nodes(noisy_projection(), "TRUMP Terminal HRAiN memory", limit=3)
+        for rank, row in enumerate(selected, start=1):
+            self.assertEqual(row["attention_rank"], rank)
+            self.assertTrue(row["matched_query_tokens"])
+            self.assertTrue(row["matched_query_token_rarity"])
+            self.assertGreater(row["query_coverage_count"], 0)
+            self.assertFalse(row["claim_verified"])
+
+    def test_selection_is_deterministic(self):
+        projection = noisy_projection()
+        a = select_nodes(projection, "TRUMP Terminal HRAiN memory", limit=5)
+        b = select_nodes(projection, "TRUMP Terminal HRAiN memory", limit=5)
+        self.assertEqual(a, b)
 
     def test_hydration_verifies_hash_and_keeps_prompt_injection_as_data(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -142,6 +250,21 @@ class HrainConversationContextTests(unittest.TestCase):
             self.assertTrue(verify_context(context))
             context["selected_memories"][0]["summary"] = "tampered"
             self.assertFalse(verify_context(context))
+
+    def test_context_records_v2_selection_method_and_attention_profile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            projection = projection_for(Path(tmp))
+            context = build_context(
+                projection,
+                projection_sha256="1" * 64,
+                query="TRUMP",
+                limit=1,
+                registry_root=tmp,
+            )
+            self.assertEqual(context["selection_method"], SELECTION_METHOD)
+            self.assertEqual(context["attention_profile"]["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
+            self.assertEqual(context["attention_profile"]["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
+            self.assertTrue(verify_context(context))
 
     def test_authority_ceiling_is_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
