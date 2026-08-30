@@ -91,8 +91,6 @@ def noisy_projection():
             "summary": summary,
         }
 
-    # Loud generic corpus: the common token JANUS appears everywhere and must
-    # not outvote rare explicit entities.
     for i in range(12):
         nodes.append(node(
             i,
@@ -149,7 +147,7 @@ class HrainConversationContextTests(unittest.TestCase):
             self.assertIn("TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE", context["laws"])
             self.assertFalse(context["selected_memories"][0]["claim_verified"])
 
-    def test_rare_entities_beat_loud_generic_janus_noise(self):
+    def test_rare_structural_entities_beat_loud_generic_janus_noise(self):
         projection = noisy_projection()
         selected = select_nodes(projection, "JANUS TRUMP Terminal HRAiN memory", limit=3)
         paths = [row["path"] for row in selected]
@@ -157,17 +155,35 @@ class HrainConversationContextTests(unittest.TestCase):
         self.assertTrue(any("TERMINAL" in path for path in paths), paths)
         self.assertTrue(any("HRAIN" in path for path in paths), paths)
         self.assertFalse(any("GENERIC" in path for path in paths), paths)
-        self.assertTrue(all(row["selection_reason"].startswith("QUERY_TOKEN_COVERAGE:") for row in selected))
+        self.assertTrue(all(row["selection_reason"].startswith("RARE_STRUCTURAL_QUERY_TOKEN_COVERAGE:") for row in selected))
 
     def test_attention_profile_downweights_common_token_and_explains_rarity(self):
         profile = attention_profile(noisy_projection(), "JANUS TRUMP Terminal HRAiN memory")
         stats = {row["token"]: row for row in profile["token_stats"]}
-        self.assertEqual(stats["janus"]["document_frequency"], 13)
+        self.assertEqual(stats["janus"]["document_frequency"], 15)
         self.assertEqual(stats["janus"]["rarity_weight"], 1)
+        self.assertFalse(stats["janus"]["coverage_eligible"])
         self.assertGreater(stats["trump"]["rarity_weight"], stats["janus"]["rarity_weight"])
         self.assertGreater(stats["terminal"]["rarity_weight"], stats["janus"]["rarity_weight"])
         self.assertGreater(stats["hrain"]["rarity_weight"], stats["janus"]["rarity_weight"])
+        self.assertEqual(stats["terminal"]["structural_document_frequency"], 1)
+        self.assertTrue(stats["terminal"]["coverage_eligible"])
+        self.assertEqual(profile["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
         self.assertEqual(profile["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
+
+    def test_rare_summary_word_cannot_take_entity_coverage_slot(self):
+        projection = noisy_projection()
+        projection["nodes"][0]["summary"] += " briefly"
+        selected = select_nodes(projection, "briefly TRUMP Terminal", limit=2)
+        paths = [row["path"] for row in selected]
+        self.assertTrue(any("TRUMP" in path for path in paths), paths)
+        self.assertTrue(any("TERMINAL" in path for path in paths), paths)
+        self.assertFalse(any("GENERIC" in path for path in paths), paths)
+        profile = attention_profile(projection, "briefly TRUMP Terminal")
+        briefly = next(row for row in profile["token_stats"] if row["token"] == "briefly")
+        self.assertGreater(briefly["rarity_weight"], 1)
+        self.assertEqual(briefly["structural_document_frequency"], 0)
+        self.assertFalse(briefly["coverage_eligible"])
 
     def test_selected_memory_explains_matched_query_tokens_and_rank(self):
         selected = select_nodes(noisy_projection(), "TRUMP Terminal HRAiN memory", limit=3)
@@ -247,6 +263,7 @@ class HrainConversationContextTests(unittest.TestCase):
             )
             self.assertEqual(context["selection_method"], SELECTION_METHOD)
             self.assertEqual(context["attention_profile"]["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
+            self.assertEqual(context["attention_profile"]["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
             self.assertTrue(verify_context(context))
 
     def test_authority_ceiling_is_zero(self):
