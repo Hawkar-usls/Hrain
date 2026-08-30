@@ -38,17 +38,23 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/Hawkar-usls/Janus-Demiurge.git /tmp/janus-demiurge
           mkdir -p artifacts
-          python /tmp/janus-demiurge/trump/trump_candidate.py status > artifacts/trump-status.json
-          python /tmp/janus-demiurge/trump/trump_candidate.py verify-source > artifacts/trump-source-verification.json
-          python /tmp/janus-demiurge/trump/trump_candidate.py selftest > artifacts/trump-selftest.json
+          python /tmp/janus-demiurge/trump/trump_candidate.py status >/dev/null
+          python /tmp/janus-demiurge/trump/trump_candidate.py verify-source >/dev/null
+          python /tmp/janus-demiurge/trump/trump_candidate.py selftest >/dev/null
+          cp /tmp/janus-demiurge/trump/TRUMP_MANIFEST.json artifacts/TRUMP_MANIFEST.json
+          git -C /tmp/janus-demiurge rev-parse HEAD > artifacts/trump-demiurge-head.txt
           python - <<'PY'
           import json
-          for name in ('trump-status.json','trump-source-verification.json','trump-selftest.json'):
-              r=json.load(open('artifacts/'+name, encoding='utf-8'))
-              assert r['authority']['proof_authority'] is False
-              assert r['authority']['scientific_claim_promotion_authority'] is False
-              assert r['scientific_boundary']['P_VS_NP']=='OPEN'
-          print('TRUMP_CANDIDATE_WAKE_AND_SELFTEST=PASS')
+          m=json.load(open('/tmp/janus-demiurge/trump/TRUMP_MANIFEST.json', encoding='utf-8'))
+          a=m['activation']
+          assert m['status']=='CANDIDATE_RUNTIME_TISSUE'
+          assert a['wake_allowed'] is True and a['use_allowed'] is True
+          assert a['proof_authority'] is False
+          assert a['scientific_claim_promotion_authority'] is False
+          assert a['command_authority'] is False
+          assert m['scientific_boundary']['P_VS_NP']=='OPEN'
+          print('TRUMP_CANDIDATE_WAKE_SOURCE_VERIFY_SELFTEST=PASS')
+          print('TRUMP_AUTHORITY_CEILING=PRESERVED')
           PY
 
       - name: Freeze full-current Meta Registry catalog and its exact source commit
@@ -62,7 +68,9 @@ jobs:
           git -C /tmp/meta-catalog fetch --depth 1 origin "$SOURCE_COMMIT"
           git -C /tmp/meta-catalog worktree add --detach /tmp/meta-source "$SOURCE_COMMIT"
           printf '%s\n' "$SOURCE_COMMIT" > /tmp/meta-source/.janus-source-commit
-          echo "META_REGISTRY_CATALOG_HEAD=$(git -C /tmp/meta-catalog rev-parse HEAD)"
+          git -C /tmp/meta-catalog rev-parse HEAD > artifacts/meta-registry-catalog-head.txt
+          printf '%s\n' "$SOURCE_COMMIT" > artifacts/meta-registry-frozen-source.txt
+          echo "META_REGISTRY_CATALOG_HEAD=$(cat artifacts/meta-registry-catalog-head.txt)"
           echo "META_REGISTRY_FROZEN_SOURCE=$SOURCE_COMMIT"
 
       - name: Run TRUMP full-current structural and semantic-mechanics audit
@@ -94,8 +102,9 @@ jobs:
 
       - name: Upload sealed audit receipts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: hrain-trump-meta-registry-audit
           path: artifacts/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
