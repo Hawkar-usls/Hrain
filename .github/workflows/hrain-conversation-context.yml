@@ -1,0 +1,122 @@
+name: HRaiN Conversation Context
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+  pull_request:
+    paths:
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_conversation_context.py'
+      - '.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json'
+      - '.github/workflows/hrain-conversation-context.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_conversation_context.py'
+      - '.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json'
+      - '.github/workflows/hrain-conversation-context.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile HRaiN context projector
+        run: python -m compileall -q tools/hrain_conversation_context.py tests/test_hrain_conversation_context.py
+      - name: Validate context contract
+        run: python -m json.tool .janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json >/dev/null
+      - name: Run context adversarial tests
+        run: python -m unittest -v tests.test_hrain_conversation_context
+
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    concurrency:
+      group: janus-hrain-conversation-context-writer
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build current HRaiN mediated context from Meta Registry projections
+        run: |
+          set -euo pipefail
+          mkdir -p runtime
+          python tools/hrain_conversation_context.py --out runtime/hrain-conversation-context.json
+          python - <<'PY'
+          import json
+          c=json.load(open('runtime/hrain-conversation-context.json'))
+          assert c['schema']=='janus.hrain.conversation_context.v1'
+          assert c['status']=='READ_ONLY_HRAIN_MEDIATED_CONVERSATION_CONTEXT'
+          assert c['mediating_organ']=='Hawkar-usls/Hrain'
+          assert c['full_current_coverage_complete'] is True
+          assert c['object_count'] > 0
+          assert c['authority']['command_authority_granted'] is False
+          assert c['authority']['world_truth_authority_granted'] is False
+          print('HRAIN_CONVERSATION_CONTEXT_BUILD_PASS', c['context_digest'], c['object_count'])
+          PY
+      - name: Publish create-or-replace context only on HRaiN context branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload="${RUNNER_TEMP}/hrain-conversation-context.json"
+          cp runtime/hrain-conversation-context.json "$payload"
+          wt="${RUNNER_TEMP}/hrain-conversation-context-wt"
+          rm -rf "$wt"
+          if git ls-remote --exit-code --heads origin janus/conversation-context >/dev/null 2>&1; then
+            git fetch origin janus/conversation-context:refs/remotes/origin/janus/conversation-context
+            git worktree add -B janus-conversation-context-local "$wt" origin/janus/conversation-context
+          else
+            git worktree add --detach "$wt" HEAD
+            cd "$wt"
+            git switch --orphan janus-conversation-context-local
+            git rm -rf --ignore-unmatch .
+            cd - >/dev/null
+          fi
+          mkdir -p "$wt/assets"
+          cp "$payload" "$wt/assets/hrain-conversation-context.json"
+          cat > "$wt/assets/MANIFEST.json" <<'JSON'
+          {"schema":"janus.hrain.conversation_context_branch.v1","role":"READ_ONLY_HRAIN_MEDIATED_CONTEXT","source_database":"Hawkar-usls/janus-meta-registry","consumer":"JANUS Terminal conversation runtime","authority_delta":0}
+          JSON
+          cd "$wt"
+          git config user.name "JANUS HRaiN Memory"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets
+          if git diff --cached --quiet; then
+            echo "HRAIN_CONVERSATION_CONTEXT_COMMIT=NO_CHANGE"
+          else
+            git commit -m "HRaiN conversation context ${GITHUB_RUN_ID}"
+            git push origin HEAD:refs/heads/janus/conversation-context
+            echo "HRAIN_CONVERSATION_CONTEXT_COMMIT=PASS"
+          fi
+      - name: Verify published context through fresh public read
+        run: |
+          set -euo pipefail
+          sleep 2
+          curl -fsSL "https://raw.githubusercontent.com/Hawkar-usls/Hrain/janus/conversation-context/assets/hrain-conversation-context.json" -o runtime/published-context.json
+          python - <<'PY'
+          import json
+          a=json.load(open('runtime/hrain-conversation-context.json'))
+          b=json.load(open('runtime/published-context.json'))
+          assert a['context_digest']==b['context_digest']
+          assert b['mediating_organ']=='Hawkar-usls/Hrain'
+          assert b['authority']['source_mutation_allowed'] is False
+          print('HRAIN_CONVERSATION_CONTEXT_PUBLIC_REPLAY=PASS', b['context_digest'])
+          PY
