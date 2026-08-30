@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#030508">
+  <meta name="description" content="Read-only HRAiN memory surface for JANUS active graph and full current Meta Registry catalog.">
+  <title>HRAiN Memory // JANUS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/hrain-memory.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="mark">H</div><div><h1>HRAiN MEMORY</h1><small>JANUS STRUCTURAL MEMORY ORGAN · READ ONLY</small></div></div>
+  <div class="mode-switch">
+    <button class="btn active" type="button" data-mode="active">ACTIVE GRAPH</button>
+    <button class="btn" type="button" data-mode="full">FULL CURRENT</button>
+  </div>
+</header>
+<div class="shell">
+  <main class="main">
+    <section id="active-wrap" class="active-wrap">
+      <iframe src="./janus.html" title="HRAiN active JANUS registry graph" referrerpolicy="no-referrer"></iframe>
+    </section>
+
+    <section id="full-view" class="full">
+      <div class="hero">
+        <div class="stat"><label>Cataloged blobs</label><strong id="mem-objects">—</strong></div>
+        <div class="stat"><label>Cataloged bytes</label><strong id="mem-bytes">—</strong></div>
+        <div class="stat"><label>Verified shards</label><strong id="mem-shards">—</strong></div>
+        <div class="stat"><label>Source commit</label><strong id="mem-source">—</strong></div>
+      </div>
+      <div class="toolbar">
+        <input id="search" class="field mono" type="search" placeholder="Search loaded memory paths…">
+        <select id="class-filter" class="field mono"><option value="ALL">ALL CLASSES</option></select>
+        <select id="ns-filter" class="field mono"><option value="ALL">ALL NAMESPACES</option></select>
+        <button id="next-shard" class="btn" type="button">LOAD NEXT</button>
+      </div>
+      <div class="results">
+        <div class="result-head"><span>Object</span><span>Memory class</span><span>Size</span><span>Ext</span></div>
+        <div id="rows" class="rows"><div class="empty">Switching to FULL CURRENT will verify and load the first memory shard.</div></div>
+      </div>
+    </section>
+  </main>
+  <aside class="aside">
+    <h2>MEMORY PROVENANCE</h2>
+    <div class="proof"><label>Source</label><div>Hawkar-usls/janus-meta-registry</div></div>
+    <div class="proof"><label>Source commit</label><div id="proof-source">—</div></div>
+    <div class="proof"><label>Catalog digest</label><div id="proof-digest">—</div></div>
+    <div class="proof"><label>Coverage complete</label><div id="proof-coverage" class="good">—</div></div>
+    <div class="proof"><label>Registry objects</label><div id="proof-registry">—</div></div>
+    <div class="proof"><label>Git history included</label><div id="proof-history">false</div></div>
+    <div class="progress"><i id="progress-bar"></i></div>
+    <div id="load-status" class="status">ACTIVE graph ready. FULL CURRENT is lazy-loaded on demand.</div>
+    <button id="load-all" class="btn" type="button" style="width:100%;margin-top:12px">VERIFY + LOAD ALL SHARDS</button>
+    <div class="law">
+      META REGISTRY DB → HRAiN → TERMINAL<br><br>
+      FULL_CURRENT != COMPLETE_GIT_HISTORY<br>
+      HRAIN_GRAPH != REGISTRY_AUTHORITY<br>
+      CATALOG_PRESENCE != SCIENTIFIC_VALIDITY<br>
+      SHARD_HASH_MISMATCH = FAIL_CLOSED
+    </div>
+  </aside>
+</div>
+<script src="./assets/hrain-memory.js" defer></script>
+</body>
+</html>
