@@ -1,0 +1,21 @@
+{
+  "schema": "janus.hrain.trump_pcner_gpei_second_pass_result_link.v1",
+  "status": "SECOND_PASS_COMPLETE__REGISTRY_RECEIPT_BOUND",
+  "registry_repository": "Hawkar-usls/janus-meta-registry",
+  "registry_path": "data/JANUS-HRAIN-TRUMP-PCNER-GPEI-SECOND-PASS-2026-08-31-v1.0.json",
+  "registry_commit": "0ee3e62bfbd514b631ef1511050e93c57b0ebf5f",
+  "workflow_run_id": 33339073248,
+  "artifact_id": 9739948603,
+  "artifact_zip_sha256": "e92f33754eabc02a62162a435deafba526322e5f38a8bfa012bff6b6970ceaf2",
+  "processed": 150,
+  "conditional_survivors": 2,
+  "survivors": [
+    "registry/p_vs_np/TOCH/JANUS-IMMUTABLE-THEOREM-LAWSET-RETRO-AUDIT-2026-08-27-v1.0.json",
+    "registry/p_vs_np/TOCH/JANUS-REVERSE-PASS-KNOWLEDGE-COMPILATION-CORRIDOR-2026-08-27-v1.0.json"
+  ],
+  "authority": {
+    "proof_authority": false,
+    "scientific_claim_promotion_authority": false
+  },
+  "P_VS_NP": "OPEN"
+}
