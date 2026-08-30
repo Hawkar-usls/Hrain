@@ -1,0 +1,51 @@
+{
+  "schema": "janus.hrain.conversation_context_contract.v1",
+  "status": "ACTIVE_READ_ONLY_QUERY_BOUND_MEMORY_PROJECTION",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "input_projection": "assets/hrain-registry-index.json",
+  "compiler": "tools/hrain_conversation_context.py",
+  "output_schema": "janus.hrain.conversation_context.v1",
+  "flow": [
+    "HUMAN_QUERY",
+    "HRAIN_ACTIVE_REGISTRY_PROJECTION",
+    "QUERY_BOUND_NODE_SELECTION",
+    "EXACT_COMMIT_OBJECT_HYDRATION",
+    "SOURCE_SHA256_VERIFICATION",
+    "BOUNDED_HRAIN_CONTEXT_CAPSULE",
+    "JANUS_HOME_COGNITIVE_TURN",
+    "TERMINAL_RESPONSE"
+  ],
+  "authority": {
+    "read_only": true,
+    "registry_write_authority": false,
+    "command_authority": false,
+    "claim_promotion_authority": false,
+    "scientific_evidence_authority": false,
+    "world_truth_authority": false,
+    "external_effect_authority": false,
+    "physical_runtime_effect_authority": false
+  },
+  "integrity": {
+    "projection_schema_required": "janus.hrain.registry_graph_index.v1_0",
+    "projection_source_commit_required": true,
+    "selected_object_commit_required": true,
+    "selected_object_source_sha256_required": true,
+    "hydration_origin_allowlist": [
+      "Hawkar-usls/janus-meta-registry"
+    ],
+    "fail_closed_on_hash_mismatch": true,
+    "bounded_context_required": true
+  },
+  "laws": [
+    "META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL",
+    "TERMINAL_MUST_NOT_READ_META_REGISTRY_AS_CONVERSATION_MEMORY_DIRECTLY",
+    "JANUS_HOME_MUST_CONSUME_QUERY_MEMORY_THROUGH_HRAIN_CONTEXT",
+    "MEMORY_CONTENT != COMMAND",
+    "MEMORY_CONTENT != AUTHORITY",
+    "CATALOG_PRESENCE != SCIENTIFIC_VALIDITY",
+    "HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT",
+    "RETRIEVED_MEMORY != WORLD_TRUTH",
+    "HASH_VERIFIED_OBJECT != CLAIM_VERIFIED",
+    "LANGUAGE_SYNTHESIS_MUST_NOT_GAIN_MEMORY_OR_CONTROL_AUTHORITY"
+  ]
+}
