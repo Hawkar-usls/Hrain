@@ -1,0 +1,67 @@
+{
+  "schema": "janus.hrain.meta_registry_trump_audit_contract.v1",
+  "status": "ACTIVE_READ_ONLY_FULL_CURRENT_AUDIT_BINDING",
+  "component": "HRAIN_META_REGISTRY_TRUMP_AUDIT",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "full_current_manifest": "assets/hrain-full-memory/manifest.json",
+  "hrain_role": "STRUCTURAL_MEMORY_REASONING_AND_QUERY_BOUND_CONTEXT_ORGAN",
+  "trump_role": "CANDIDATE_FAIL_CLOSED_AUDIT_PROFILE",
+  "trump_canonical_runtime": "Hawkar-usls/Janus-Demiurge/trump/TRUMP_MANIFEST.json",
+  "audit_scope": {
+    "catalog": "FULL_CURRENT_TRACKED_TREE_CATALOG",
+    "required_coverage_complete": true,
+    "verify_every_cataloged_blob": true,
+    "verify_shard_hashes": true,
+    "verify_object_sha256": true,
+    "verify_git_blob_sha": true,
+    "verify_size_bytes": true,
+    "scan_textual_objects_for_mechanics": true,
+    "extract_polynomial_route_candidates": true
+  },
+  "trump_profile": {
+    "mode": "REGISTRY_AUDIT_ADAPTER_NOT_SAT_SOLVE",
+    "spine_used": [
+      "PROCESS_LINEAGE",
+      "MK_ID",
+      "RESOURCE_LEDGER",
+      "DEFERRED_WORK_DEBT",
+      "TOPA_SPIDER_ADVISORY_GRAPH",
+      "EXACT_JANUS"
+    ],
+    "mechanic_axes": [
+      "POLY_FIND",
+      "POLY_HOLD",
+      "POLY_ADVANCE",
+      "EXACTNESS_CERTIFICATION",
+      "DEBT_RESOURCE_ACCOUNTING"
+    ],
+    "important_boundary": "The executable TRUMP candidate solve entrypoint consumes CNF, not arbitrary registry JSON. This adapter applies TRUMP fail-closed lineage/integrity/resource/mechanic gates to the registry; it does not reinterpret registry objects as SAT instances."
+  },
+  "authority": {
+    "read_only": true,
+    "registry_write_authority": false,
+    "proof_authority": false,
+    "scientific_claim_promotion_authority": false,
+    "command_authority": false,
+    "external_effect_authority": false
+  },
+  "laws": [
+    "HRAIN_GRAPH != REGISTRY_AUTHORITY",
+    "TRUMP_REGISTRY_AUDIT != TRUMP_SAT_SOLVE",
+    "CANDIDATE_TRUMP != PROOF_AUTHORIZED_TRUMP",
+    "CATALOG_PRESENCE != SCIENTIFIC_VALIDITY",
+    "INTEGRITY_PASS != THEOREM_PROOF",
+    "MECHANIC_MATCH != SAT_THEOREM",
+    "ASSOCIATION != PROOF",
+    "OPEN_IS_A_VALID_RESULT",
+    "UNKNOWN_IS_NOT_PASS",
+    "P_VS_NP = OPEN"
+  ],
+  "expected_terminal": "FULL_CURRENT_STRUCTURAL_INTEGRITY_AUDITED__SEMANTIC_MECHANICS_RANKED__AUTHORITY_UNCHANGED",
+  "scientific_boundary": {
+    "TRUMP_finished": false,
+    "polynomial_time_SAT_proved": false,
+    "P_equals_NP_proved": false,
+    "P_VS_NP": "OPEN"
+  }
+}
