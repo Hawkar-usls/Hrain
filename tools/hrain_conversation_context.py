@@ -133,6 +133,7 @@ def selectable_nodes(projection: Mapping[str, Any]) -> Iterable[Mapping[str, Any
 
 
 def select_nodes(projection: Mapping[str, Any], query: str, *, limit: int = 12) -> list[Dict[str, Any]]:
+    validate_projection(projection)
     if limit < 1 or limit > 32:
         raise HrainContextError("HRAIN_CONTEXT_SELECTION_LIMIT_OUT_OF_RANGE")
     ranked = []
