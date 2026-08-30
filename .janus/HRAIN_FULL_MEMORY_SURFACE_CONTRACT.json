@@ -1,0 +1,33 @@
+{
+  "schema": "janus.hrain.full_memory_surface_contract.v1",
+  "status": "READ_ONLY_ACTIVE_PLUS_FULL_CURRENT_MEMORY_SURFACE",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "active_projection": "https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/main/assets/hrain-registry-index.json",
+  "full_current_manifest": "https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/main/assets/hrain-full-memory/manifest.json",
+  "surface": "memory.html",
+  "modes": {
+    "ACTIVE_GRAPH": "janus.html",
+    "FULL_CURRENT": "lazy verified shard catalog"
+  },
+  "integrity": {
+    "manifest_required": true,
+    "shard_sha256_required": true,
+    "source_commit_visible": true,
+    "catalog_digest_visible": true,
+    "coverage_complete_required_for_full_current_label": true
+  },
+  "authority": {
+    "read_only": true,
+    "delete_allowed": false,
+    "source_mutation_allowed": false,
+    "scientific_authority_granted": false,
+    "claim_promotion_authority_granted": false
+  },
+  "laws": [
+    "FULL_CURRENT != COMPLETE_GIT_HISTORY",
+    "HRAIN_GRAPH != REGISTRY_AUTHORITY",
+    "CATALOG_PRESENCE != SCIENTIFIC_VALIDITY",
+    "SHARD_HASH_MISMATCH = FAIL_CLOSED_FOR_THAT_SHARD",
+    "TERMINAL_MEMORY_READOUT_MUST_PASS_THROUGH_HRAIN"
+  ]
+}
