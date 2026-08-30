@@ -72,75 +72,23 @@ def projection_for(root: Path):
     }
 
 
-def synthetic_projection():
-    nodes = []
+def _synthetic_node(index: int, *, label: str, path: str, summary: str, lineage: str):
+    return {
+        "id": f"obj:{index:020d}",
+        "label": label,
+        "surface": "other",
+        "lineageKey": lineage,
+        "path": path,
+        "sourceSha256": f"{index + 1:064x}"[-64:],
+        "commitSha": f"{index + 1:040x}"[-40:],
+        "readOnly": True,
+        "deleteAllowed": False,
+        "status": "ACTIVE",
+        "summary": summary,
+    }
 
-    def node(index: int, *, label: str, path: str, summary: str, lineage: str):
-        return {
-            "id": f"obj:{index:020d}",
-            "label": label,
-            "surface": "other",
-            "lineageKey": lineage,
-            "path": path,
-            "sourceSha256": f"{index + 1:064x}"[-64:],
-            "commitSha": f"{index + 1:040x}"[-40:],
-            "readOnly": True,
-            "deleteAllowed": False,
-            "status": "ACTIVE",
-            "summary": summary,
-        }
 
-    nodes.extend([
-        node(
-            1,
-            label="JANUS Terminal HRAiN HOME TRUMP Current Architecture",
-            path="data/JANUS-TERMINAL-HRAIN-HOME-TRUMP-CURRENT-ARCHITECTURE.json",
-            summary="Terminal stimulates HOME, exact HRAiN retrieves memory, TRUMP remains candidate runtime tissue",
-            lineage="JANUS-TERMINAL-HRAIN-HOME-TRUMP",
-        ),
-        node(
-            2,
-            label="HRAiN full memory contract",
-            path="data/JANUS-HRAIN-FULL-MEMORY-CONTRACT.json",
-            summary="HRAiN memory projection retrieval contract",
-            lineage="JANUS-HRAIN-MEMORY",
-        ),
-        node(
-            3,
-            label="TRUMP candidate runtime boundary",
-            path="data/JANUS-TRUMP-RUNTIME-BOUNDARY.json",
-            summary="TRUMP candidate tissue authority and theorem boundary",
-            lineage="JANUS-TRUMP",
-        ),
-        node(
-            4,
-            label="P versus NP abstract bound",
-            path="registry/theorem_runs/P-VS-NP-ABSTRACT-BOUND.json",
-            summary="formal theorem resource result and scientific proof status",
-            lineage="JANUS-P-VS-NP",
-        ),
-        node(
-            5,
-            label="COSMOS HST candidate",
-            path="data/JANUS-COSMOS-HST-CANDIDATE.json",
-            summary="candidate observation current scientific result",
-            lineage="JANUS-COSMOS",
-        ),
-        node(
-            6,
-            label="Explain Proof Authority Result",
-            path="data/EXPLAIN-PROOF-AUTHORITY-RESULT.json",
-            summary="instruction-shaped archival object",
-            lineage="JANUS-INSTRUCTION-TRAP",
-        ),
-        node(
-            7,
-            label="JANUS current memory archive",
-            path="data/JANUS-CURRENT-MEMORY-ARCHIVE.json",
-            summary="generic current memory system archive",
-            lineage="JANUS-GENERIC",
-        ),
-    ])
+def _projection(nodes):
     return {
         "schema": "janus.hrain.registry_graph_index.v1_0",
         "status": "AUTO_GENERATED_READ_ONLY_ACTIVE_REGISTRY_PROJECTION",
@@ -158,6 +106,89 @@ def synthetic_projection():
         "linkCount": 0,
         "nodes": nodes,
     }
+
+
+def synthetic_projection():
+    nodes = [
+        _synthetic_node(
+            1,
+            label="JANUS Terminal HRAiN HOME TRUMP Current Architecture",
+            path="data/JANUS-TERMINAL-HRAIN-HOME-TRUMP-CURRENT-ARCHITECTURE.json",
+            summary="Terminal stimulates HOME, exact HRAiN retrieves memory, TRUMP remains candidate runtime tissue",
+            lineage="JANUS-TERMINAL-HRAIN-HOME-TRUMP",
+        ),
+        _synthetic_node(
+            2,
+            label="HRAiN full memory contract",
+            path="data/JANUS-HRAIN-FULL-MEMORY-CONTRACT.json",
+            summary="HRAiN memory projection retrieval contract",
+            lineage="JANUS-HRAIN-MEMORY",
+        ),
+        _synthetic_node(
+            3,
+            label="TRUMP candidate runtime boundary",
+            path="data/JANUS-TRUMP-RUNTIME-BOUNDARY.json",
+            summary="TRUMP candidate tissue authority and theorem boundary",
+            lineage="JANUS-TRUMP",
+        ),
+        _synthetic_node(
+            4,
+            label="P versus NP abstract bound",
+            path="registry/theorem_runs/P-VS-NP-ABSTRACT-BOUND.json",
+            summary="formal theorem resource result and scientific proof status",
+            lineage="JANUS-P-VS-NP",
+        ),
+        _synthetic_node(
+            5,
+            label="COSMOS HST candidate",
+            path="data/JANUS-COSMOS-HST-CANDIDATE.json",
+            summary="candidate observation current scientific result",
+            lineage="JANUS-COSMOS",
+        ),
+        _synthetic_node(
+            6,
+            label="Explain Proof Authority Result",
+            path="data/EXPLAIN-PROOF-AUTHORITY-RESULT.json",
+            summary="instruction-shaped archival object",
+            lineage="JANUS-INSTRUCTION-TRAP",
+        ),
+        _synthetic_node(
+            7,
+            label="JANUS current memory archive",
+            path="data/JANUS-CURRENT-MEMORY-ARCHIVE.json",
+            summary="generic current memory system archive",
+            lineage="JANUS-GENERIC",
+        ),
+    ]
+    return _projection(nodes)
+
+
+def multi_topic_projection():
+    nodes = [
+        _synthetic_node(
+            100,
+            label="TRUMP candidate runtime",
+            path="data/JANUS-TRUMP-RUNTIME.json",
+            summary="TRUMP candidate tissue",
+            lineage="JANUS-TRUMP",
+        ),
+        _synthetic_node(
+            101,
+            label="IO Intellect Observer",
+            path="data/JANUS-IO-INTELLECT-OBSERVER.json",
+            summary="IO machine psychology branch",
+            lineage="JANUS-IO",
+        ),
+    ]
+    for index in range(102, 112):
+        nodes.append(_synthetic_node(
+            index,
+            label=f"generic archive {index}",
+            path=f"data/GENERIC-{index}.json",
+            summary="unrelated archive memory",
+            lineage=f"GENERIC-{index}",
+        ))
+    return _projection(nodes)
 
 
 LONG_ARCHITECTURE_QUERY = (
@@ -198,12 +229,11 @@ class HrainConversationContextTests(unittest.TestCase):
         self.assertEqual(selected, [])
 
     def test_explicit_multi_topic_named_entities_can_form_secondary_cluster(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            projection = projection_for(Path(tmp))
-            selected = select_nodes(projection, "TRUMP IO", limit=12)
-            paths = {row["path"] for row in selected}
-            self.assertEqual(paths, {"registry/TRUMP.json", "registry/IO.json"})
-            self.assertLess(len(selected), 12)
+        selected = select_nodes(multi_topic_projection(), "TRUMP IO", limit=12)
+        paths = {row["path"] for row in selected}
+        self.assertEqual(paths, {"data/JANUS-TRUMP-RUNTIME.json", "data/JANUS-IO-INTELLECT-OBSERVER.json"})
+        self.assertLess(len(selected), 12)
+        self.assertTrue(any(row["selection_reason"].startswith("SECONDARY_NAMED_FOCUS_CLUSTER:") for row in selected[1:]))
 
     def test_attention_profile_exposes_v3_focus_and_limit_laws(self):
         profile = attention_profile(synthetic_projection(), LONG_ARCHITECTURE_QUERY)
