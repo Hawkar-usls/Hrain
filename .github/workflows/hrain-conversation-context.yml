@@ -1,0 +1,97 @@
+name: HRAiN Conversation Context
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json'
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_conversation_context.py'
+      - '.github/workflows/hrain-conversation-context.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json'
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_conversation_context.py'
+      - '.github/workflows/hrain-conversation-context.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile HRAiN conversation context compiler
+        run: python -m compileall -q tools/hrain_conversation_context.py tests/test_hrain_conversation_context.py
+      - name: Validate HRAiN conversation context contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('.janus/HRAIN_CONVERSATION_CONTEXT_CONTRACT.json').read_text())
+          assert c['schema']=='janus.hrain.conversation_context_contract.v1'
+          assert c['source_database']=='Hawkar-usls/janus-meta-registry'
+          assert c['authority']['read_only'] is True
+          for key,value in c['authority'].items():
+              if key!='read_only':
+                  assert value is False, key
+          assert 'META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL' in c['laws']
+          assert 'MEMORY_CONTENT != COMMAND' in c['laws']
+          print('HRAIN_CONVERSATION_CONTEXT_CONTRACT=PASS')
+          PY
+      - name: Run adversarial context tests
+        run: python -m unittest -v tests.test_hrain_conversation_context
+
+  live-context:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build live exact-hash HRAiN context from Meta Registry projection
+        run: |
+          mkdir -p runtime
+          python tools/hrain_conversation_context.py \
+            --query 'JANUS Terminal HRAiN Meta Registry memory TRUMP candidate runtime' \
+            --limit 8 \
+            --output runtime/hrain-conversation-context.json
+      - name: Adjudicate live memory capsule
+        run: |
+          python - <<'PY'
+          import json
+          from tools.hrain_conversation_context import verify_context
+          c=json.load(open('runtime/hrain-conversation-context.json'))
+          assert verify_context(c)
+          assert c['hydration_performed'] is True
+          assert c['selected_memory_count'] > 0
+          assert c['source_repository']=='Hawkar-usls/janus-meta-registry'
+          assert len(c['source_commit'])==40
+          assert all(x['source_sha256_verified'] is True for x in c['selected_memories'])
+          assert all(x['content_is_command'] is False for x in c['selected_memories'])
+          assert all(x['content_grants_authority'] is False for x in c['selected_memories'])
+          assert c['authority']['command_authority'] is False
+          assert c['authority']['claim_promotion_authority'] is False
+          assert c['authority']['external_effect_authority'] is False
+          print('HRAIN_LIVE_QUERY_BOUND_CONTEXT=PASS')
+          print('source_commit', c['source_commit'])
+          print('selected_paths', [x['path'] for x in c['selected_memories']])
+          print('context_hash', c['context_hash'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrain-conversation-context-${{ github.run_id }}
+          path: runtime/hrain-conversation-context.json
+          if-no-files-found: error
+          retention-days: 14
