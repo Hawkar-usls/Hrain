@@ -1,0 +1,52 @@
+name: HRAiN Full Memory Surface
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'memory.html'
+      - 'assets/hrain-memory.css'
+      - 'assets/hrain-memory.js'
+      - '.janus/HRAIN_FULL_MEMORY_SURFACE_CONTRACT.json'
+      - 'tests/test_full_memory_surface.py'
+      - '.github/workflows/hrain-full-memory-surface.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'memory.html'
+      - 'assets/hrain-memory.css'
+      - 'assets/hrain-memory.js'
+      - '.janus/HRAIN_FULL_MEMORY_SURFACE_CONTRACT.json'
+      - 'tests/test_full_memory_surface.py'
+      - '.github/workflows/hrain-full-memory-surface.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependency
+        run: python -m pip install --quiet pytest
+      - name: Validate memory contract
+        run: python -m json.tool .janus/HRAIN_FULL_MEMORY_SURFACE_CONTRACT.json >/dev/null
+      - name: Syntax-check browser memory runtime
+        run: node --check assets/hrain-memory.js
+      - name: Run full-memory surface tests
+        run: python -m pytest -q tests/test_full_memory_surface.py
+      - name: Prove Meta Registry to HRAiN to Terminal boundary
+        run: |
+          grep -q 'Hawkar-usls/janus-meta-registry/main' assets/hrain-memory.js
+          grep -q 'TERMINAL_MEMORY_READOUT_MUST_PASS_THROUGH_HRAIN' .janus/HRAIN_FULL_MEMORY_SURFACE_CONTRACT.json
+          grep -q 'crypto.subtle.digest' assets/hrain-memory.js
+          echo 'META_REGISTRY_TO_HRAIN_FULL_MEMORY=PASS'
