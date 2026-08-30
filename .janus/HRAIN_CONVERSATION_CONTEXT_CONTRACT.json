@@ -1,18 +1,19 @@
 {
   "schema": "janus.hrain.conversation_context_contract.v1",
-  "status": "ACTIVE_READ_ONLY_QUERY_BOUND_RARITY_WEIGHTED_MEMORY_PROJECTION",
+  "status": "ACTIVE_READ_ONLY_QUERY_BOUND_FOCUS_CLUSTER_MEMORY_PROJECTION",
   "source_database": "Hawkar-usls/janus-meta-registry",
   "input_projection": "assets/hrain-registry-index.json",
   "compiler": "tools/hrain_conversation_context.py",
   "output_schema": "janus.hrain.conversation_context.v1",
-  "selection_method": "DETERMINISTIC_RARITY_WEIGHTED_DIVERSE_GRAPH_ATTENTION_V2",
+  "selection_method": "DETERMINISTIC_FOCUS_CLUSTER_THRESHOLD_ATTENTION_V3",
   "flow": [
     "HUMAN_QUERY",
     "HRAIN_ACTIVE_REGISTRY_PROJECTION",
     "QUERY_TOKEN_DOCUMENT_FREQUENCY",
     "RARITY_WEIGHTED_ATTENTION",
-    "RARE_QUERY_ENTITY_COVERAGE",
-    "GLOBAL_SCORE_FILL",
+    "PRIMARY_FOCUS_CLUSTER",
+    "RELATIVE_SCORE_THRESHOLD",
+    "OPTIONAL_SECONDARY_NAMED_FOCUS_CLUSTER",
     "EXACT_COMMIT_OBJECT_HYDRATION",
     "SOURCE_SHA256_VERIFICATION",
     "BOUNDED_HRAIN_CONTEXT_CAPSULE",
@@ -41,15 +42,35 @@
     "bounded_context_required": true,
     "attention_profile_required": true,
     "selection_reason_required_per_memory": true,
-    "matched_query_tokens_required_per_memory": true
+    "matched_query_tokens_required_per_memory": true,
+    "matched_focus_tokens_required_per_memory": true,
+    "relative_score_required_per_memory": true
   },
   "attention": {
     "common_query_tokens_are_downweighted": true,
     "rare_query_tokens_receive_bounded_extra_attention": true,
     "rarity_weight_max": 12,
-    "set_level_query_entity_coverage_before_global_fill": true,
+    "primary_focus_cluster_required_when_memory_selected": true,
+    "selection_limit_is_upper_bound_not_target_count": true,
+    "no_noise_fill_to_limit": true,
+    "zero_relevant_memory_is_valid_retrieval_outcome": true,
+    "primary_named_shared_score_percent": 15,
+    "primary_shared_score_percent": 35,
+    "secondary_named_cluster_score_percent": 65,
+    "structural_focus_fields": [
+      "label",
+      "lineageKey",
+      "path"
+    ],
     "deterministic_replay_required": true,
     "semantic_similarity_model_required": false
+  },
+  "audit_origin": {
+    "live_regression_issue_v11": "Hawkar-usls/-Terminal-for-Janus#10",
+    "live_regression_issue_v12": "Hawkar-usls/-Terminal-for-Janus#12",
+    "finding_v11": "INTEGRITY_PASS_RELEVANCE_BAD",
+    "finding_v12": "TOP1_RELEVANCE_FIXED_TAIL_STILL_POLLUTED",
+    "v13_target": "TOPIC_FOCUS_WITHOUT_FORCED_TAIL_FILL"
   },
   "laws": [
     "META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL",
@@ -60,6 +81,9 @@
     "CATALOG_PRESENCE != SCIENTIFIC_VALIDITY",
     "HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT",
     "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE",
+    "QUERY_INSTRUCTION_TOKENS != MEMORY_TOPIC",
+    "LIMIT != TARGET_COUNT",
+    "NO_STRONG_MATCH != FILL_WITH_NOISE",
     "QUERY_COVERAGE_IS_ATTENTION_NOT_CLAIM_CONFIDENCE",
     "RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE",
     "RETRIEVED_MEMORY != WORLD_TRUTH",

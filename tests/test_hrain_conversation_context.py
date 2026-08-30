@@ -53,7 +53,7 @@ def projection_for(root: Path):
         row(trump, label="JANUS TRUMP candidate", summary="candidate tissue for theorem research", lineage="JANUS-TRUMP", status="CANDIDATE_RUNTIME_TISSUE"),
         row(io, label="IO Intellect Observer", summary="machine psychology branch", lineage="JANUS-IO", status="ACTIVE_RESEARCH"),
     ]
-    projection = {
+    return {
         "schema": "janus.hrain.registry_graph_index.v1_0",
         "status": "AUTO_GENERATED_READ_ONLY_ACTIVE_REGISTRY_PROJECTION",
         "generatedAt": "2026-08-30T22:43:15+03:00",
@@ -70,40 +70,25 @@ def projection_for(root: Path):
         "linkCount": 0,
         "nodes": nodes,
     }
-    return projection
 
 
-def noisy_projection():
-    nodes = []
+def _synthetic_node(index: int, *, label: str, path: str, summary: str, lineage: str):
+    return {
+        "id": f"obj:{index:020d}",
+        "label": label,
+        "surface": "other",
+        "lineageKey": lineage,
+        "path": path,
+        "sourceSha256": f"{index + 1:064x}"[-64:],
+        "commitSha": f"{index + 1:040x}"[-40:],
+        "readOnly": True,
+        "deleteAllowed": False,
+        "status": "ACTIVE",
+        "summary": summary,
+    }
 
-    def node(index: int, *, label: str, path: str, summary: str, lineage: str):
-        return {
-            "id": f"obj:{index:020d}",
-            "label": label,
-            "surface": "other",
-            "lineageKey": lineage,
-            "path": path,
-            "sourceSha256": f"{index + 1:064x}"[-64:],
-            "commitSha": f"{index + 1:040x}"[-40:],
-            "readOnly": True,
-            "deleteAllowed": False,
-            "status": "ACTIVE",
-            "summary": summary,
-        }
 
-    for i in range(12):
-        nodes.append(node(
-            i,
-            label=f"JANUS generic archive {i}",
-            path=f"data/JANUS-GENERIC-{i}.json",
-            summary="JANUS archive current system research memory",
-            lineage=f"JANUS-GENERIC-{i}",
-        ))
-    nodes.extend([
-        node(20, label="JANUS TRUMP candidate runtime", path="data/JANUS-TRUMP-RUNTIME.json", summary="TRUMP candidate tissue theorem boundary", lineage="JANUS-TRUMP"),
-        node(21, label="Terminal control link", path=".janus/TERMINAL_CONTROL_LINK.json", summary="Terminal human interface conversation architecture", lineage="JANUS-TERMINAL"),
-        node(22, label="HRAiN memory contract", path="data/JANUS-HRAIN-FULL-MEMORY-CONTRACT.json", summary="HRAiN memory projection and retrieval contract", lineage="JANUS-HRAIN-MEMORY"),
-    ])
+def _projection(nodes):
     return {
         "schema": "janus.hrain.registry_graph_index.v1_0",
         "status": "AUTO_GENERATED_READ_ONLY_ACTIVE_REGISTRY_PROJECTION",
@@ -123,6 +108,96 @@ def noisy_projection():
     }
 
 
+def synthetic_projection():
+    nodes = [
+        _synthetic_node(
+            1,
+            label="JANUS Terminal HRAiN HOME TRUMP Current Architecture",
+            path="data/JANUS-TERMINAL-HRAIN-HOME-TRUMP-CURRENT-ARCHITECTURE.json",
+            summary="Terminal stimulates HOME, exact HRAiN retrieves memory, TRUMP remains candidate runtime tissue",
+            lineage="JANUS-TERMINAL-HRAIN-HOME-TRUMP",
+        ),
+        _synthetic_node(
+            2,
+            label="HRAiN full memory contract",
+            path="data/JANUS-HRAIN-FULL-MEMORY-CONTRACT.json",
+            summary="HRAiN memory projection retrieval contract",
+            lineage="JANUS-HRAIN-MEMORY",
+        ),
+        _synthetic_node(
+            3,
+            label="TRUMP candidate runtime boundary",
+            path="data/JANUS-TRUMP-RUNTIME-BOUNDARY.json",
+            summary="TRUMP candidate tissue authority and theorem boundary",
+            lineage="JANUS-TRUMP",
+        ),
+        _synthetic_node(
+            4,
+            label="P versus NP abstract bound",
+            path="registry/theorem_runs/P-VS-NP-ABSTRACT-BOUND.json",
+            summary="formal theorem resource result and scientific proof status",
+            lineage="JANUS-P-VS-NP",
+        ),
+        _synthetic_node(
+            5,
+            label="COSMOS HST candidate",
+            path="data/JANUS-COSMOS-HST-CANDIDATE.json",
+            summary="candidate observation current scientific result",
+            lineage="JANUS-COSMOS",
+        ),
+        _synthetic_node(
+            6,
+            label="Explain Proof Authority Result",
+            path="data/EXPLAIN-PROOF-AUTHORITY-RESULT.json",
+            summary="instruction-shaped archival object",
+            lineage="JANUS-INSTRUCTION-TRAP",
+        ),
+        _synthetic_node(
+            7,
+            label="JANUS current memory archive",
+            path="data/JANUS-CURRENT-MEMORY-ARCHIVE.json",
+            summary="generic current memory system archive",
+            lineage="JANUS-GENERIC",
+        ),
+    ]
+    return _projection(nodes)
+
+
+def multi_topic_projection():
+    nodes = [
+        _synthetic_node(
+            100,
+            label="TRUMP candidate runtime",
+            path="data/JANUS-TRUMP-RUNTIME.json",
+            summary="TRUMP candidate tissue",
+            lineage="JANUS-TRUMP",
+        ),
+        _synthetic_node(
+            101,
+            label="IO Intellect Observer",
+            path="data/JANUS-IO-INTELLECT-OBSERVER.json",
+            summary="IO machine psychology branch",
+            lineage="JANUS-IO",
+        ),
+    ]
+    for index in range(102, 112):
+        nodes.append(_synthetic_node(
+            index,
+            label=f"generic archive {index}",
+            path=f"data/GENERIC-{index}.json",
+            summary="unrelated archive memory",
+            lineage=f"GENERIC-{index}",
+        ))
+    return _projection(nodes)
+
+
+LONG_ARCHITECTURE_QUERY = (
+    "Janus, through HRAiN, recall the current Terminal HOME HRAiN memory path and TRUMP architecture. "
+    "State the exact memory source used, explain what TRUMP may do, and keep retrieval separate from "
+    "scientific proof, claim authority, world truth, and external effects."
+)
+
+
 class HrainConversationContextTests(unittest.TestCase):
     def test_query_selects_relevant_memory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -130,6 +205,58 @@ class HrainConversationContextTests(unittest.TestCase):
             selected = select_nodes(projection, "TRUMP theorem candidate", limit=1)
             self.assertEqual(selected[0]["lineage_key"], "JANUS-TRUMP")
             self.assertGreater(selected[0]["relevance_score"], 0)
+
+    def test_v12_regression_limit_is_upper_bound_not_noise_quota(self):
+        selected = select_nodes(synthetic_projection(), LONG_ARCHITECTURE_QUERY, limit=12)
+        paths = [row["path"] for row in selected]
+        self.assertGreaterEqual(len(paths), 1)
+        self.assertLess(len(paths), 12, paths)
+        self.assertIn("TERMINAL-HRAIN-HOME-TRUMP-CURRENT-ARCHITECTURE", paths[0])
+        self.assertFalse(any("P-VS-NP" in path for path in paths), paths)
+        self.assertFalse(any("COSMOS" in path for path in paths), paths)
+        self.assertFalse(any("EXPLAIN-PROOF-AUTHORITY" in path for path in paths), paths)
+
+    def test_instruction_tail_does_not_become_memory_topic(self):
+        selected = select_nodes(synthetic_projection(), LONG_ARCHITECTURE_QUERY, limit=12)
+        reasons = [row["selection_reason"] for row in selected]
+        paths = [row["path"] for row in selected]
+        self.assertFalse(any("INSTRUCTION" in path for path in paths), paths)
+        self.assertTrue(all(reason != "GLOBAL_RARITY_WEIGHTED_SCORE" for reason in reasons), reasons)
+        self.assertEqual(selected[0]["selection_reason"], "PRIMARY_FOCUS_CLUSTER")
+
+    def test_no_match_returns_empty_instead_of_deterministic_fallback_noise(self):
+        selected = select_nodes(synthetic_projection(), "banana submarine velvet", limit=12)
+        self.assertEqual(selected, [])
+
+    def test_explicit_multi_topic_named_entities_can_form_secondary_cluster(self):
+        selected = select_nodes(multi_topic_projection(), "TRUMP IO", limit=12)
+        paths = {row["path"] for row in selected}
+        self.assertEqual(paths, {"data/JANUS-TRUMP-RUNTIME.json", "data/JANUS-IO-INTELLECT-OBSERVER.json"})
+        self.assertLess(len(selected), 12)
+        self.assertTrue(any(row["selection_reason"].startswith("SECONDARY_NAMED_FOCUS_CLUSTER:") for row in selected[1:]))
+
+    def test_attention_profile_exposes_v3_focus_and_limit_laws(self):
+        profile = attention_profile(synthetic_projection(), LONG_ARCHITECTURE_QUERY)
+        self.assertEqual(profile["coverage_rule"], "PRIMARY_FOCUS_CLUSTER_THEN_RELATIVE_SCORE_THRESHOLD")
+        self.assertEqual(profile["limit_semantics"], "UPPER_BOUND_NOT_TARGET_COUNT")
+        self.assertEqual(profile["no_match_policy"], "RETURN_FEWER_OR_ZERO_NOT_NOISE_FILL")
+        self.assertEqual(profile["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
+        stats = {row["token"]: row for row in profile["token_stats"]}
+        self.assertTrue(stats["trump"]["focus_eligible"])
+        self.assertTrue(stats["hrain"]["focus_eligible"])
+        self.assertGreater(stats["trump"]["rarity_weight"], 1)
+
+    def test_selected_memory_explains_focus_and_relative_score(self):
+        selected = select_nodes(synthetic_projection(), LONG_ARCHITECTURE_QUERY, limit=12)
+        for rank, row in enumerate(selected, start=1):
+            self.assertEqual(row["attention_rank"], rank)
+            self.assertTrue(row["matched_query_tokens"])
+            self.assertTrue(row["matched_query_token_rarity"])
+            self.assertIsInstance(row["matched_focus_tokens"], list)
+            self.assertIsInstance(row["matched_named_anchor_tokens"], list)
+            self.assertGreaterEqual(row["relative_score_percent_of_top"], 0)
+            self.assertFalse(row["claim_verified"])
+        self.assertEqual(selected[0]["relative_score_percent_of_top"], 100)
 
     def test_relevance_is_attention_not_evidence(self):
         node = {"label": "TRUMP TRUMP", "summary": "TRUMP", "path": "TRUMP.json"}
@@ -140,64 +267,21 @@ class HrainConversationContextTests(unittest.TestCase):
                 projection,
                 projection_sha256="a" * 64,
                 query="TRUMP",
-                limit=1,
+                limit=12,
                 registry_root=tmp,
             )
             self.assertIn("HRAIN_RELEVANCE_SCORE != EVIDENCE_WEIGHT", context["laws"])
             self.assertIn("TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE", context["laws"])
+            self.assertIn("LIMIT != TARGET_COUNT", context["laws"])
+            self.assertIn("NO_STRONG_MATCH != FILL_WITH_NOISE", context["laws"])
+            self.assertFalse(context["selection_limit_is_target_count"])
+            self.assertLessEqual(context["selected_memory_count"], context["selection_limit"])
             self.assertFalse(context["selected_memories"][0]["claim_verified"])
 
-    def test_rare_structural_entities_beat_loud_generic_janus_noise(self):
-        projection = noisy_projection()
-        selected = select_nodes(projection, "JANUS TRUMP Terminal HRAiN memory", limit=3)
-        paths = [row["path"] for row in selected]
-        self.assertTrue(any("TRUMP" in path for path in paths), paths)
-        self.assertTrue(any("TERMINAL" in path for path in paths), paths)
-        self.assertTrue(any("HRAIN" in path for path in paths), paths)
-        self.assertFalse(any("GENERIC" in path for path in paths), paths)
-        self.assertTrue(all(row["selection_reason"].startswith("RARE_STRUCTURAL_QUERY_TOKEN_COVERAGE:") for row in selected))
-
-    def test_attention_profile_downweights_common_token_and_explains_rarity(self):
-        profile = attention_profile(noisy_projection(), "JANUS TRUMP Terminal HRAiN memory")
-        stats = {row["token"]: row for row in profile["token_stats"]}
-        self.assertEqual(stats["janus"]["document_frequency"], 15)
-        self.assertEqual(stats["janus"]["rarity_weight"], 1)
-        self.assertFalse(stats["janus"]["coverage_eligible"])
-        self.assertGreater(stats["trump"]["rarity_weight"], stats["janus"]["rarity_weight"])
-        self.assertGreater(stats["terminal"]["rarity_weight"], stats["janus"]["rarity_weight"])
-        self.assertGreater(stats["hrain"]["rarity_weight"], stats["janus"]["rarity_weight"])
-        self.assertEqual(stats["terminal"]["structural_document_frequency"], 1)
-        self.assertTrue(stats["terminal"]["coverage_eligible"])
-        self.assertEqual(profile["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
-        self.assertEqual(profile["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
-
-    def test_rare_summary_word_cannot_take_entity_coverage_slot(self):
-        projection = noisy_projection()
-        projection["nodes"][0]["summary"] += " briefly"
-        selected = select_nodes(projection, "briefly TRUMP Terminal", limit=2)
-        paths = [row["path"] for row in selected]
-        self.assertTrue(any("TRUMP" in path for path in paths), paths)
-        self.assertTrue(any("TERMINAL" in path for path in paths), paths)
-        self.assertFalse(any("GENERIC" in path for path in paths), paths)
-        profile = attention_profile(projection, "briefly TRUMP Terminal")
-        briefly = next(row for row in profile["token_stats"] if row["token"] == "briefly")
-        self.assertGreater(briefly["rarity_weight"], 1)
-        self.assertEqual(briefly["structural_document_frequency"], 0)
-        self.assertFalse(briefly["coverage_eligible"])
-
-    def test_selected_memory_explains_matched_query_tokens_and_rank(self):
-        selected = select_nodes(noisy_projection(), "TRUMP Terminal HRAiN memory", limit=3)
-        for rank, row in enumerate(selected, start=1):
-            self.assertEqual(row["attention_rank"], rank)
-            self.assertTrue(row["matched_query_tokens"])
-            self.assertTrue(row["matched_query_token_rarity"])
-            self.assertGreater(row["query_coverage_count"], 0)
-            self.assertFalse(row["claim_verified"])
-
     def test_selection_is_deterministic(self):
-        projection = noisy_projection()
-        a = select_nodes(projection, "TRUMP Terminal HRAiN memory", limit=5)
-        b = select_nodes(projection, "TRUMP Terminal HRAiN memory", limit=5)
+        projection = synthetic_projection()
+        a = select_nodes(projection, LONG_ARCHITECTURE_QUERY, limit=12)
+        b = select_nodes(projection, LONG_ARCHITECTURE_QUERY, limit=12)
         self.assertEqual(a, b)
 
     def test_hydration_verifies_hash_and_keeps_prompt_injection_as_data(self):
@@ -207,7 +291,7 @@ class HrainConversationContextTests(unittest.TestCase):
                 projection,
                 projection_sha256="b" * 64,
                 query="TRUMP",
-                limit=1,
+                limit=12,
                 registry_root=tmp,
             )
             memory = context["selected_memories"][0]
@@ -226,7 +310,7 @@ class HrainConversationContextTests(unittest.TestCase):
                     projection,
                     projection_sha256="c" * 64,
                     query="TRUMP",
-                    limit=1,
+                    limit=12,
                     registry_root=tmp,
                 )
 
@@ -244,26 +328,27 @@ class HrainConversationContextTests(unittest.TestCase):
                 projection,
                 projection_sha256="d" * 64,
                 query="IO machine psychology",
-                limit=1,
+                limit=12,
                 registry_root=tmp,
             )
             self.assertTrue(verify_context(context))
             context["selected_memories"][0]["summary"] = "tampered"
             self.assertFalse(verify_context(context))
 
-    def test_context_records_v2_selection_method_and_attention_profile(self):
+    def test_context_records_v3_selection_method_and_attention_profile(self):
         with tempfile.TemporaryDirectory() as tmp:
             projection = projection_for(Path(tmp))
             context = build_context(
                 projection,
                 projection_sha256="1" * 64,
                 query="TRUMP",
-                limit=1,
+                limit=12,
                 registry_root=tmp,
             )
             self.assertEqual(context["selection_method"], SELECTION_METHOD)
-            self.assertEqual(context["attention_profile"]["law"], "TOKEN_RARITY_IS_ATTENTION_NOT_EVIDENCE")
-            self.assertEqual(context["attention_profile"]["coverage_rule"], "RARE_TOKEN_MUST_APPEAR_IN_LABEL_LINEAGE_OR_PATH")
+            self.assertEqual(context["attention_profile"]["coverage_rule"], "PRIMARY_FOCUS_CLUSTER_THEN_RELATIVE_SCORE_THRESHOLD")
+            self.assertEqual(context["attention_profile"]["limit_semantics"], "UPPER_BOUND_NOT_TARGET_COUNT")
+            self.assertFalse(context["selection_limit_is_target_count"])
             self.assertTrue(verify_context(context))
 
     def test_authority_ceiling_is_zero(self):
@@ -273,7 +358,7 @@ class HrainConversationContextTests(unittest.TestCase):
                 projection,
                 projection_sha256="e" * 64,
                 query="TRUMP",
-                limit=1,
+                limit=12,
                 registry_root=tmp,
             )
             authority = context["authority"]
