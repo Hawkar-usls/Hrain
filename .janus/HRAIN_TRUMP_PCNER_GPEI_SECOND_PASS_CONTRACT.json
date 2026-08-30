@@ -1,0 +1,72 @@
+{
+  "schema": "janus.hrain.trump_pcner_gpei_second_pass_contract.v1",
+  "status": "ACTIVE_FAIL_CLOSED_MECHANIC_TO_FORMULA_REDTEAM",
+  "component": "HRAIN_TRUMP_PCNER_GPEI_SECOND_PASS",
+  "input": {
+    "source": "Hawkar-usls/janus-meta-registry full-current frozen catalog",
+    "first_pass": "HRAiN x TRUMP full Meta Registry mechanics ranking",
+    "default_ranked_candidates": 150
+  },
+  "pipeline": [
+    "MECHANIC",
+    "FORMULA",
+    "REQUIRED_ASSUMPTIONS",
+    "SAT_TRANSFER_TEST",
+    "COUNTEREXAMPLE_ATTACK"
+  ],
+  "canonical_formula_translation": {
+    "POLY_FIND": "For every reachable nonterminal state S, the frozen algorithm discovers or recognizes a canonically admissible exact action a with charged discovery work <= N^d for one fixed d.",
+    "POLY_HOLD": "For every reachable state S_t, total encoded state + representation + certificate + auxiliary + deferred-debt liability remains <= N^c for one fixed c measured against original input length N.",
+    "POLY_ADVANCE": "Every committed macrostep preserves exact decision semantics and strictly decreases a well-founded potential mu with mu(S_0) <= N^k and polynomially bounded normalization microsteps.",
+    "EXACTNESS_CERTIFICATION": "Every committed transition has independently replayable exact semantics/certificate verification with verifier work and bytes charged polynomially in original N.",
+    "DEBT_RESOURCE_ACCOUNTING": "No hidden work is free: failed discovery, representation growth, deferred work, proof bytes, verification, recovery, switching and normalization are charged to the original-N ledger.",
+    "PCNER_GPEI": "POLY_FIND AND POLY_HOLD AND POLY_ADVANCE AND EXACTNESS_CERTIFICATION AND DEBT_RESOURCE_ACCOUNTING under one frozen deterministic arbitrary-CNF algorithm."
+  },
+  "sat_transfer_rule": {
+    "conditional_statement": "If one fixed deterministic algorithm satisfies the complete PCNER_GPEI obligations for every arbitrary-CNF input and reaches an exact polynomial-time terminal decision, then SAT is in P.",
+    "promotion_rule": "A registry artifact may at most be classified as a conditional route candidate. Text similarity, finite controls, or survival of this pass cannot prove the universal premise.",
+    "required_universal_scope": "ARBITRARY_CNF_UNDER_ONE_FROZEN_ALGORITHM"
+  },
+  "counterexample_library": [
+    "ITERATED_LOCAL_POLY_BLOWUP",
+    "DISCOVERY_VS_VERIFICATION_GAP",
+    "COMPACT_REPRESENTATION_VS_OPERATIONAL_DEBT",
+    "STRICT_PROGRESS_WITH_EXPONENTIAL_INITIAL_POTENTIAL",
+    "MACRO_PROGRESS_WITH_UNBOUNDED_MICRO_NORMALIZATION",
+    "CERTIFICATE_EXISTS_WITH_UNCHARGED_VERIFIER_BYTES",
+    "FAMILY_SCOPE_TO_UNIVERSAL_SCOPE_LEAP",
+    "DEFERRED_WORK_WRAPPER_DEBT"
+  ],
+  "allowed_terminals": [
+    "TRANSFER_BLOCKED_SCOPE",
+    "TRANSFER_BLOCKED_MISSING_ASSUMPTIONS",
+    "COUNTEREXAMPLE_ATTACK_FOUND",
+    "CONDITIONAL_ROUTE_SURVIVOR_NOT_THEOREM",
+    "INSUFFICIENT_SEMANTIC_SIGNAL"
+  ],
+  "authority": {
+    "read_only_registry_analysis": true,
+    "registry_write_authority": false,
+    "proof_authority": false,
+    "scientific_claim_promotion_authority": false,
+    "command_authority": false,
+    "external_effect_authority": false
+  },
+  "laws": [
+    "MECHANIC_MATCH != FORMULA_PROOF",
+    "FORMULA_TRANSLATION != SOURCE_THEOREM",
+    "SAT_TRANSFER_CONDITIONAL != SAT_IN_P_PROOF",
+    "FINITE_COUNTEREXAMPLE_SURVIVAL != UNIVERSAL_PROOF",
+    "COUNTEREXAMPLE_TO_ONE_ROUTE != SAT_HARDNESS_PROOF",
+    "MISSING_ASSUMPTION = TRANSFER_BLOCK",
+    "UNKNOWN_IS_NOT_PASS",
+    "OPEN_IS_A_VALID_RESULT",
+    "P_VS_NP = OPEN"
+  ],
+  "scientific_boundary": {
+    "TRUMP_finished": false,
+    "polynomial_time_SAT_proved": false,
+    "P_equals_NP_proved": false,
+    "P_VS_NP": "OPEN"
+  }
+}
