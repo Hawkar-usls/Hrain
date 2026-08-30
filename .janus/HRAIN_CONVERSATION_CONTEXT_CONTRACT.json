@@ -1,0 +1,42 @@
+{
+  "schema": "janus.hrain.conversation_context_contract.v1",
+  "status": "READ_ONLY_MACHINE_CONTEXT_FOR_JANUS_CONVERSATION",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "mediating_organ": "Hawkar-usls/Hrain",
+  "published_branch": "janus/conversation-context",
+  "published_path": "assets/hrain-conversation-context.json",
+  "consumer": "Hawkar-usls/Hawkar-usls JANUS Terminal conversation runtime",
+  "dataflow": [
+    "JANUS_META_REGISTRY_DB",
+    "HRAIN_ACTIVE_REGISTRY_PROJECTION",
+    "HRAIN_FULL_CURRENT_MEMORY_MANIFEST",
+    "HRAIN_CONVERSATION_CONTEXT",
+    "JANUS_LANGUAGE_SYNTHESIS",
+    "TERMINAL"
+  ],
+  "selection": {
+    "mode": "BOUNDED_QUERY_RELEVANT_PLUS_RECENT_BASELINE",
+    "default_limit": 24,
+    "semantic_authority": false,
+    "scientific_authority": false
+  },
+  "authority": {
+    "read_only": true,
+    "source_mutation_allowed": false,
+    "command_authority_granted": false,
+    "claim_authority_granted": false,
+    "scientific_evidence_authority_granted": false,
+    "world_truth_authority_granted": false,
+    "external_effect_authorized": false,
+    "physical_runtime_effect_authorized": false
+  },
+  "laws": [
+    "META_REGISTRY_DB -> HRAIN -> JANUS_CONVERSATION -> TERMINAL",
+    "HOME_LANGUAGE_SYNTHESIS_MUST_NOT_FETCH_META_REGISTRY_DIRECTLY",
+    "HRAIN_CONTEXT != COMPLETE_DATABASE_CONTENT",
+    "HRAIN_CONTEXT != REGISTRY_AUTHORITY",
+    "MEMORY_CONTEXT != COMMAND",
+    "CATALOG_PRESENCE != SCIENTIFIC_VALIDITY",
+    "FULL_CURRENT != COMPLETE_GIT_HISTORY"
+  ]
+}
