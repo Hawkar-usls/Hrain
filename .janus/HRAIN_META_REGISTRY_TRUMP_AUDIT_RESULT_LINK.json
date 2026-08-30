@@ -1,0 +1,32 @@
+{
+  "schema": "janus.hrain.meta_registry_trump_audit_result_link.v1",
+  "status": "PASS_RECEIPT_LINKED",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "receipt_path": "data/JANUS-HRAIN-TRUMP-FULL-META-REGISTRY-AUDIT-2026-08-31-v1.0.json",
+  "receipt_commit": "337bd764b046dcaffac5c73c27c2dc85e7b1c58b",
+  "hrain_audit_head": "bbf001e47e94b4d8b0652af2b3a64ad8640f9670",
+  "workflow_run_id": 33338775348,
+  "job_id": 99330412935,
+  "artifact_id": 9739860141,
+  "artifact_zip_sha256": "f9ffd49d43d3c72400b9ca02be629dab362eac7257e6aa163a3b04efd3afec42",
+  "terminal": "FULL_CURRENT_STRUCTURAL_INTEGRITY_AUDITED__SEMANTIC_MECHANICS_RANKED__AUTHORITY_UNCHANGED",
+  "coverage": {
+    "frozen_source_commit": "b66f2a761ee5e526858b3e48394dc5492bb193da",
+    "catalog_head_at_run": "d4ad30b6ca7cc20bedcef7af6cbf935d0212b84c",
+    "objects_verified": 3253,
+    "bytes_verified": 43375834,
+    "shards_verified": 17
+  },
+  "authority": {
+    "read_only": true,
+    "proof_authority": false,
+    "scientific_claim_promotion_authority": false,
+    "registry_write_authority": false
+  },
+  "laws": [
+    "TRUMP_REGISTRY_AUDIT != TRUMP_SAT_SOLVE",
+    "INTEGRITY_PASS != THEOREM_PROOF",
+    "MECHANIC_MATCH != SAT_THEOREM",
+    "P_VS_NP = OPEN"
+  ]
+}
