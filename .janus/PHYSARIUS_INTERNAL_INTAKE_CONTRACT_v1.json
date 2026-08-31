@@ -1,0 +1,28 @@
+{
+  "schema": "hrain.physarius.internal_intake_contract.v1",
+  "artifact_id": "HRAIN_PHYSARIUS_INTERNAL_INTAKE_CONTRACT_V1",
+  "status": "ACTIVE_READ_ONLY_INTERNAL_KNOWLEDGE_UPLINK",
+  "source": "https://raw.githubusercontent.com/Hawkar-usls/Janus-Fundamentum/main/registry/PHYSARIUS_INTERNAL_REPO_HRAIN_LIVE_v1.json",
+  "expected_source_network": "PHYSARIUS_INTERNAL_REPO_NETWORK_V1",
+  "expected_schema": "janus.hrain.physarius_internal_graph.v1",
+  "required_repositories": [
+    "Hawkar-usls/janus-meta-registry",
+    "Hawkar-usls/janus-lapis"
+  ],
+  "authority": {
+    "read_only": true,
+    "write": false,
+    "delete": false,
+    "source_mutation": false,
+    "scientific_truth_authority": false,
+    "external_evidence_authority": false
+  },
+  "laws": [
+    "META_REGISTRY_MEMORY_NE_EXTERNAL_EVIDENCE",
+    "LAPIS_MECHANISM_NE_TRUTH_AUTHORITY",
+    "BRANCH_RECURRENCE_NE_INDEPENDENT_REPLICATION",
+    "BLOB_DEDUP_NE_LINEAGE_ERASURE",
+    "SELECTIVE_PULL_REQUIRES_REPO_REF_PATH_EXPECTED_BLOB_SHA",
+    "HRAIN_MAY_ROUTE_ATTENTION_BUT_MAY_NOT_MUTATE_SOURCE_REPOSITORIES"
+  ]
+}
