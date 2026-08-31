@@ -1,0 +1,42 @@
+name: HRaiN Physarius Intake
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'physarius-intake.js'
+      - '.janus/PHYSARIUS_INTAKE_CONTRACT_v1.json'
+      - '.github/workflows/physarius-intake.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-live-intake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load live Physarius graph through HRaiN module
+        run: |
+          node - <<'JS'
+          global.window = global;
+          global.CustomEvent = class CustomEvent { constructor(type, init={}) { this.type=type; this.detail=init.detail; } };
+          global.dispatchEvent = () => true;
+          require('./physarius-intake.js');
+          (async () => {
+            const intake = await global.JANUS_PHYSARIUS_INTAKE.load();
+            if (intake.authority !== 'READ_ONLY_DISCOVERY_PROJECTION') throw new Error('bad authority');
+            if (intake.contentExposed !== false) throw new Error('content exposure firewall failed');
+            console.log(JSON.stringify({
+              status: 'HRAIN_PHYSARIUS_INTAKE_PASS',
+              sourceNetwork: intake.sourceNetwork,
+              graphSha256: intake.graphSha256,
+              nodes: intake.nodes.length,
+              links: intake.links.length,
+              authority: intake.authority,
+              contentExposed: intake.contentExposed
+            }, null, 2));
+          })().catch(e => { console.error(e); process.exit(1); });
+          JS
