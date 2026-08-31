@@ -1,0 +1,36 @@
+name: HRaiN Physarius Internal Intake
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'physarius-internal-intake.js'
+      - '.janus/PHYSARIUS_INTERNAL_INTAKE_CONTRACT_v1.json'
+      - '.github/workflows/physarius-internal-intake.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live-internal-uplink:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load live Meta Registry and Lapis trunk graph
+        run: |
+          node - <<'NODE'
+          const assert=require('node:assert/strict');
+          const api=require('./physarius-internal-intake.js');
+          (async()=>{
+            const intake=await api.load();
+            assert.equal(intake.authority,'READ_ONLY_INTERNAL_DISCOVERY_PROJECTION');
+            assert.equal(intake.contentExposed,false);
+            assert.ok(intake.nodes.some(n=>n.label==='Hawkar-usls/janus-meta-registry'));
+            assert.ok(intake.nodes.some(n=>n.label==='Hawkar-usls/janus-lapis'));
+            assert.ok(intake.nodes.some(n=>n.label==='LONGEVITY-SURVIVOR'));
+            console.log('HRAIN_INTERNAL_PHYSARIUS_INTAKE_PASS');
+            console.log(JSON.stringify({sourceNetwork:intake.sourceNetwork,graphSha256:intake.graphSha256,nodes:intake.nodes.length,links:intake.links.length},null,2));
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
