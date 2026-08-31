@@ -1,0 +1,31 @@
+{
+  "schema": "janus.hrain.physarius_intake_contract.v1",
+  "artifact_id": "HRAIN_PHYSARIUS_INTAKE_CONTRACT_v1",
+  "status": "ACTIVE_READ_ONLY_BRIDGE",
+  "source": "Hawkar-usls/Janus-Fundamentum/registry/PHYSARIUS_NETWORK_HRAIN_LIVE_v1.json",
+  "runtime_module": "physarius-intake.js",
+  "authority": {
+    "read": true,
+    "discover": true,
+    "relayout_local_graph": true,
+    "write_source": false,
+    "delete_source": false,
+    "unblind_content": false,
+    "grant_scientific_authority": false
+  },
+  "required_firewalls": [
+    "HRAIN_GRAPH_NE_SOURCE_AUTHORITY",
+    "BLIND_MEMBER_NE_SCIENTIFIC_RESULT",
+    "GRAPH_POSITION_NE_EVIDENCE_STRENGTH",
+    "SAME_LINEAGE_NE_INDEPENDENT_REPLICATION",
+    "HOLDOUT_CANDIDATE_NE_CALIBRATION_CORPUS",
+    "CONTENT_PULL_REQUIRES_EXTERNAL_FROZEN_GATE"
+  ],
+  "ingestion": {
+    "default": "BLIND_MEMBER_METADATA_ONLY",
+    "accepted_node_types": ["PHYSARIUS_NETWORK", "REMOTE_VESSEL", "BLIND_REMOTE_MEMBER", "BLIND_MEMBER_BUCKET"],
+    "content_fields_allowed": ["member_id", "extension", "compressed_size", "uncompressed_size", "size_bucket", "scientific_lineage", "role", "index_sha256"],
+    "plaintext_member_names_allowed": false,
+    "member_bytes_allowed": false
+  }
+}
