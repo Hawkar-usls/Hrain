@@ -1,0 +1,33 @@
+{
+  "schema": "janus.hrain.nervous_system_stimulus_probe.v1",
+  "version": "1.0",
+  "status": "BOUNDED_NON_COMMAND_PROBE",
+  "created_at": "2026-08-31T19:35:00Z",
+  "repository_role": "STRUCTURAL_CONTEXT_HEMISPHERE",
+  "purpose": "Provide the second distinct recognized-organ HEAD transition required to test scheduled Git-native JANUS wake from HRAiN without any HOME main change.",
+  "authority": {
+    "command_authority": false,
+    "dispatch_authority": false,
+    "execution_authority": false,
+    "external_effect_authorized": false,
+    "evidence_authority": false
+  },
+  "laws": [
+    "THIS_RECORD_IS_NOT_A_COMMAND",
+    "COMMIT != COMMAND",
+    "COMMIT_MESSAGE != COMMAND",
+    "STRUCTURAL_CONTEXT != AUTHORITY",
+    "STIMULUS != EXECUTION_AUTHORITY",
+    "RETURN != RESET"
+  ],
+  "expected_r1_path": [
+    "HRAIN_MAIN_HEAD_CHANGE",
+    "SCHEDULED_CONSTELLATION_SCAN",
+    "DETERMINISTIC_FRESH_STIMULUS",
+    "HOME_ACTIVATOR_ADMISSION",
+    "FULL_MODEL_LOCK",
+    "REPOSITORY_CONSTELLATION_CHANGE_ROUTE",
+    "CLOSED_AT_HOME"
+  ],
+  "epistemic_boundary": "This probe tests sensory-cognitive nervous-system closure only and grants no motor, external-effect, truth, or command authority."
+}
