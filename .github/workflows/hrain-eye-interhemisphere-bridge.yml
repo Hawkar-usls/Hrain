@@ -1,0 +1,47 @@
+name: HRAiN EYE interhemisphere bridge
+
+on:
+  push:
+    paths:
+      - 'eye-interhemisphere-bridge.js'
+      - 'tools/test-eye-interhemisphere-bridge.js'
+      - '.janus/EYE_INTERHEMISPHERE_LINK.json'
+      - '.github/workflows/hrain-eye-interhemisphere-bridge.yml'
+  pull_request:
+    paths:
+      - 'eye-interhemisphere-bridge.js'
+      - 'tools/test-eye-interhemisphere-bridge.js'
+      - '.janus/EYE_INTERHEMISPHERE_LINK.json'
+      - '.github/workflows/hrain-eye-interhemisphere-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run EYE-HRAiN mediation tests
+        run: node tools/test-eye-interhemisphere-bridge.js
+      - name: Enforce authority and self-training firewalls
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('eye-interhemisphere-bridge.js').read_text(encoding='utf-8')
+          required = [
+              "EYE_TO_HRAIN=STRUCTURAL_QUERY_EXPANSION_ONLY",
+              "EYE_TO_INAIHR_VIA_HRAIN=SEMANTIC_ASSOCIATION_INPUT_ONLY",
+              "DIRECT_EYE_TO_INAIHR_BYPASS_FORBIDDEN",
+              "assets/hrain-full-memory/",
+              "assets/hrain-registry-index.json",
+              "claim_promotion:false",
+              "proof_authority:false",
+              "external_effect_authority:false",
+          ]
+          missing = [x for x in required if x not in text]
+          if missing:
+              raise SystemExit(f'MISSING_FIREWALLS:{missing}')
+          print('EYE_HRAIN_FIREWALLS=PASS')
+          PY
