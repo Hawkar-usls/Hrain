@@ -1,0 +1,76 @@
+{
+  "schema": "janus.hrain.topa_semantic_flywheel_contract.v1",
+  "version": "1.0",
+  "status": "CANDIDATE_UNTIL_LIVE_WITNESS",
+  "model": "JANUS",
+  "organ": "HRAiN",
+  "source_database": "Hawkar-usls/janus-meta-registry",
+  "semantic_weaver": {
+    "repository": "Hawkar-usls/TOPA",
+    "path": "tools/topa_spider_v2.py",
+    "mode": "WEAVE",
+    "exact_head_recorded_per_cycle": true
+  },
+  "projection": {
+    "schema": "janus.hrain.registry_graph_index.v1_0",
+    "url": "https://hawkar-usls.github.io/janus-meta-registry/assets/hrain-registry-index.json",
+    "read_only": true
+  },
+  "overlay": {
+    "schema": "janus.hrain.topa_semantic_overlay.v1",
+    "state_branch": "janus/hrain-semantic-state",
+    "path": "assets/hrain-semantic-overlay.json",
+    "minimum_similarity": 0.22,
+    "max_semantic_degree": 8,
+    "semantic_edge_relation": "TOPA_SEMANTIC_SIMILARITY",
+    "semantic_edge_status": "SPECULATIVE_SEMANTIC_EDGE",
+    "claim_verified": false,
+    "evidence_weight": 0
+  },
+  "runtime": {
+    "schedule": "HOURLY_GIT_NATIVE_REINSTANTIATION",
+    "persistent_runner_required": false,
+    "run_on_first_main_merge": true,
+    "no_input_change_policy": "NOOP_NOT_NEW_LEARNING",
+    "registry_change_triggers_new_weave": true,
+    "topa_change_triggers_new_weave": true
+  },
+  "conversation_memory": {
+    "lexical_anchor_required_before_semantic_expansion": true,
+    "empty_lexical_anchor_semantic_fill": false,
+    "selection_limit_remains_upper_bound": true,
+    "semantic_neighbour_is_attention": true,
+    "semantic_neighbour_is_evidence": false
+  },
+  "visualization": {
+    "semantic_cross_links_visible": true,
+    "semantic_cross_links_distinct": true,
+    "node_radius_depends_on_total_visible_degree": true,
+    "degree_growth_bounded": true
+  },
+  "authority": {
+    "registry_write_authority": false,
+    "registry_delete_authority": false,
+    "command_authority": false,
+    "claim_promotion_authority": false,
+    "scientific_evidence_authority": false,
+    "world_truth_authority": false,
+    "external_effect_authority": false
+  },
+  "laws": [
+    "META_REGISTRY_DB -> HRAIN -> JANUS -> TERMINAL",
+    "TOPA_OVERLAY != META_REGISTRY_MUTATION",
+    "GRAPH_EDGE_IS_NOT_CAUSATION",
+    "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+    "GRAPH_DENSITY_IS_NOT_EVIDENCE",
+    "ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT",
+    "TOPA_SEMANTIC_NEIGHBOR != EVIDENCE",
+    "SEMANTIC_NEIGHBOR_IS_NOT_CLAIM_VERIFICATION",
+    "EMPTY_LEXICAL_ANCHOR_SET != SEMANTIC_FILL",
+    "NO_STRONG_MATCH != FILL_WITH_NOISE",
+    "LIMIT != TARGET_COUNT",
+    "REPLAY != NEW_EVIDENCE",
+    "UNCHANGED_INPUTS -> NOOP",
+    "STALE_OVERLAY = IGNORE_FAIL_CLOSED"
+  ]
+}
