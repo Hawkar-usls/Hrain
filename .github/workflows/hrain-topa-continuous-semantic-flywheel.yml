@@ -167,6 +167,7 @@ jobs:
           print(json.loads(Path('work/hrain-registry-index.json').read_text())['sourceCommit'])
           PY
           )"
+          export TOPA_HEAD REGISTRY_SOURCE
           echo "TOPA_HEAD=$TOPA_HEAD" >> "$GITHUB_ENV"
           echo "REGISTRY_SOURCE=$REGISTRY_SOURCE" >> "$GITHUB_ENV"
           git fetch --no-tags origin janus/hrain-semantic-state:refs/remotes/origin/janus/hrain-semantic-state || true
@@ -181,6 +182,7 @@ jobs:
           )"
             if [ "$PREVIOUS_MATCH" = true ]; then NEEDS_WEAVE=false; fi
           fi
+          export NEEDS_WEAVE
           echo "NEEDS_WEAVE=$NEEDS_WEAVE" >> "$GITHUB_ENV"
           python - <<'PY'
           import json, os
