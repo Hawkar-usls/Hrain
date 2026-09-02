@@ -1,0 +1,289 @@
+name: HRAiN × TOPA Continuous Semantic Flywheel
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/hrain_topa_semantic_overlay.py'
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_topa_semantic_overlay.py'
+      - 'assets/hrain-semantic-inject.js'
+      - 'memory.html'
+      - '.janus/HRAIN_TOPA_SEMANTIC_FLYWHEEL_CONTRACT.json'
+      - '.github/workflows/hrain-topa-continuous-semantic-flywheel.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hrain_topa_semantic_overlay.py'
+      - 'tools/hrain_conversation_context.py'
+      - 'tests/test_hrain_topa_semantic_overlay.py'
+      - 'assets/hrain-semantic-inject.js'
+      - 'memory.html'
+      - '.janus/HRAIN_TOPA_SEMANTIC_FLYWHEEL_CONTRACT.json'
+      - '.github/workflows/hrain-topa-continuous-semantic-flywheel.yml'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: hrain-topa-continuous-semantic-flywheel
+  cancel-in-progress: false
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate frozen contract JSON
+        run: python -m json.tool .janus/HRAIN_TOPA_SEMANTIC_FLYWHEEL_CONTRACT.json >/dev/null
+      - name: Adapter self-test
+        run: python tools/hrain_topa_semantic_overlay.py self-test
+      - name: Semantic overlay regression tests
+        run: python -m unittest tests.test_hrain_topa_semantic_overlay -v
+      - name: Compile semantic memory path
+        run: python -m py_compile tools/hrain_topa_semantic_overlay.py tools/hrain_conversation_context.py
+
+  live-db-dry-run:
+    if: github.event_name == 'pull_request'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/checkout@v4
+        with:
+          repository: Hawkar-usls/TOPA
+          path: vendor/TOPA
+          fetch-depth: 1
+      - name: Fetch current Meta Registry HRAiN projection
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/main/assets/hrain-registry-index.json \
+            -o work/hrain-registry-index.json
+      - name: Convert registry objects into TOPA records
+        run: |
+          python tools/hrain_topa_semantic_overlay.py prepare \
+            --projection work/hrain-registry-index.json \
+            --records work/registry-records.jsonl \
+            --map work/document-map.json \
+            --receipt work/prepare-receipt.json
+      - name: Run exact checked-out TOPA Spider self-test and weave
+        run: |
+          set -euo pipefail
+          python vendor/TOPA/tools/topa_spider_v2.py self-test
+          python vendor/TOPA/tools/topa_spider_v2.py weave \
+            --input work/registry-records.jsonl \
+            --nodes work/topa-nodes.jsonl \
+            --edges work/topa-edges.jsonl \
+            --receipt work/topa-weave-receipt.json \
+            --semantic-threshold 0.14 \
+            --topk 8 \
+            --keyword-nodes 8
+      - name: Build bounded semantic overlay
+        run: |
+          set -euo pipefail
+          TOPA_HEAD="$(git -C vendor/TOPA rev-parse HEAD)"
+          python tools/hrain_topa_semantic_overlay.py finalize \
+            --projection work/hrain-registry-index.json \
+            --map work/document-map.json \
+            --topa-edges work/topa-edges.jsonl \
+            --topa-receipt work/topa-weave-receipt.json \
+            --topa-head "$TOPA_HEAD" \
+            --generated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --min-similarity 0.22 \
+            --max-semantic-degree 8 \
+            --overlay work/hrain-semantic-overlay.json \
+            --receipt work/hrain-semantic-overlay-receipt.json
+          python tools/hrain_topa_semantic_overlay.py validate \
+            --projection work/hrain-registry-index.json \
+            --overlay work/hrain-semantic-overlay.json
+      - name: Require actual semantic cross-links without authority escalation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          overlay=json.loads(Path('work/hrain-semantic-overlay.json').read_text())
+          receipt=json.loads(Path('work/hrain-semantic-overlay-receipt.json').read_text())
+          assert overlay['edgeCount'] > 0, 'NO_SEMANTIC_CROSS_LINKS_FOUND'
+          assert receipt['acceptedSemanticEdges'] == overlay['edgeCount']
+          assert receipt['maximumObservedSemanticDegree'] <= overlay['maxSemanticDegree'] <= 8
+          assert overlay['authority']['registryWriteAuthority'] is False
+          assert overlay['authority']['claimPromotionAuthority'] is False
+          assert all(e['relation']=='TOPA_SEMANTIC_SIMILARITY' for e in overlay['edges'])
+          assert all(e['claimVerified'] is False and e['evidenceWeight']==0 for e in overlay['edges'])
+          print('HRAIN_TOPA_LIVE_DB_DRY_RUN=PASS')
+          print('SEMANTIC_EDGE_COUNT='+str(overlay['edgeCount']))
+          print('MAX_SEMANTIC_DEGREE='+str(receipt['maximumObservedSemanticDegree']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrain-topa-pr-dry-run-${{ github.run_id }}
+          path: work
+          retention-days: 14
+
+  weave:
+    if: github.event_name != 'pull_request'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/checkout@v4
+        with:
+          repository: Hawkar-usls/TOPA
+          path: vendor/TOPA
+          fetch-depth: 1
+      - name: Freeze current registry and TOPA inputs
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/main/assets/hrain-registry-index.json \
+            -o work/hrain-registry-index.json
+          TOPA_HEAD="$(git -C vendor/TOPA rev-parse HEAD)"
+          REGISTRY_SOURCE="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          print(json.loads(Path('work/hrain-registry-index.json').read_text())['sourceCommit'])
+          PY
+          )"
+          export TOPA_HEAD REGISTRY_SOURCE
+          echo "TOPA_HEAD=$TOPA_HEAD" >> "$GITHUB_ENV"
+          echo "REGISTRY_SOURCE=$REGISTRY_SOURCE" >> "$GITHUB_ENV"
+          git fetch --no-tags origin janus/hrain-semantic-state:refs/remotes/origin/janus/hrain-semantic-state || true
+          NEEDS_WEAVE=true
+          if git show refs/remotes/origin/janus/hrain-semantic-state:assets/hrain-semantic-overlay.json > work/previous-overlay.json 2>/dev/null; then
+            PREVIOUS_MATCH="$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=json.loads(Path('work/previous-overlay.json').read_text())
+          print('true' if p.get('sourceCommit')==os.environ['REGISTRY_SOURCE'] and p.get('topaHeadSha')==os.environ['TOPA_HEAD'] else 'false')
+          PY
+          )"
+            if [ "$PREVIOUS_MATCH" = true ]; then NEEDS_WEAVE=false; fi
+          fi
+          export NEEDS_WEAVE
+          echo "NEEDS_WEAVE=$NEEDS_WEAVE" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          body={
+            'schema':'janus.hrain.topa_semantic_flywheel_cycle.v1',
+            'registrySourceCommit':os.environ['REGISTRY_SOURCE'],
+            'topaHeadSha':os.environ['TOPA_HEAD'],
+            'needsWeave':os.environ.get('NEEDS_WEAVE','true')=='true',
+            'replayIsNewEvidence':False,
+            'unchangedInputsAreNewLearning':False,
+          }
+          Path('work/cycle-inputs.json').write_text(json.dumps(body,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Unchanged inputs are a NOOP
+        if: env.NEEDS_WEAVE == 'false'
+        run: |
+          echo 'HRAIN_TOPA_FLYWHEEL=NOOP_UNCHANGED_INPUTS'
+          echo 'REPLAY_IS_NOT_NEW_EVIDENCE=PASS'
+      - name: Convert current registry objects into TOPA records
+        if: env.NEEDS_WEAVE == 'true'
+        run: |
+          python tools/hrain_topa_semantic_overlay.py prepare \
+            --projection work/hrain-registry-index.json \
+            --records work/registry-records.jsonl \
+            --map work/document-map.json \
+            --receipt work/prepare-receipt.json
+      - name: Run TOPA Spider semantic weave
+        if: env.NEEDS_WEAVE == 'true'
+        run: |
+          set -euo pipefail
+          python vendor/TOPA/tools/topa_spider_v2.py self-test
+          python vendor/TOPA/tools/topa_spider_v2.py weave \
+            --input work/registry-records.jsonl \
+            --nodes work/topa-nodes.jsonl \
+            --edges work/topa-edges.jsonl \
+            --receipt work/topa-weave-receipt.json \
+            --semantic-threshold 0.14 \
+            --topk 8 \
+            --keyword-nodes 8
+      - name: Validate and seal semantic overlay
+        if: env.NEEDS_WEAVE == 'true'
+        run: |
+          set -euo pipefail
+          python tools/hrain_topa_semantic_overlay.py finalize \
+            --projection work/hrain-registry-index.json \
+            --map work/document-map.json \
+            --topa-edges work/topa-edges.jsonl \
+            --topa-receipt work/topa-weave-receipt.json \
+            --topa-head "$TOPA_HEAD" \
+            --generated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --min-similarity 0.22 \
+            --max-semantic-degree 8 \
+            --overlay work/hrain-semantic-overlay.json \
+            --receipt work/hrain-semantic-overlay-receipt.json
+          python tools/hrain_topa_semantic_overlay.py validate \
+            --projection work/hrain-registry-index.json \
+            --overlay work/hrain-semantic-overlay.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          overlay=json.loads(Path('work/hrain-semantic-overlay.json').read_text())
+          receipt=json.loads(Path('work/hrain-semantic-overlay-receipt.json').read_text())
+          assert overlay['edgeCount'] > 0, 'NO_SEMANTIC_CROSS_LINKS_FOUND'
+          assert receipt['maximumObservedSemanticDegree'] <= overlay['maxSemanticDegree'] <= 8
+          assert overlay['authority']['registryWriteAuthority'] is False
+          assert overlay['authority']['claimPromotionAuthority'] is False
+          assert all(e['claimVerified'] is False and e['evidenceWeight']==0 for e in overlay['edges'])
+          print('HRAIN_TOPA_SEMANTIC_OVERLAY=PASS')
+          print('SEMANTIC_EDGE_COUNT='+str(overlay['edgeCount']))
+          print('MAX_SEMANTIC_DEGREE='+str(receipt['maximumObservedSemanticDegree']))
+          print('OVERLAY_HASH='+overlay['overlayHash'])
+          PY
+      - name: Persist overlay only on semantic input change
+        if: env.NEEDS_WEAVE == 'true'
+        run: |
+          set -euo pipefail
+          STATE="$RUNNER_TEMP/hrain-semantic-state"
+          rm -rf "$STATE"
+          if git show-ref --verify --quiet refs/remotes/origin/janus/hrain-semantic-state; then
+            git worktree add --detach "$STATE" refs/remotes/origin/janus/hrain-semantic-state
+          else
+            git worktree add -b janus/hrain-semantic-state "$STATE" HEAD
+          fi
+          mkdir -p "$STATE/assets"
+          cp work/hrain-semantic-overlay.json "$STATE/assets/hrain-semantic-overlay.json"
+          cp work/hrain-semantic-overlay-receipt.json "$STATE/assets/hrain-semantic-overlay-receipt.json"
+          cp work/topa-weave-receipt.json "$STATE/assets/hrain-semantic-topa-receipt.json"
+          cp work/prepare-receipt.json "$STATE/assets/hrain-semantic-prepare-receipt.json"
+          git -C "$STATE" config user.name 'janus-hrain-topa[bot]'
+          git -C "$STATE" config user.email 'janus-hrain-topa[bot]@users.noreply.github.com'
+          git -C "$STATE" add assets/hrain-semantic-*.json
+          if git -C "$STATE" diff --cached --quiet; then
+            echo 'HRAIN_TOPA_STATE_WRITE=NOOP'
+          else
+            git -C "$STATE" commit -m "HRAiN TOPA semantic weave ${REGISTRY_SOURCE:0:10} ${TOPA_HEAD:0:10}"
+            git -C "$STATE" push origin HEAD:janus/hrain-semantic-state
+            echo 'HRAIN_TOPA_STATE_WRITE=PASS'
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrain-topa-semantic-flywheel-${{ github.run_id }}
+          path: work
+          retention-days: 30

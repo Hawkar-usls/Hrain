@@ -22,7 +22,7 @@
 <div class="shell">
   <main class="main">
     <section id="active-wrap" class="active-wrap">
-      <iframe src="./janus.html" title="HRAiN active JANUS registry graph" referrerpolicy="no-referrer"></iframe>
+      <iframe id="active-graph" src="./janus.html" title="HRAiN active JANUS registry graph" referrerpolicy="no-referrer"></iframe>
     </section>
 
     <section id="full-view" class="full">
@@ -60,10 +60,38 @@
       FULL_CURRENT != COMPLETE_GIT_HISTORY<br>
       HRAIN_GRAPH != REGISTRY_AUTHORITY<br>
       CATALOG_PRESENCE != SCIENTIFIC_VALIDITY<br>
+      TOPA_SEMANTIC_EDGE != EVIDENCE<br>
       SHARD_HASH_MISMATCH = FAIL_CLOSED
     </div>
   </aside>
 </div>
 <script src="./assets/hrain-memory.js" defer></script>
+<script>
+(() => {
+  const frame = document.getElementById('active-graph');
+  if (!frame) return;
+  let injected = false;
+  const injectSemanticWeave = () => {
+    if (injected) return;
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.body) return;
+      if (doc.querySelector('script[data-hrain-topa-semantic="v1"]')) {
+        injected = true;
+        return;
+      }
+      const script = doc.createElement('script');
+      script.src = './assets/hrain-semantic-inject.js?v=1';
+      script.dataset.hrainTopaSemantic = 'v1';
+      doc.body.appendChild(script);
+      injected = true;
+    } catch (error) {
+      console.warn('[HRAiN/TOPA] semantic UI injection unavailable:', error);
+    }
+  };
+  frame.addEventListener('load', injectSemanticWeave, { once: true });
+  if (frame.contentDocument && frame.contentDocument.readyState === 'complete') injectSemanticWeave();
+})();
+</script>
 </body>
 </html>
