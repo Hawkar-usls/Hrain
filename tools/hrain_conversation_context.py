@@ -10,6 +10,11 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping
 
+from hrain_topa_semantic_overlay import (
+    expand_selected_with_semantic_neighbors,
+    load_default_overlay,
+)
+
 PROJECTION_SCHEMA = "janus.hrain.registry_graph_index.v1_0"
 OUTPUT_SCHEMA = "janus.hrain.conversation_context.v1"
 REGISTRY_REPOSITORY = "Hawkar-usls/janus-meta-registry"
@@ -398,6 +403,10 @@ def build_context(projection: Mapping[str, Any], *, projection_sha256: str, quer
     validate_projection(projection)
     profile = attention_profile(projection, query)
     selected = select_nodes(projection, query, limit=limit)
+    overlay, overlay_sha256, overlay_status = load_default_overlay(projection)
+    if overlay is not None:
+        selected = expand_selected_with_semantic_neighbors(selected, projection, overlay, limit=limit)
+    semantic_neighbor_count = sum(1 for row in selected if row.get("semantic_relation") == "TOPA_SEMANTIC_SIMILARITY")
     memories = hydrate_selected(selected, registry_root=registry_root) if hydrate else selected
     body: Dict[str, Any] = {
         "schema": OUTPUT_SCHEMA,
@@ -413,6 +422,9 @@ def build_context(projection: Mapping[str, Any], *, projection_sha256: str, quer
         "attention_profile": profile,
         "selection_limit": limit,
         "selection_limit_is_target_count": False,
+        "semantic_overlay_status": overlay_status,
+        "semantic_overlay_sha256": overlay_sha256,
+        "semantic_neighbor_count": semantic_neighbor_count,
         "selected_memory_count": len(memories),
         "selected_memories": memories,
         "hydration_performed": hydrate,
@@ -439,6 +451,9 @@ def build_context(projection: Mapping[str, Any], *, projection_sha256: str, quer
             "RETRIEVAL_DIVERSITY != EVIDENCE_INDEPENDENCE",
             "RETRIEVED_MEMORY != WORLD_TRUTH",
             "HASH_VERIFIED_OBJECT != CLAIM_VERIFIED",
+            "TOPA_SEMANTIC_NEIGHBOR != EVIDENCE",
+            "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+            "EMPTY_LEXICAL_ANCHOR_SET != SEMANTIC_FILL",
         ],
     }
     body["context_hash"] = canonical_hash(body)
