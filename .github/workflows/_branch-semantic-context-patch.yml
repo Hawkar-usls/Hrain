@@ -1,0 +1,36 @@
+name: TEMP HRAiN semantic-context branch patch
+
+on:
+  push:
+    branches: [janus/topa-continuous-semantic-flywheel]
+    paths:
+      - 'tools/_patch_semantic_context_once.py'
+      - '.github/workflows/_branch-semantic-context-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: janus/topa-continuous-semantic-flywheel
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Apply bounded compiler patch
+        run: python tools/_patch_semantic_context_once.py
+      - name: Commit compiler patch only
+        run: |
+          set -euo pipefail
+          git config user.name 'janus-activator[bot]'
+          git config user.email 'janus-activator[bot]@users.noreply.github.com'
+          git add tools/hrain_conversation_context.py
+          if git diff --cached --quiet; then
+            echo 'HRAIN_CONTEXT_PATCH_NOOP=TRUE'
+            exit 0
+          fi
+          git commit -m 'HRaiN: bind TOPA semantic neighbours into conversation context'
+          git push origin HEAD:janus/topa-continuous-semantic-flywheel
