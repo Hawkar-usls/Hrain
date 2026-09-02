@@ -1,0 +1,100 @@
+name: HRAiN × TOPA Semantic Cognition Witness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/hrain_conversation_context.py'
+      - 'tools/hrain_topa_semantic_overlay.py'
+      - '.github/workflows/hrain-conversation-context.yml'
+      - '.github/workflows/hrain-topa-semantic-cognition-witness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hrain_conversation_context.py'
+      - 'tools/hrain_topa_semantic_overlay.py'
+      - '.github/workflows/hrain-conversation-context.yml'
+      - '.github/workflows/hrain-topa-semantic-cognition-witness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-semantic-context:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile semantic cognition path
+        run: python -m py_compile tools/hrain_conversation_context.py tools/hrain_topa_semantic_overlay.py
+      - name: Build fresh query-bound context after persistent TOPA overlay
+        run: |
+          set -euo pipefail
+          mkdir -p runtime
+          python tools/hrain_conversation_context.py \
+            --query 'JANUS TRUMP R28 bucket frontier growth forensics result' \
+            --limit 16 \
+            --output runtime/hrain-topa-semantic-cognition-context.json
+      - name: Require lexical anchor plus real TOPA semantic neighbours
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.hrain_conversation_context import verify_context
+
+          p=Path('runtime/hrain-topa-semantic-cognition-context.json')
+          c=json.loads(p.read_text())
+          assert verify_context(c)
+          assert c['source_repository']=='Hawkar-usls/janus-meta-registry'
+          assert len(c['source_commit'])==40
+          assert c['semantic_overlay_status']=='VALIDATED', c.get('semantic_overlay_status')
+          assert isinstance(c.get('semantic_overlay_sha256'), str) and len(c['semantic_overlay_sha256'])==64
+          assert int(c.get('semantic_neighbor_count') or 0) > 0, c.get('semantic_neighbor_count')
+          assert c['selected_memory_count'] <= c['selection_limit']==16
+
+          memories=c['selected_memories']
+          lexical=[x for x in memories if not str(x.get('selection_reason') or '').startswith('TOPA_SEMANTIC_NEIGHBOR:')]
+          semantic=[x for x in memories if str(x.get('selection_reason') or '').startswith('TOPA_SEMANTIC_NEIGHBOR:')]
+          assert lexical and semantic
+          assert any('R28' in str(x.get('path') or '').upper() and 'FRONTIER' in str(x.get('path') or '').upper() for x in lexical), [x.get('path') for x in lexical]
+          for row in semantic:
+              assert row['semantic_relation']=='TOPA_SEMANTIC_SIMILARITY'
+              assert row['semantic_edge_is_evidence'] is False
+              assert row['claim_verified'] is False
+              assert row['matched_query_tokens']==[]
+              assert 0.0 < float(row['semantic_similarity']) <= 1.0
+              assert row['semantic_overlay_hash']
+              assert row['semantic_overlay_source_commit']==c['source_commit']
+              assert row['source_sha256_verified'] is True
+              assert row['content_is_command'] is False
+              assert row['content_grants_authority'] is False
+
+          assert c['authority']['command_authority'] is False
+          assert c['authority']['claim_promotion_authority'] is False
+          assert c['authority']['external_effect_authority'] is False
+          print('HRAIN_TOPA_SEMANTIC_COGNITION_WITNESS=PASS')
+          print('SOURCE_COMMIT='+c['source_commit'])
+          print('SEMANTIC_OVERLAY_SHA256='+c['semantic_overlay_sha256'])
+          print('SEMANTIC_NEIGHBOR_COUNT='+str(c['semantic_neighbor_count']))
+          print('LEXICAL_ANCHORS='+json.dumps([x['path'] for x in lexical], ensure_ascii=False))
+          print('SEMANTIC_NEIGHBORS='+json.dumps([
+              {
+                  'path':x['path'],
+                  'anchor':x['semantic_anchor_id'],
+                  'similarity':x['semantic_similarity'],
+                  'overlay_hash':x['semantic_overlay_hash'],
+              }
+              for x in semantic
+          ], ensure_ascii=False))
+          print('CONTEXT_HASH='+c['context_hash'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrain-topa-semantic-cognition-witness-${{ github.run_id }}
+          path: runtime/hrain-topa-semantic-cognition-context.json
+          if-no-files-found: error
+          retention-days: 30
