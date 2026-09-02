@@ -10,10 +10,16 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping
 
-from hrain_topa_semantic_overlay import (
-    expand_selected_with_semantic_neighbors,
-    load_default_overlay,
-)
+try:
+    from tools.hrain_topa_semantic_overlay import (
+        expand_selected_with_semantic_neighbors,
+        load_default_overlay,
+    )
+except ModuleNotFoundError:
+    from hrain_topa_semantic_overlay import (
+        expand_selected_with_semantic_neighbors,
+        load_default_overlay,
+    )
 
 PROJECTION_SCHEMA = "janus.hrain.registry_graph_index.v1_0"
 OUTPUT_SCHEMA = "janus.hrain.conversation_context.v1"
