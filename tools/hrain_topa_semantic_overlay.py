@@ -251,7 +251,8 @@ def finalize_overlay(
         raise SemanticOverlayError("MIN_SIMILARITY_OUT_OF_RANGE")
 
     table = _validate_map(document_map, projection, projection_sha256)
-    object_ids = {str(node["id"]) for node in _object_nodes(projection)}
+    object_nodes = {str(node["id"]): node for node in _object_nodes(projection)}
+    object_ids = set(object_nodes)
     hierarchy = _hierarchy_pairs(projection)
     candidates: list[tuple[float, str, str, dict[str, Any]]] = []
     rejected = defaultdict(int)
@@ -266,6 +267,11 @@ def finalize_overlay(
             continue
         if source == target:
             rejected["self_loop"] += 1
+            continue
+        source_label = re.sub(r"\W+", "", str(object_nodes[source].get("label") or "").casefold(), flags=re.UNICODE)
+        target_label = re.sub(r"\W+", "", str(object_nodes[target].get("label") or "").casefold(), flags=re.UNICODE)
+        if source_label and source_label == target_label:
+            rejected["same_normalized_label"] += 1
             continue
         pair = tuple(sorted((source, target)))
         if pair in hierarchy:
@@ -333,6 +339,7 @@ def finalize_overlay(
             "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
             "ATTENTION_WEIGHT_IS_NOT_EVIDENCE_WEIGHT",
             "SEMANTIC_NEIGHBOR_IS_NOT_CLAIM_VERIFICATION",
+            "IDENTICAL_LABEL_LINEAGE != SEMANTIC_CROSS_CONCEPT_EDGE",
             "TOPA_OVERLAY != META_REGISTRY_MUTATION",
             "STALE_OVERLAY = IGNORE_FAIL_CLOSED",
         ],
