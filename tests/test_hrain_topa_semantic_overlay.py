@@ -146,6 +146,11 @@ class HrainTopaSemanticOverlayTests(unittest.TestCase):
         self.assertFalse(contract["conversation_memory"]["empty_lexical_anchor_semantic_fill"])
         self.assertFalse(contract["authority"]["claim_promotion_authority"])
         self.assertIn("REPLAY != NEW_EVIDENCE", contract["laws"])
+        workflow = (ROOT / ".github" / "workflows" / "hrain-topa-continuous-semantic-flywheel.yml").read_text(encoding="utf-8")
+        self.assertIn("export TOPA_HEAD REGISTRY_SOURCE", workflow)
+        self.assertIn("export NEEDS_WEAVE", workflow)
+        adapter = (TOOLS / "hrain_topa_semantic_overlay.py").read_text(encoding="utf-8")
+        self.assertIn("same_normalized_label", adapter)
 
 
 if __name__ == "__main__":
