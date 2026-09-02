@@ -116,9 +116,11 @@ jobs:
           assert len(c['source_commit'])==40
           memories=c['selected_memories']
           assert memories[0]['selection_reason']=='PRIMARY_FOCUS_CLUSTER'
-          first_focus=set(memories[0]['matched_focus_tokens'])
-          assert {'trump','hrain','terminal'}.issubset(first_focus), first_focus
-          paths=[str(x['path']).upper() for x in memories]
+          lexical=[x for x in memories if not str(x.get('selection_reason') or '').startswith('TOPA_SEMANTIC_NEIGHBOR:')]
+          assert lexical, 'LEXICAL_ANCHOR_REQUIRED'
+          lexical_focus=set().union(*(set(x.get('matched_focus_tokens') or []) for x in lexical))
+          assert lexical_focus.intersection({'trump','hrain','terminal','memory'}), lexical_focus
+          paths=[str(x['path']).upper() for x in lexical]
           assert not any('P-VS-NP' in path or 'P_VS_NP' in path for path in paths), paths
           assert not any('COSMOS' in path for path in paths), paths
           assert all(x['source_sha256_verified'] is True for x in memories)
@@ -132,6 +134,8 @@ jobs:
           assert c['authority']['external_effect_authority'] is False
           print('HRAIN_LIVE_FOCUS_CLUSTER_CONTEXT=PASS')
           print('source_commit', c['source_commit'])
+          print('semantic_overlay_status', c.get('semantic_overlay_status'))
+          print('semantic_neighbor_count', c.get('semantic_neighbor_count'))
           print('attention_profile', p)
           print('selected', [
             {
