@@ -1,0 +1,29 @@
+{
+  "schema": "janus.hrain.inaihr_synth_link.v1",
+  "status": "ACTIVE_READ_ONLY_SYNTHESIS_SOURCE_LINK",
+  "source": {
+    "repository": "Hawkar-usls/Hrain",
+    "surface": "JANUS Living Registry",
+    "registry_projection": "https://hawkar-usls.github.io/janus-meta-registry/assets/hrain-registry-index.json",
+    "mode": "READ_ONLY"
+  },
+  "consumer": {
+    "repository": "Hawkar-usls/iNaiHR",
+    "organ": "JANUS_SYNTH",
+    "runtime_path": "janus-synth-organ.js",
+    "contract_path": ".janus/JANUS_SYNTH_ORGAN_V1.json"
+  },
+  "relationship": "HRaiN existing nodes+links are synthesis context for iNaiHR JANUS_SYNTH; HRaiN itself remains a non-mutating registry projection.",
+  "authority": {
+    "hrain_registry_write": false,
+    "synth_candidate_is_registry_truth": false,
+    "synth_candidate_is_proof": false,
+    "source_link_visibility_grants_authority": false
+  },
+  "law": "HRAIN_LINKS -> JANUS_SYNTH_CONTEXT; SYNTH_OUTPUT MAY RETURN AS CANDIDATE CONTEXT BUT MAY NOT REWRITE HRAIN REGISTRY SOURCE.",
+  "evidence": {
+    "inaihr_wiring_commit": "95efb2a89ade56278219c462002ab2232e19b910",
+    "inaihr_verification_run": 33653534108,
+    "inaihr_verification": "SUCCESS"
+  }
+}
