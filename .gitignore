@@ -1,0 +1,3 @@
+# Ephemeral JANUS actuator/scout workspace. Never seal runtime clones or selected
+# proposal transport files into target patch branches.
+runtime/
