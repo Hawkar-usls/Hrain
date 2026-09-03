@@ -1,0 +1,27 @@
+{
+  "schema": "janus.hrain.neural_link_memory_contract.v1",
+  "status": "ACTIVE_READ_ONLY_MIRROR",
+  "source": {
+    "repository": "Hawkar-usls/janus-meta-registry",
+    "path": "data/JANUS-NEURAL-LINK/",
+    "pinning": "EXACT_SOURCE_COMMIT_REQUIRED"
+  },
+  "local_surface": "state/neural-link/",
+  "terminal_read_path": "TERMINAL -> HRAIN/state/neural-link/RECENT.json",
+  "direct_terminal_registry_read": false,
+  "authority": {
+    "mirror_is_command_authority": false,
+    "mirror_is_scientific_evidence": false,
+    "mirror_is_world_truth": false,
+    "mirror_can_mutate_registry": false,
+    "mirror_can_mutate_terminal": false
+  },
+  "laws": [
+    "META_REGISTRY_DB -> HRAIN -> TERMINAL",
+    "HRAIN_MIRROR != REGISTRY_AUTHORITY",
+    "CHAT_EVENT != COMMAND_AUTHORITY",
+    "ARCHIVE_PRESENCE != WORLD_TRUTH",
+    "SOURCE_COMMIT_MISMATCH = FAIL_CLOSED",
+    "SOURCE_HASH_MISMATCH = FAIL_CLOSED"
+  ]
+}
