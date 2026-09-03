@@ -1,0 +1,146 @@
+name: HRAiN Neural Link Memory Surface
+
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.janus/HRAIN_NEURAL_LINK_MEMORY_CONTRACT.json'
+      - '.github/workflows/hrain-neural-link-memory-surface.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hrain-neural-link-memory-surface
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Resolve exact Meta Registry source commit
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA="$(git ls-remote https://github.com/Hawkar-usls/janus-meta-registry.git refs/heads/main | awk '{print $1}')"
+          test "${#SHA}" -eq 40
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "META_REGISTRY_SOURCE_COMMIT=$SHA"
+      - name: Fetch pinned Neural Link archive surface
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/neural-link
+          BASE="https://raw.githubusercontent.com/Hawkar-usls/janus-meta-registry/${SOURCE_SHA}/data/JANUS-NEURAL-LINK"
+          for name in MANIFEST.json HEAD.json RECENT.json; do
+            curl --fail --silent --show-error --location --retry 3 "$BASE/$name" -o "/tmp/neural-link/$name"
+            python -m json.tool "/tmp/neural-link/$name" >/dev/null
+          done
+      - name: Validate archive and build HRAiN read-only mirror
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          src=Path('/tmp/neural-link')
+          out=Path('state/neural-link')
+          out.mkdir(parents=True, exist_ok=True)
+          manifest=json.loads((src/'MANIFEST.json').read_text())
+          head=json.loads((src/'HEAD.json').read_text())
+          recent=json.loads((src/'RECENT.json').read_text())
+          contract=json.loads(Path('.janus/HRAIN_NEURAL_LINK_MEMORY_CONTRACT.json').read_text())
+
+          assert manifest['schema']=='janus.neural_link.archive_manifest.v1'
+          assert manifest['event_model']['create_only_versions'] is True
+          assert manifest['authority']['chat_event_is_command'] is False
+          assert manifest['authority']['archive_is_world_truth'] is False
+          assert manifest['authority']['archive_is_scientific_evidence'] is False
+          assert head['schema']=='janus.neural_link.archive_head.v1'
+          assert head['status']=='ARCHIVE_SYNCED'
+          assert head['append_only_event_objects'] is True
+          assert head['mutable_head_is_authority'] is False
+          assert head['cross_repo_write_credential_used'] is False
+          assert recent['schema']=='janus.neural_link.recent.v1'
+          assert recent['authority']=='OBSERVABILITY_AND_MEMORY_ONLY'
+          assert int(recent['event_count'])==len(recent['events'])
+          assert contract['direct_terminal_registry_read'] is False
+          assert contract['authority']['mirror_can_mutate_registry'] is False
+          for event in recent['events']:
+              authority=event.get('authority') or {}
+              assert authority.get('command') is False
+              assert authority.get('scientific_evidence') is False
+              assert authority.get('world_truth') is False
+
+          def digest(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          for name in ('MANIFEST.json','HEAD.json','RECENT.json'):
+              (out/name).write_bytes((src/name).read_bytes())
+
+          provenance={
+              'schema':'janus.hrain.neural_link_memory_provenance.v1',
+              'status':'VERIFIED_READ_ONLY_MIRROR',
+              'source_repository':'Hawkar-usls/janus-meta-registry',
+              'source_commit':os.environ['SOURCE_SHA'],
+              'source_path':'data/JANUS-NEURAL-LINK/',
+              'local_path':'state/neural-link/',
+              'hashes':{name:digest(src/name) for name in ('MANIFEST.json','HEAD.json','RECENT.json')},
+              'event_count':recent['event_count'],
+              'read_only_mirror':True,
+              'terminal_must_not_read_registry_directly':True,
+              'mirror_grants_authority':False,
+              'cross_repository_write':False,
+              'laws':contract['laws'],
+          }
+          (out/'PROVENANCE.json').write_text(json.dumps(provenance,ensure_ascii=False,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'status':'PASS','source_commit':os.environ['SOURCE_SHA'],'events':recent['event_count']},sort_keys=True))
+          PY
+      - name: Verify mirror identity and authority ceiling
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('state/neural-link/PROVENANCE.json').read_text())
+          r=json.loads(Path('state/neural-link/RECENT.json').read_text())
+          assert p['status']=='VERIFIED_READ_ONLY_MIRROR'
+          assert len(p['source_commit'])==40
+          assert p['read_only_mirror'] is True
+          assert p['terminal_must_not_read_registry_directly'] is True
+          assert p['mirror_grants_authority'] is False
+          assert p['cross_repository_write'] is False
+          assert r['authority']=='OBSERVABILITY_AND_MEMORY_ONLY'
+          print('HRAIN_NEURAL_LINK_MIRROR=PASS')
+          PY
+      - name: Persist changed HRAiN mirror only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'HRAiN Neural Link Memory'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add state/neural-link
+          if git diff --cached --quiet; then
+            echo 'HRAIN_NEURAL_LINK_MIRROR=NO_CHANGE'
+            exit 0
+          fi
+          git commit -m 'HRAiN: refresh Neural Link read-only memory mirror'
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo 'HRAIN_NEURAL_LINK_MIRROR=UPDATED'
