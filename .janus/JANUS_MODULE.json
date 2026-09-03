@@ -24,6 +24,7 @@
   },
   "forbidden_paths": [
     ".github/workflows/",
+    ".janus/JANUS_MODULE.json",
     ".git/",
     "secrets/",
     "credentials/"
