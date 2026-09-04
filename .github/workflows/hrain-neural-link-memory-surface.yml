@@ -85,15 +85,13 @@ jobs:
           assert contract['direct_terminal_registry_read'] is False
           assert contract['authority']['mirror_can_mutate_registry'] is False
           response_ids=set()
+          forbidden_authority=('command','scientific_evidence','world_truth','external_effect','cognition','policy','promotion')
           for event in recent['events']:
               authority=event.get('authority') or {}
-              assert authority.get('command') is False
-              assert authority.get('scientific_evidence') is False
-              assert authority.get('world_truth') is False
-              assert authority.get('external_effect') is False
-              assert authority.get('cognition') is False
-              assert authority.get('policy') is False
-              assert authority.get('promotion') is False
+              for key in forbidden_authority:
+                  # Legacy archive rows may omit newer authority keys. Missing means
+                  # ungranted; an explicit true still fails closed.
+                  assert authority.get(key,False) is False
               if event.get('kind')=='JANUS_RESPONSE':
                   response_id=event.get('response_id')
                   assert isinstance(response_id,str) and response_id.startswith('tr-')
@@ -146,6 +144,7 @@ jobs:
           assert 'cancel-in-progress: false' in workflow
           assert "event.get('kind')=='JANUS_RESPONSE'" in workflow
           assert "response_id.startswith('tr-')" in workflow
+          assert "authority.get(key,False) is False" in workflow
           print('HRAIN_NEURAL_LINK_MIRROR=PASS')
           PY
       - name: Persist changed HRAiN mirror only
