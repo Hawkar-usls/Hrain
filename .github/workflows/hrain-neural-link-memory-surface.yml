@@ -4,11 +4,13 @@ on:
   schedule:
     - cron: '2-57/5 * * * *'
   workflow_dispatch:
+  # Scheduled delivery is best-effort on GitHub. Any unrelated HRAiN main
+  # update is also a safe opportunity to catch the mirror up; mirror-only
+  # commits are excluded to prevent a self-trigger loop.
   push:
     branches: [main]
-    paths:
-      - '.janus/HRAIN_NEURAL_LINK_MEMORY_CONTRACT.json'
-      - '.github/workflows/hrain-neural-link-memory-surface.yml'
+    paths-ignore:
+      - 'state/neural-link/**'
 
 permissions:
   contents: write
@@ -120,6 +122,7 @@ jobs:
           from pathlib import Path
           p=json.loads(Path('state/neural-link/PROVENANCE.json').read_text())
           r=json.loads(Path('state/neural-link/RECENT.json').read_text())
+          workflow=Path('.github/workflows/hrain-neural-link-memory-surface.yml').read_text(encoding='utf-8')
           assert p['status']=='VERIFIED_READ_ONLY_MIRROR'
           assert len(p['source_commit'])==40
           assert p['read_only_mirror'] is True
@@ -127,6 +130,10 @@ jobs:
           assert p['mirror_grants_authority'] is False
           assert p['cross_repository_write'] is False
           assert r['authority']=='OBSERVABILITY_AND_MEMORY_ONLY'
+          assert "cron: '2-57/5 * * * *'" in workflow
+          assert 'paths-ignore:' in workflow
+          assert "- 'state/neural-link/**'" in workflow
+          assert 'cancel-in-progress: false' in workflow
           print('HRAIN_NEURAL_LINK_MIRROR=PASS')
           PY
       - name: Persist changed HRAiN mirror only
