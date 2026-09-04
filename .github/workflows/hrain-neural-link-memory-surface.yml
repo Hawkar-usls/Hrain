@@ -4,9 +4,14 @@ on:
   schedule:
     - cron: '2-57/5 * * * *'
   workflow_dispatch:
-  # Scheduled delivery is best-effort on GitHub. Any unrelated HRAiN main
-  # update is also a safe opportunity to catch the mirror up; mirror-only
-  # commits are excluded to prevent a self-trigger loop.
+  # Scheduled delivery is best-effort on GitHub. Use completion of the existing
+  # same-repository TOPA flywheel as an independent catch-up wake source; this
+  # does not grant HRAiN any Meta Registry mutation authority.
+  workflow_run:
+    workflows: ['HRAiN × TOPA Continuous Semantic Flywheel']
+    types: [completed]
+  # Any unrelated HRAiN main update is also a safe opportunity to catch the
+  # mirror up; mirror-only commits are excluded to prevent a self-trigger loop.
   push:
     branches: [main]
     paths-ignore:
@@ -139,6 +144,8 @@ jobs:
           assert p['cross_repository_write'] is False
           assert r['authority']=='OBSERVABILITY_AND_MEMORY_ONLY'
           assert "cron: '2-57/5 * * * *'" in workflow
+          assert 'workflow_run:' in workflow
+          assert "workflows: ['HRAiN × TOPA Continuous Semantic Flywheel']" in workflow
           assert 'paths-ignore:' in workflow
           assert "- 'state/neural-link/**'" in workflow
           assert 'cancel-in-progress: false' in workflow
