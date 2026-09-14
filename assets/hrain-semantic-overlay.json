@@ -202,12 +202,12 @@
     },
     {
       "claimVerified": false,
-      "confidence": 0.346792,
+      "confidence": 0.347079,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.590834,
+      "similarity": 0.591655,
       "source": "obj:1be8a2d2430a48202e15",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:2e6388c62a86ed942c1b"
@@ -250,24 +250,24 @@
     },
     {
       "claimVerified": false,
-      "confidence": 0.296306,
+      "confidence": 0.294626,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.446588,
+      "similarity": 0.44179,
       "source": "obj:c4a409aa3e5568ae3dca",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:c8987e8cc41ad5f0b14a"
     },
     {
       "claimVerified": false,
-      "confidence": 0.286287,
+      "confidence": 0.28649,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.417963,
+      "similarity": 0.418543,
       "source": "obj:1be8a2d2430a48202e15",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:3ff448dc293a58a26483"
@@ -334,12 +334,12 @@
     },
     {
       "claimVerified": false,
-      "confidence": 0.255265,
+      "confidence": 0.255425,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.329329,
+      "similarity": 0.329786,
       "source": "obj:1be8a2d2430a48202e15",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:77afc25ed0399ea216e4"
@@ -370,12 +370,12 @@
     },
     {
       "claimVerified": false,
-      "confidence": 0.251971,
+      "confidence": 0.252126,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.319916,
+      "similarity": 0.32036,
       "source": "obj:1be8a2d2430a48202e15",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:bd204e5bcf9729c26077"
@@ -405,7 +405,7 @@
       "target": "obj:bd204e5bcf9729c26077"
     }
   ],
-  "generatedAt": "2026-09-14T19:24:13Z",
+  "generatedAt": "2026-09-14T23:08:55Z",
   "laws": [
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
@@ -440,15 +440,15 @@
     "obj:fecd7b0291eef7164c0d": 5,
     "obj:ff19ae2af745fccf5fc6": 3
   },
-  "overlayHash": "37ae1fb77323b37fbe2a02a09d61554309a8ec3606cc34030e9ddc5463ab99ba",
+  "overlayHash": "478e9aefbc07556d7a8ac638c324e51e8cce5fb01e29d091e97d2534f80a2305",
   "repository": "Hawkar-usls/Hrain",
   "schema": "janus.hrain.topa_semantic_overlay.v1",
-  "sourceCommit": "8bf75d950d80eb284dfa0498b6edd4c965e2b385",
+  "sourceCommit": "8dc67b3f0f6b6575bd737a50b87b0af2baac94a6",
   "sourceProjectionSchema": "janus.hrain.registry_graph_index.v1_0",
-  "sourceProjectionSha256": "f8fdc54d026177b3af35d83d8a9dd022def69a6fc71bd1b94c9a62da09bd9d33",
+  "sourceProjectionSha256": "da1d7820bf985efe8851220183e3911adcf75ff67557b4ffc919c91f9ec9eca0",
   "sourceRepository": "Hawkar-usls/janus-meta-registry",
   "status": "READY",
   "topaHeadSha": "7717c527a44da48d814160eb1e7d52cb96c27ed6",
-  "topaReceiptHash": "f38a02e2a776a5c688e3882a4bcdbbe6093d798e15464053d252703839ef1529",
+  "topaReceiptHash": "c0341c5b60ff09fd971ce2589a68bbf739ed2b9a4270f29e45afcd971db9f5ff",
   "topaRepository": "Hawkar-usls/TOPA"
 }
