@@ -1,0 +1,61 @@
+name: HRAiN Fundamentum JSON Mirror
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hrain-fundamentum-json-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build source-bound Fundamentum JSON
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/fundamentum-mirror
+          python tools/fundamentum_json_mirror.py --out /tmp/fundamentum-mirror
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('/tmp/fundamentum-mirror/LATEST.json').read_text())
+          assert x['schema']=='janus.hrain.fundamentum_memory_pointer.v1'
+          assert x['status']=='READY'
+          assert x['source_mutation'] is False
+          assert x['claim_promotion'] is False
+          assert x['entry_count'] > 0
+          print('HRAIN_FUNDAMENTUM_MIRROR_GATE=PASS')
+          PY
+      - name: Persist isolated structural memory
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin janus/fundamentum-structural-memory >/dev/null 2>&1; then
+            git fetch origin janus/fundamentum-structural-memory
+            git switch -C janus/fundamentum-structural-memory origin/janus/fundamentum-structural-memory
+          else
+            git switch --orphan janus/fundamentum-structural-memory
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          mkdir -p data/fundamentum-mirror
+          cp /tmp/fundamentum-mirror/*.json data/fundamentum-mirror/
+          printf '%s\n' '# Fundamentum structural memory' '' 'Read-only source mirror for JANUS. This branch is derivative memory and never rewrites Janus-Fundamentum.' > data/fundamentum-mirror/README.md
+          git config user.name 'janus-hrain-fundamentum[bot]'
+          git config user.email 'janus-hrain-fundamentum[bot]@users.noreply.github.com'
+          git add data/fundamentum-mirror
+          git diff --cached --quiet && exit 0
+          git commit -m "hrain: refresh Fundamentum structural memory"
+          git push origin HEAD:janus/fundamentum-structural-memory
