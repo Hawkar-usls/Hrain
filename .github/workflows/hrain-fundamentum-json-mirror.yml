@@ -1,6 +1,12 @@
 name: HRAiN Fundamentum JSON Mirror
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fundamentum_json_mirror.py'
+      - '.janus/HRAIN_FUNDAMENTUM_MEMORY_CONTRACT.json'
+      - '.github/workflows/hrain-fundamentum-json-mirror.yml'
   schedule:
     - cron: '7 * * * *'
   workflow_dispatch:
