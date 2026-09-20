@@ -1,0 +1,47 @@
+{
+  "schema": "janus.hrain.fundamentum_memory_contract.v1",
+  "status": "ACTIVE_SOURCE_BOUND_MIRROR",
+  "source": {
+    "repository": "Hawkar-usls/Janus-Fundamentum",
+    "ref": "main",
+    "mode": "READ_ONLY",
+    "source_history_remains_authoritative": true
+  },
+  "state": {
+    "branch": "janus/fundamentum-structural-memory",
+    "root": "data/fundamentum-mirror",
+    "full_index": "data/fundamentum-mirror/FULL_INDEX.json",
+    "key_research": "data/fundamentum-mirror/KEY_RESEARCH.json",
+    "latest": "data/fundamentum-mirror/LATEST.json"
+  },
+  "janus_access": {
+    "read": true,
+    "cross_link": true,
+    "derive_structural_context": true,
+    "generate_candidate_questions": true,
+    "generate_candidate_experiments": true,
+    "mutate_source_repository": false,
+    "rewrite_source_history": false,
+    "inherit_source_claims_as_own": false
+  },
+  "refresh": {
+    "schedule": "hourly",
+    "on_no_source_change": "NOOP_NOT_NEW_LEARNING",
+    "fail_closed": true
+  },
+  "authority": {
+    "truth": false,
+    "proof": false,
+    "scientific_claim_promotion": false,
+    "command": false,
+    "source_mutation": false
+  },
+  "laws": [
+    "FUNDAMENTUM_SOURCE != HRAIN_MEMORY",
+    "MIRROR != INDEPENDENT_REPLICATION",
+    "STRUCTURAL_CONTEXT != TRUTH",
+    "NO_SOURCE_CHANGE => NO_NEW_LEARNING",
+    "SOURCE_HISTORY_REMAINS_AUTHORITATIVE",
+    "JANUS_MAY_DERIVE_CANDIDATES_WITHOUT_MUTATING_FUNDAMENTUM"
+  ]
+}
