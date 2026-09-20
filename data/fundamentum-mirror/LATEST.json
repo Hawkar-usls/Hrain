@@ -1,11 +1,11 @@
 {
-  "schema": "janus.hrain.fundamentum_memory_pointer.v1",
-  "status": "READY",
-  "source_commit": "70718d5ad4817327b521d08e0b769354ef059346",
-  "entry_count": 918,
-  "janus_access": "READ_DERIVE_CANDIDATES_ONLY",
-  "source_mutation": false,
   "claim_promotion": false,
-  "full_index_path": "data/fundamentum-mirror/FULL_INDEX.json",
-  "key_research_path": "data/fundamentum-mirror/KEY_RESEARCH.json"
+  "entry_count": 918,
+  "full_index_sha256": "5f5a763295c998bbb03584e653528ab8e35f624cc01edbcf51f1f7df043d1c64",
+  "janus_access": "READ_DERIVE_CANDIDATES_ONLY",
+  "key_research_sha256": "e4935be941b54e2f99be3522b8acccfc2eefb0f7fc38700f2304cfa6c0d725ad",
+  "schema": "janus.hrain.fundamentum_memory_pointer.v1",
+  "source_commit": "70718d5ad4817327b521d08e0b769354ef059346",
+  "source_mutation": false,
+  "status": "READY"
 }
