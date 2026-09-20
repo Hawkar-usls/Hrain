@@ -1,0 +1,11 @@
+{
+  "schema": "janus.hrain.fundamentum_memory_pointer.v1",
+  "status": "READY",
+  "source_commit": "70718d5ad4817327b521d08e0b769354ef059346",
+  "entry_count": 918,
+  "janus_access": "READ_DERIVE_CANDIDATES_ONLY",
+  "source_mutation": false,
+  "claim_promotion": false,
+  "full_index_path": "data/fundamentum-mirror/FULL_INDEX.json",
+  "key_research_path": "data/fundamentum-mirror/KEY_RESEARCH.json"
+}
