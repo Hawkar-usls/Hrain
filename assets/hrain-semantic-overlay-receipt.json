@@ -4,8 +4,8 @@
   "claimPromotionPerformed": false,
   "maxSemanticDegree": 8,
   "maximumObservedSemanticDegree": 3,
-  "overlayHash": "1f61d03dc47752048745551289e41f429839a68183b6951e70a50b6a3738ca4e",
-  "receiptHash": "c32d9f16149bf78d2de80a6fd59a69c1f434fe75c66e7210141b8f8e7240d623",
+  "overlayHash": "c6524360e7c61dcb53cb5e48b0371c4175ff73b9f4a108f141979a89d358e4a3",
+  "receiptHash": "2a0ebc028301bea775be53a674d7832b96754068001cfdf36d598b37ac902e75",
   "registryMutationPerformed": false,
   "rejected": {
     "below_similarity_threshold": 1,
@@ -15,6 +15,6 @@
   "sourceCommit": "7d675418b5e2e843995cee8761339d708c2c77b6",
   "sourceProjectionSha256": "53c0e21e0c4e5f57b537b90b1c8d608ef16677a5aa2e4f52858ae0b3f2f2d04e",
   "status": "PASS",
-  "topaHeadSha": "6b574be14555af33610f6416d0936a4eb3f161e7",
+  "topaHeadSha": "00f55be2519efc341efb5750594f88124a4dd0a2",
   "topaReceiptHash": "86f484d31e240a0f55a010acad20e01a5443df78cfc1270b6fed7c18756d8dcc"
 }
