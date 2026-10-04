@@ -39,6 +39,6 @@
     "MIRROR != INDEPENDENT_REPLICATION"
   ],
   "schema": "janus.hrain.fundamentum_key_research.v1",
-  "source_commit": "63a32637d72ec7f38b32e21306352f708439aaa9",
+  "source_commit": "fd036e274f56457dbb91ecb8b19085a3a913571c",
   "source_repository": "Hawkar-usls/Janus-Fundamentum"
 }
