@@ -6,82 +6,46 @@
     "registryWriteAuthority": false,
     "scientificEvidenceAuthority": false
   },
-  "edgeCount": 6,
+  "edgeCount": 3,
   "edges": [
     {
       "claimVerified": false,
-      "confidence": 0.319763,
+      "confidence": 0.370264,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.513607,
-      "source": "obj:86d2c455577bc0e4b9cd",
-      "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:ff19ae2af745fccf5fc6"
-    },
-    {
-      "claimVerified": false,
-      "confidence": 0.276686,
-      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
-      "evidenceWeight": 0,
-      "readOnly": true,
-      "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.390533,
-      "source": "obj:86d2c455577bc0e4b9cd",
-      "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:f8ef1e78aa8d16672582"
-    },
-    {
-      "claimVerified": false,
-      "confidence": 0.276686,
-      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
-      "evidenceWeight": 0,
-      "readOnly": true,
-      "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.390533,
+      "similarity": 0.657897,
       "source": "obj:f8ef1e78aa8d16672582",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:ff19ae2af745fccf5fc6"
+      "target": "obj:f94c9802b45cea20150c"
     },
     {
       "claimVerified": false,
-      "confidence": 0.274587,
+      "confidence": 0.291998,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.384535,
+      "similarity": 0.434281,
       "source": "obj:a3b7abc5389e4784160b",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:f8ef1e78aa8d16672582"
     },
     {
       "claimVerified": false,
-      "confidence": 0.260787,
+      "confidence": 0.245486,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.345106,
-      "source": "obj:86d2c455577bc0e4b9cd",
-      "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:a3b7abc5389e4784160b"
-    },
-    {
-      "claimVerified": false,
-      "confidence": 0.260787,
-      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
-      "evidenceWeight": 0,
-      "readOnly": true,
-      "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.345106,
+      "similarity": 0.30139,
       "source": "obj:a3b7abc5389e4784160b",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:ff19ae2af745fccf5fc6"
+      "target": "obj:f94c9802b45cea20150c"
     }
   ],
-  "generatedAt": "2026-09-27T13:59:55Z",
+  "generatedAt": "2026-10-05T22:38:42Z",
   "laws": [
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
@@ -94,20 +58,19 @@
   "maxSemanticDegree": 8,
   "minimumSimilarity": 0.22,
   "nodeSemanticDegree": {
-    "obj:86d2c455577bc0e4b9cd": 3,
-    "obj:a3b7abc5389e4784160b": 3,
-    "obj:f8ef1e78aa8d16672582": 3,
-    "obj:ff19ae2af745fccf5fc6": 3
+    "obj:a3b7abc5389e4784160b": 2,
+    "obj:f8ef1e78aa8d16672582": 2,
+    "obj:f94c9802b45cea20150c": 2
   },
-  "overlayHash": "c6524360e7c61dcb53cb5e48b0371c4175ff73b9f4a108f141979a89d358e4a3",
+  "overlayHash": "152e31c55f5b35c11a8788380652297dad7fa9511c2ddda5e9c2e288cd5ef37c",
   "repository": "Hawkar-usls/Hrain",
   "schema": "janus.hrain.topa_semantic_overlay.v1",
-  "sourceCommit": "7d675418b5e2e843995cee8761339d708c2c77b6",
+  "sourceCommit": "729a3bd4ca78e0d1a16bab826bc6959ae3acbd52",
   "sourceProjectionSchema": "janus.hrain.registry_graph_index.v1_0",
-  "sourceProjectionSha256": "53c0e21e0c4e5f57b537b90b1c8d608ef16677a5aa2e4f52858ae0b3f2f2d04e",
+  "sourceProjectionSha256": "cb9b3b29c101564dc7a564779900fb880b91dfa96d763ff3f4625c6cce9730a9",
   "sourceRepository": "Hawkar-usls/janus-meta-registry",
   "status": "READY",
   "topaHeadSha": "00f55be2519efc341efb5750594f88124a4dd0a2",
-  "topaReceiptHash": "86f484d31e240a0f55a010acad20e01a5443df78cfc1270b6fed7c18756d8dcc",
+  "topaReceiptHash": "9202c54320469ea4dd24e7184a3b64ac2a27b07f108c972832ca911dfd99bcc1",
   "topaRepository": "Hawkar-usls/TOPA"
 }
