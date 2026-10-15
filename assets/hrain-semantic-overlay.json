@@ -129,7 +129,7 @@
       "target": "obj:f94c9802b45cea20150c"
     }
   ],
-  "generatedAt": "2026-10-14T23:56:06Z",
+  "generatedAt": "2026-10-15T19:09:41Z",
   "laws": [
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
@@ -148,15 +148,15 @@
     "obj:f94c9802b45cea20150c": 4,
     "obj:ff19ae2af745fccf5fc6": 4
   },
-  "overlayHash": "96412b0dfb605fb8e8da7bcb225e64ff96a7712b2ffc2808dd00d03aacf6fb46",
+  "overlayHash": "b9efb6d5b54f6cf75e58d3ff2e02d5642e20fce27ff4bdb404e7b7f3fca848a9",
   "repository": "Hawkar-usls/Hrain",
   "schema": "janus.hrain.topa_semantic_overlay.v1",
-  "sourceCommit": "b91d4a3d461d6c9c25428b9c9638f9b150bf7fd8",
+  "sourceCommit": "5c41bdb67fbaa8a078d4d18d83258c33fa81ca4f",
   "sourceProjectionSchema": "janus.hrain.registry_graph_index.v1_0",
-  "sourceProjectionSha256": "57ce669bfa944a85b734358600edaa06c9690895127e5a64d7c3bd22025f211f",
+  "sourceProjectionSha256": "49f03a1cb823815cb16fd38e0c308b88b03b77815eb1082c82c19d74f816e073",
   "sourceRepository": "Hawkar-usls/janus-meta-registry",
   "status": "READY",
   "topaHeadSha": "00f55be2519efc341efb5750594f88124a4dd0a2",
-  "topaReceiptHash": "a6e01d6e31ac7bc66acd41f121932f72c43de6c4dc47543b3f4dca31dbe9bf59",
+  "topaReceiptHash": "655af1b68d01ab9ee48df845139e1d18c04f5b88eb99cf3b88c93cd99d462833",
   "topaRepository": "Hawkar-usls/TOPA"
 }
