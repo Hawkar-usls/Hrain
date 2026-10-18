@@ -6,7 +6,7 @@
     "registryWriteAuthority": false,
     "scientificEvidenceAuthority": false
   },
-  "edgeCount": 17,
+  "edgeCount": 22,
   "edges": [
     {
       "claimVerified": false,
@@ -106,6 +106,18 @@
     },
     {
       "claimVerified": false,
+      "confidence": 0.26596,
+      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+      "evidenceWeight": 0,
+      "readOnly": true,
+      "relation": "TOPA_SEMANTIC_SIMILARITY",
+      "similarity": 0.359885,
+      "source": "obj:19efaba13bc267bb4849",
+      "status": "SPECULATIVE_SEMANTIC_EDGE",
+      "target": "obj:e89a3158a0fba3f1d299"
+    },
+    {
+      "claimVerified": false,
       "confidence": 0.263363,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
@@ -127,6 +139,18 @@
       "source": "obj:a3b7abc5389e4784160b",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:ff19ae2af745fccf5fc6"
+    },
+    {
+      "claimVerified": false,
+      "confidence": 0.257834,
+      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+      "evidenceWeight": 0,
+      "readOnly": true,
+      "relation": "TOPA_SEMANTIC_SIMILARITY",
+      "similarity": 0.336668,
+      "source": "obj:d6eb8e510b0de280c6e5",
+      "status": "SPECULATIVE_SEMANTIC_EDGE",
+      "target": "obj:e89a3158a0fba3f1d299"
     },
     {
       "claimVerified": false,
@@ -178,15 +202,15 @@
     },
     {
       "claimVerified": false,
-      "confidence": 0.237091,
+      "confidence": 0.232439,
       "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
       "evidenceWeight": 0,
       "readOnly": true,
       "relation": "TOPA_SEMANTIC_SIMILARITY",
-      "similarity": 0.277404,
+      "similarity": 0.264111,
       "source": "obj:19efaba13bc267bb4849",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
-      "target": "obj:bb0707f255aacf322419"
+      "target": "obj:d6eb8e510b0de280c6e5"
     },
     {
       "claimVerified": false,
@@ -211,9 +235,45 @@
       "source": "obj:ce0a251d4b393dee5201",
       "status": "SPECULATIVE_SEMANTIC_EDGE",
       "target": "obj:f8ef1e78aa8d16672582"
+    },
+    {
+      "claimVerified": false,
+      "confidence": 0.230401,
+      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+      "evidenceWeight": 0,
+      "readOnly": true,
+      "relation": "TOPA_SEMANTIC_SIMILARITY",
+      "similarity": 0.258289,
+      "source": "obj:19efaba13bc267bb4849",
+      "status": "SPECULATIVE_SEMANTIC_EDGE",
+      "target": "obj:bb0707f255aacf322419"
+    },
+    {
+      "claimVerified": false,
+      "confidence": 0.2278,
+      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+      "evidenceWeight": 0,
+      "readOnly": true,
+      "relation": "TOPA_SEMANTIC_SIMILARITY",
+      "similarity": 0.250857,
+      "source": "obj:19efaba13bc267bb4849",
+      "status": "SPECULATIVE_SEMANTIC_EDGE",
+      "target": "obj:2ea6efae0eb1243d58fc"
+    },
+    {
+      "claimVerified": false,
+      "confidence": 0.221844,
+      "epistemicNote": "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
+      "evidenceWeight": 0,
+      "readOnly": true,
+      "relation": "TOPA_SEMANTIC_SIMILARITY",
+      "similarity": 0.233841,
+      "source": "obj:2ea6efae0eb1243d58fc",
+      "status": "SPECULATIVE_SEMANTIC_EDGE",
+      "target": "obj:e89a3158a0fba3f1d299"
     }
   ],
-  "generatedAt": "2026-10-18T01:04:02Z",
+  "generatedAt": "2026-10-18T11:08:17Z",
   "laws": [
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
@@ -227,28 +287,31 @@
   "minimumSimilarity": 0.22,
   "nodeSemanticDegree": {
     "obj:19b6d6e14de65f823d93": 2,
-    "obj:19efaba13bc267bb4849": 1,
+    "obj:19efaba13bc267bb4849": 4,
     "obj:1fc0ec4c1a55215b997f": 1,
     "obj:20f8448485544927cb72": 2,
+    "obj:2ea6efae0eb1243d58fc": 2,
     "obj:560f41bcaae211d82509": 1,
     "obj:86d2c455577bc0e4b9cd": 4,
     "obj:9f1c0298c82f5e88a5f4": 2,
     "obj:a3b7abc5389e4784160b": 4,
     "obj:bb0707f255aacf322419": 1,
     "obj:ce0a251d4b393dee5201": 2,
+    "obj:d6eb8e510b0de280c6e5": 2,
+    "obj:e89a3158a0fba3f1d299": 3,
     "obj:f8ef1e78aa8d16672582": 5,
     "obj:f94c9802b45cea20150c": 5,
     "obj:ff19ae2af745fccf5fc6": 4
   },
-  "overlayHash": "ae4b6e5d01800aea8f25da734f68e9b35ab1f3e130b0006a5d2b8ad3e6dfe945",
+  "overlayHash": "f00734e09ee7b2a9f7e0168ea441f61e0b78775fa5102d4874b93908d48e8b7d",
   "repository": "Hawkar-usls/Hrain",
   "schema": "janus.hrain.topa_semantic_overlay.v1",
-  "sourceCommit": "eea4a8f402cfe5e9924ee5adb5cae0528887a6b1",
+  "sourceCommit": "5754868897a40ad52c0b0bc00a417ddefdc8e368",
   "sourceProjectionSchema": "janus.hrain.registry_graph_index.v1_0",
-  "sourceProjectionSha256": "ce6280d087272445795a20301a51db33328270ce9c5a5565946088e0ba1ec034",
+  "sourceProjectionSha256": "ead34c342819887936acdbc27b9bc96fd63fe39a166a53c5c7c70ce446da66d8",
   "sourceRepository": "Hawkar-usls/janus-meta-registry",
   "status": "READY",
   "topaHeadSha": "00f55be2519efc341efb5750594f88124a4dd0a2",
-  "topaReceiptHash": "72de879e662d2965b2806ae3fbffac1373ab4267e1ae66f277160904ea396d0d",
+  "topaReceiptHash": "da96806e4bbcbffd1f2a4be12014d936b03eabb2b8aa6221f7bca61e788d8b0b",
   "topaRepository": "Hawkar-usls/TOPA"
 }
