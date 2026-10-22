@@ -1,11 +1,11 @@
 {
   "claim_promotion": false,
   "entry_count": 1390,
-  "full_index_sha256": "c73eacf48bec35138f24287c1ec7746c0001ac675398b646420c5bd7116f7dae",
+  "full_index_sha256": "e9382a6a5fe11c48de32b57c8b17fa1307ea78d3bb4f0d2804b5506c41c009b7",
   "janus_access": "READ_DERIVE_CANDIDATES_ONLY",
-  "key_research_sha256": "b77af6edbdeb42825715be1b53127efe9ca818d77f60be6f92ec89a246face5b",
+  "key_research_sha256": "c34600eea5d7d6ec6f66827b5a68a3c1215458a5df021f92a0f014489b1ce4dd",
   "schema": "janus.hrain.fundamentum_memory_pointer.v1",
-  "source_commit": "f5b31fffa9cc05784a3a3b60c239bd3f154e92eb",
+  "source_commit": "eb721e13478e328c9bf53d9177584f98cf5c30cc",
   "source_mutation": false,
   "status": "READY"
 }
