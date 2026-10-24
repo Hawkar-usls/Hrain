@@ -1,10 +1,10 @@
 {
-  "acknowledged_at": "2026-10-24T16:15:32.817390Z",
-  "batch_id": "34e67dc239245f1d3f6e",
-  "last_sequence": 50,
+  "acknowledged_at": "2026-10-24T19:01:22.719880Z",
+  "batch_id": "55b6d3c38ed313d237b3",
+  "last_sequence": 51,
   "schema": "janus.beetle.inbox_ack.v1",
   "scientific_authority_delta": 0,
-  "sha256": "c003d0ab9edd57ea8dadc1a47f687d70ddfec573dbfa3a2c861fb0cfac67da74",
+  "sha256": "536777343614d55f2775377f1b2f7c4aa8bdbeafcff8a6457fd3862fb00e0488",
   "status": "INBOX_DURABLE_UNVERIFIED__NOT_RUNTIME_CONSUMPTION",
   "target_repository": "Hawkar-usls/Hrain"
 }
