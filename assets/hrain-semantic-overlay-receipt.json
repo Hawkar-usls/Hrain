@@ -1,20 +1,19 @@
 {
-  "acceptedSemanticEdges": 22,
-  "candidateSemanticEdges": 22,
+  "acceptedSemanticEdges": 17,
+  "candidateSemanticEdges": 17,
   "claimPromotionPerformed": false,
   "maxSemanticDegree": 8,
-  "maximumObservedSemanticDegree": 5,
-  "overlayHash": "2b8316062f893df7727a71efb4a2aad3dbeb134279b982fe81c6544acf8f4ce3",
-  "receiptHash": "d2745f19cf21bb36d809be50f6396a6efb6b7db6501b2b2006b69621c4899ae2",
+  "maximumObservedSemanticDegree": 4,
+  "overlayHash": "61803b9efa664f58f33075dfe420ddcedf27e836d20e5f79b03a94b7d2150f44",
+  "receiptHash": "4aac8e1a5ca7179d3a560cf1520e3854649d5f167199d1b1ad8a6ef88d108516",
   "registryMutationPerformed": false,
   "rejected": {
-    "below_similarity_threshold": 7,
-    "same_normalized_label": 183
+    "same_normalized_label": 140
   },
   "schema": "janus.hrain.topa_semantic_overlay_receipt.v1",
-  "sourceCommit": "1aad6386fc2a1e9e4c47968c813148f92074167a",
-  "sourceProjectionSha256": "253a7a65cdbc6ada875cfbe58c71e3eb4cad90c4df8834b03d06c1d4de998e30",
+  "sourceCommit": "0c3cd60a83e02d0fdaf34ec1216f878fb99b74e5",
+  "sourceProjectionSha256": "c48baad96e043b51187d3a88dbabda62699db8bebc13ae6db7da1f4cf0169edf",
   "status": "PASS",
   "topaHeadSha": "00f55be2519efc341efb5750594f88124a4dd0a2",
-  "topaReceiptHash": "ea1b33f5a1b9d0dddfb394a32881c23dd3412c6c181cbfada16f1b28badf8ed1"
+  "topaReceiptHash": "9573ef5a1443349ebafcab095e69cec98f5c1b1d9b49bf8da123c3c46d6666cc"
 }
