@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 from urllib.request import urlopen,Request
 from urllib.parse import quote
+from janus_verified_source import read_exact_pointer, SourceHold
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULT_INDEX="https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas"
@@ -147,8 +148,19 @@ def main():
     p.add_argument("--limit",type=int,default=12)
     p.add_argument("--related",type=int,default=6)
     p.add_argument("--local-index",type=Path)
+    p.add_argument("--read-source",action="store_true",help="Download and verify one exact public JSON by Git blob hash")
+    p.add_argument("--pointer",default="",help="RFC 6901 pointer, e.g. /status or /results/0/metric")
     args=p.parse_args()
     m,rows=load_catalog(args.local_index or DEFAULT_INDEX)
-    print(json.dumps(navigate(m,rows,args.query,args.repo,args.focus,args.limit,args.related),
-                     ensure_ascii=False,indent=2))
+    output=navigate(m,rows,args.query,args.repo,args.focus,args.limit,args.related)
+    if args.read_source:
+        focus=output["focus"]
+        if not focus:raise Hold("SOURCE_READ_REQUIRES_EXACT_MATCH_OR_FOCUS")
+        selected=next((r for r in rows if r["id"]==focus["id"]),None)
+        if selected is None:raise Hold("UNINDEXED_SOURCE")
+        try:output["verifiedSourceField"]=read_exact_pointer(selected,args.pointer)
+        except SourceHold as exc:raise Hold(str(exc)) from exc
+    elif args.pointer:
+        raise Hold("JSON_POINTER_REQUIRES_READ_SOURCE")
+    print(json.dumps(output,ensure_ascii=False,indent=2))
 if __name__=="__main__":main()

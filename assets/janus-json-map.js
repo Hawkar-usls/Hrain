@@ -79,6 +79,114 @@ function associations(record,cap=8){
  }
  return pool.sort((a,b)=>b.score-a.score||a.record.path.localeCompare(b.record.path)).slice(0,cap)
 }
+
+// Explicit opt-in byte-verification: data is untrusted, never executed or
+// promoted to evidence. Only HTTPS raw content at the exact indexed commit.
+const SOURCE_MAX_BYTES=2_000_000;
+function sourceRawUrl(r){
+ const owner=/^Hawkar-usls\/[a-zA-Z0-9_.-]+$/;
+ const revision=/^[0-9a-f]{40}$/;
+ if(!owner.test(r.repository)||!revision.test(r.sourceCommit)||typeof r.path!=='string'||
+    r.path.length>512||!r.path.endsWith('.json')||
+    r.path.split('/').some(p=>!p||p==='.'||p==='..'||p.includes('\\'))||
+    !/^https:\/\/github\.com\/Hawkar-usls\//.test(r.sourceUrl||'')||
+    !r.readOnly||r.deleteAllowed!==false)throw Error('UNTRUSTED_SOURCE_POINTER');
+ const uri=r.path.split('/').map(encodeURIComponent).join('/');
+ const expected='https://github.com/'+r.repository+'/blob/'+r.sourceCommit+'/'+uri;
+ if(r.sourceUrl!==expected)throw Error('UNTRUSTED_OR_UNPINNED_ORIGIN');
+ if(!Number.isSafeInteger(r.sizeBytes)||r.sizeBytes<1||r.sizeBytes>SOURCE_MAX_BYTES)throw Error('SOURCE_TOO_LARGE_TO_DIVE');
+ return 'https://raw.githubusercontent.com/'+r.repository+'/'+r.sourceCommit+'/'+uri;
+}
+async function bytesDigest(algorithm,buf){
+ const hashed=await crypto.subtle.digest(algorithm,buf);
+ return [...new Uint8Array(hashed)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function loadVerifiedSourceJSON(record){
+ const raw=sourceRawUrl(record);
+ const response=await fetch(raw,{cache:'no-store',headers:{Accept:'application/json'}});
+ if(!response.ok)throw Error('PINNED_SOURCE_HTTP_'+response.status);
+ const contentLength=Number(response.headers.get('content-length')||'0');
+ if(contentLength>SOURCE_MAX_BYTES)throw Error('SOURCE_HTTP_LENGTH_EXCEEDS_CAP');
+ const reader=response.body?.getReader();
+ const pieces=[];let total=0;
+ if(reader){
+  while(true){const {done,value}=await reader.read();if(done)break;
+   total+=value.byteLength;
+   if(total>SOURCE_MAX_BYTES){await reader.cancel();throw Error('SOURCE_STREAM_EXCEEDS_CAP')}
+   pieces.push(value);
+  }
+ }else{
+  const ab=await response.arrayBuffer();total=ab.byteLength;
+  if(total>SOURCE_MAX_BYTES)throw Error('SOURCE_RESPONSE_EXCEEDS_CAP');
+  pieces.push(new Uint8Array(ab));
+ }
+ if(total!==record.sizeBytes)throw Error('SOURCE_LENGTH_CHANGED_FROM_GITHUB_TREE');
+ const bytes=new Uint8Array(total);let at=0;
+ for(const part of pieces){bytes.set(part,at);at+=part.byteLength}
+ // Git blob prefix uses the NUL separator of Git's loose blob representation.
+ const truePrefix=new TextEncoder().encode('blob '+total+String.fromCharCode(0));
+ const blob=new Uint8Array(truePrefix.byteLength+total);
+ blob.set(truePrefix);blob.set(bytes,truePrefix.byteLength);
+ const actualGit=await bytesDigest('SHA-1',blob);
+ if(!/^[0-9a-f]{40}$/.test(record.gitBlobSha||'')||record.gitBlobSha!==actualGit)
+  throw Error('PINNED_GIT_BLOB_SHA_MISMATCH');
+ const actualSha=await bytesDigest('SHA-256',bytes);
+ if(record.sourceSha256!==null&&record.sourceSha256!==undefined){
+  if(!/^[0-9a-f]{64}$/.test(record.sourceSha256)||record.sourceSha256!==actualSha)
+   throw Error('META_REGISTRY_SHA256_MISMATCH');
+ }
+ const decoded=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+ return {value:JSON.parse(decoded),sha256:actualSha,blob:actualGit,bytes:total,url:raw};
+}
+function jsonPointerSegments(root){
+ const out=[];const visited=new Set();
+ function rec(v,path,depth){
+  if(out.length>=160||depth>7)return;
+  if(v===null||typeof v!=='object'){
+   out.push({pointer:path,type:v===null?'null':typeof v,
+             value:JSON.stringify(v)});return;
+  }
+  if(visited.has(v))return;visited.add(v);
+  const entries=Array.isArray(v)?v.map((x,i)=>[String(i),x]):Object.entries(v);
+  if(entries.length===0)out.push({pointer:path,type:Array.isArray(v)?'array':'object',value:'(empty)'});
+  for(const [key,x] of entries.slice(0,100)){
+   if(out.length>=160)break;
+   rec(x,path+'/'+key.replaceAll('~','~0').replaceAll('/','~1'),depth+1);
+  }
+ }
+ rec(root,'',0);return out;
+}
+async function showVerifiedFields(record,box){
+ box.replaceChildren(element('p','Fetching exact commit-pinned JSON and validating Git blob identity…','hint'));
+ try{
+  const v=await loadVerifiedSourceJSON(record);
+  if(state.current?.id!==record.id)return;
+  const fields=jsonPointerSegments(v.value);
+  box.replaceChildren();
+  box.append(element('p','VERIFIED SOURCE BYTES · SHA-256 '+v.sha256.slice(0,20)+'… · '+fmt(v.bytes)+' bytes','verified'));
+  box.append(element('p',fields.length+' displayed JSON leaf pointers · exact Git blob '+v.blob.slice(0,16)+'…','hint'));
+  const q=element('input',null,'field-filter');q.type='search';q.placeholder='Filter source JSON keys/values…';
+  q.setAttribute('aria-label','Filter verified JSON pointer records');box.append(q);
+  const results=element('div',null,'verified-records');box.append(results);
+  function render(){
+   results.replaceChildren();
+   const needle=q.value.toLowerCase();
+   for(const row of fields.filter(r=>(r.pointer+' '+r.value).toLowerCase().includes(needle)).slice(0,60)){
+    const el=element('div',null,'verified-field');
+    el.append(element('code',row.pointer||'(root)','verified-pointer'));
+    el.append(element('div',(row.value||'').slice(0,450),'verified-value'));
+    results.append(el);
+   }
+   if(!results.childElementCount)results.append(element('p','No matching verified field in the bounded preview.','hint'));
+  }
+  q.addEventListener('input',render);render();
+ }catch(err){
+  if(state.current?.id===record.id){
+   box.replaceChildren(element('p','FAIL CLOSED · '+err.message+' — source not displayed.','warning'));
+  }
+ }
+}
+
 function fillResults(){
  const list=$('results');list.replaceChildren();
  const q=state.query.trim().toLowerCase();
@@ -105,6 +213,10 @@ function selectRecord(record){
  const warning=element('p','Source metadata only. A semantic neighbour is a candidate, not evidence or authorization.','warning');det.append(warning);
  const href=safeURL(record.sourceUrl);
  if(href){const link=element('a','OPEN EXACT GITHUB JSON ↗','source-link');link.href=href;link.target='_blank';link.rel='noopener noreferrer';det.append(link)}
+ const verifyBtn=element('button','VERIFY + DIVE INTO SOURCE JSON','source-dive');verifyBtn.type='button';
+ const verifiedPane=element('div',null,'verified-pane');
+ verifyBtn.onclick=()=>{verifyBtn.disabled=true;showVerifiedFields(record,verifiedPane).finally(()=>{verifyBtn.disabled=false})};
+ det.append(verifyBtn,verifiedPane);
  const candidates=associations(record);
  det.append(element('h3',SEMANTIC?'iNaiHR · candidate connections':'Neighbouring JSONs · candidate only'));
  const related=element('div',null,'related');
