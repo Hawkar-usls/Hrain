@@ -1,12 +1,12 @@
 {
-  "documents": 260,
-  "edge_stream_sha256": "0e1190dd18b2d525015de8bce8e494f3a0ea0b0c3a805cfbe9987c75164bcd1d",
+  "documents": 254,
+  "edge_stream_sha256": "da94c13ca732b4410a317c15a5c9d39acbfd33027ad9b716ae3789acf3a71574",
   "edge_types": {
-    "MENTIONS": 1582,
-    "SEMANTIC_SIMILARITY": 1119,
-    "SHARED_ENTITY": 10158
+    "MENTIONS": 1565,
+    "SEMANTIC_SIMILARITY": 1075,
+    "SHARED_ENTITY": 9917
   },
-  "edges": 12859,
+  "edges": 12557,
   "laws": [
     "GRAPH_EDGE_IS_NOT_CAUSATION",
     "SEMANTIC_SIMILARITY_IS_NOT_MECHANISM",
@@ -14,10 +14,10 @@
     "REPEATED_SAME_SOURCE_IS_NOT_INDEPENDENT_WITNESS",
     "NO_FIXED_HYPOTHESIS_CENTER"
   ],
-  "node_stream_sha256": "9718fdc0370b0d969593ab3037f8755327bdf27604e62e8127fe3c493615a634",
-  "nodes": 1095,
+  "node_stream_sha256": "68bf594d2c57d30e9065cd44b98b9060872f85a242b87ac7fb510aa21e4977a0",
+  "nodes": 1075,
   "promotion_rule": "EDGE_STRENGTH_MAY_RISE_ONLY_WITH_EXPLICIT_SOURCE_RELATION_OR_INDEPENDENT_EVIDENCE__NEVER_FROM_DENSITY_ALONE",
   "schema": "hawkar.topa.spider.receipt.v2",
   "status": "PASS",
-  "weak_or_speculative_edges": 12859
+  "weak_or_speculative_edges": 12557
 }
