@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import re
+import concurrent.futures
 from pathlib import Path
 from urllib.request import urlopen,Request
 from urllib.parse import quote,urlsplit
@@ -83,8 +84,7 @@ def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
         or policy.get("sourceMutationAllowed") is not False or policy.get("readOnly") is not True):
         raise Hold("PUBLIC_SOURCE_OR_AUTHORITY_VIOLATION")
     if m.get("shardCount")!=len(m.get("shards",[])):raise Hold("INCOMPLETE_SHARD_MANIFEST")
-    records=[]
-    for shard in m["shards"]:
+    def load_verified_shard(shard):
         path=shard.get("path","")
         if not path.startswith("assets/janus-json-atlas/shards/") or ".." in path:
             raise Hold("PATH_TRAVERSAL_OR_INVALID_SHARD")
@@ -94,7 +94,7 @@ def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
         doc=json.loads(data)
         if (doc.get("schema")!="janus.hrain.github_json_constellation_shard.v1"
             or doc.get("readOnly") is not True or doc.get("repository")!=shard["repository"]
-            or doc.get("sourceCommit") not in {s["commit"] for s in m["repositories"] if s["repository"]==shard["repository"]}
+            or doc.get("sourceCommit") not in {x["commit"] for x in m["repositories"] if x["repository"]==shard["repository"]}
             or len(doc.get("records",[]))!=shard["count"]):
             raise Hold("SOURCE_SHARD_INTEGRITY_MISMATCH")
         for rec in doc["records"]:
@@ -103,7 +103,13 @@ def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
                 or rec.get("readOnly") is not True or rec.get("deleteAllowed") is not False
                 or not rec["path"].endswith(".json")):
                 raise Hold("UNTRUSTED_GITHUB_SOURCE_POINTER")
-            records.append(rec)
+        return doc["records"]
+    # Immutable catalog revision is pinned BEFORE parallel work. executor.map
+    # preserves original manifest shard order, including deterministic ranking.
+    # If even ONE shard fails its SHA/commit/source contract, FAIL CLOSED.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        batches=list(pool.map(load_verified_shard,m["shards"]))
+    records=[rec for batch in batches for rec in batch]
     if len(records)!=m["jsonCount"] or len({x["id"] for x in records})!=len(records):
         raise Hold("INCOMPLETE_OR_DUPLICATED_PUBLIC_SOURCE_CATALOG")
     return m,records
