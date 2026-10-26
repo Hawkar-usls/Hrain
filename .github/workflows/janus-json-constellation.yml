@@ -63,7 +63,15 @@ jobs:
               assert x in s, x
           assert 'metadataOnly' in t
           assert 'privateRepositoriesIncluded' in t
-          assert 'data-lens="structural"' in html
+          # Retired star-map is a redirect to the true native D3 organism,
+          # not a second independently rendered copy of HRAiN.
+          assert "location.replace('./?atlas=1')" in html
+          native=Path('assets/janus-native-atlas.js').read_text()
+          home=Path('index.html').read_text()
+          assert 'HRAIN v10.5: Janus Link' in home
+          assert './assets/janus-native-atlas.js' in home
+          assert 'SHARD_SHA256_MISMATCH' in native
+          assert 'GITHUB_BLOB_INTEGRITY_HOLD' in native
           for forbidden in ("method:'POST'","method:'DELETE'","method:'PUT'","method:'PATCH'",
                             'localStorage.setItem('):
               assert forbidden not in s, forbidden
