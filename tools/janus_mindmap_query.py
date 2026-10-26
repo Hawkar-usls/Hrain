@@ -15,24 +15,56 @@ import json
 import re
 from pathlib import Path
 from urllib.request import urlopen,Request
-from urllib.parse import quote
+from urllib.parse import quote,urlsplit
 from janus_verified_source import read_exact_pointer, SourceHold
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULT_INDEX="https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas"
 SCHEMA="janus.hrain.github_json_constellation_manifest.v1"
+ATLAS_REVISION_API="https://api.github.com/repos/Hawkar-usls/Hrain/commits?path=assets/janus-json-atlas/manifest.json&per_page=1"
 STOP={"janus","json","data","assets","2026","2025","repo","source","registry","meta","main","true","false"}
 class Hold(RuntimeError):pass
 
 def _get(url):
-    if not url.startswith("https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas/"):
+    parts=urlsplit(url)
+    prefix="/Hawkar-usls/Hrain/"
+    if (parts.scheme!="https" or parts.netloc!="raw.githubusercontent.com"
+        or parts.query or parts.fragment or not parts.path.startswith(prefix)
+        or "/assets/janus-json-atlas/" not in parts.path):
         raise Hold("SOURCE_HOST_OR_PATH_NOT_ALLOWED")
+    revision=parts.path[len(prefix):].split("/",1)[0]
+    if not re.fullmatch(r"[0-9a-f]{40}",revision):
+        raise Hold("UNPINNED_ATLAS_READ_FORBIDDEN")
     with urlopen(Request(url,headers={"User-Agent":"JANUS-HRAiN-readonly-navigator/1"}),timeout=30) as r:
         return r.read(8_000_001)
+
+def pin_atlas_revision(fetch=None):
+    if fetch is None:
+        with urlopen(Request(ATLAS_REVISION_API,headers={
+            "User-Agent":"JANUS-HRAiN-atomic-catalog-reader/1",
+            "Accept":"application/vnd.github+json"
+        }),timeout=25) as r:
+            raw=r.read(100_001)
+    else:
+        raw=fetch(ATLAS_REVISION_API)
+    if len(raw)>100_000:raise Hold("ATLAS_COMMIT_API_SIZE_LIMIT")
+    try:
+        commits=json.loads(raw)
+        revision=commits[0]["sha"]
+    except (ValueError,IndexError,KeyError,TypeError) as exc:
+        raise Hold("ATLAS_COMMIT_PIN_UNAVAILABLE") from exc
+    if not isinstance(revision,str) or not re.fullmatch(r"[0-9a-f]{40}",revision):
+        raise Hold("ATLAS_COMMIT_SHA_NOT_AUTHENTICATED")
+    return revision
 def tokens(path):
     return {x for x in re.split(r"[^a-zа-яіїєґ0-9]+",path.casefold()) if len(x)>=3 and x not in STOP}
 def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
     local = isinstance(index_root,Path)
+    revision=None
+    if not local:
+        if index_root!=DEFAULT_INDEX:raise Hold("ATLAS_URL_OVERRIDE_NOT_ALLOWED")
+        revision=pin_atlas_revision(fetch=fetch)
+        index_root=DEFAULT_INDEX.replace("/main/assets/","/"+revision+"/assets/")
     def read(path):
         if local:
             f=(index_root/path)
@@ -44,6 +76,7 @@ def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
         if len(data)>8_000_000:raise Hold("SHARD_LIMIT_EXCEEDED")
         return data
     m=json.loads(read("manifest.json"))
+    if revision:m["catalogRevision"]=revision
     policy=m.get("authority") or {}
     if (m.get("schema")!=SCHEMA or m.get("privateRepositoriesIncluded") is not False
         or m.get("metadataOnly") is not True or policy.get("writeAuthority") is not False
@@ -118,6 +151,7 @@ def navigate(m,records,query="",repository="",focus="",limit=12,related=6):
       "schema":"janus.hrain.inaihr.json_navigation_receipt.v1",
       "status":"SOURCE_INDEX_VERIFIED_READ_ONLY",
       "snapshotAt":m["generatedAt"],
+      "catalogRevision":m.get("catalogRevision"),
       "snapshotRepositoryCount":m["repositoryCount"],
       "snapshotJSONCount":m["jsonCount"],
       "query":query,"repositoryFilter":repository,
