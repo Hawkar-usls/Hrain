@@ -511,9 +511,37 @@
     }
   }
 
+
+  // Native D3 registry projection: verified source hits are TEMPORARY view-only
+  // nodes. The original authoritative registry and all handlers are retained.
+  window.JANUSAtlasNativeFocus=(records)=>{
+    if(!sourceIndex||!Array.isArray(records)||!records.length)return;
+    const selected=records.slice(0,16).filter(r=>r.readOnly===true&&r.deleteAllowed===false&&
+      /^Hawkar-usls\/[\w.-]+$/.test(r.repository)&&
+      /^https:\/\/github\.com\/Hawkar-usls\//.test(r.sourceUrl||''));
+    if(!selected.length)return;
+    const rootId='atlas:janus-native-root';
+    globalNodes=[{id:rootId,parentId:null,label:'JANUS · JSON MEMORY',emoji:'🧠',type:'info',readOnly:true,
+      summary:'Temporary exact-source public JSON projection in the ORIGINAL HRAiN neural visualization.'},
+      ...selected.map((r,i)=>({id:'atlas:'+r.id,parentId:rootId,
+        label:r.path.split('/').pop().slice(0,72),path:r.path,
+        surface:r.repository,sourceUrl:r.sourceUrl,sourceSha256:r.sourceSha256,
+        status:'GITHUB SOURCE · UNVERIFIED SCIENTIFIC CLAIM',type:'info',
+        readOnly:true,summary:'Source-pinned public JSON metadata. Open exact source for evidence; node presence alone proves no scientific claim.',
+        x:width/2+Math.cos(i*Math.PI*2/selected.length)*210,
+        y:height/2+Math.sin(i*Math.PI*2/selected.length)*210}))];
+    globalLinks=selected.map(r=>({source:rootId,target:'atlas:'+r.id}));
+    contextStack=[rootId];selectedNode=null;updateView();
+  };
+  window.JANUSAtlasNativeRestore=()=>{
+    if(!sourceIndex)return;
+    cloneRuntime();contextStack=[];selectedNode=null;closePanel();updateView();
+  };
+
   boot();
 })();
 </script>
   <script src="./janus-network-v3.js"></script>
+<script src="./assets/janus-native-atlas.js" defer></script>
 </body>
 </html>

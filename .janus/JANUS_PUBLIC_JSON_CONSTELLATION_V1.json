@@ -1,12 +1,12 @@
 {
   "schema": "janus.hrain.public_github_json_constellation.v1",
   "date": "2026-10-26",
-  "status": "PUBLIC_SOURCE_METADATA_INDEX_DYNAMIC_SHA_VERIFIED_WITH_STRUCTURAL_AND_SEMANTIC_READ_ONLY_LENSES",
+  "status": "SOURCE_VERIFIED_PUBLIC_JSON_INDEX_WITH_NATIVE_HRAIN_AND_INAIHR_NEURAL_INTERFACE_PRESENTATION",
   "existingSystemsPreserved": {
     "active_graph": "janus.html · source assets/hrain-registry-index.json · current bounded authoritative projection",
     "full_current": "memory.html · existing 35 hashed full-memory shards + manifest in Meta Registry",
     "semantic_inaihr": "iNaiHR/janus.html · existing candidate-only source-derived SYNTH",
-    "new_work": "janus-map.html · public cross-repository JSON atlas and JANUS CLI navigator",
+    "new_work": "Native index.html and janus.html use read-only JANUS source drawer / temporary D3 source projection; retired star replica redirects",
     "no_second_database": true,
     "no_existing_UI_replaced": true
   },
@@ -45,14 +45,18 @@
     ],
     "example": "python tools/janus_mindmap_query.py --query 'FN1 Rowan' --related 5",
     "read_only": true,
-    "knowledgeBoundary": "Search/navigation metadata does not itself access full JSON content or extend JANUS source authority."
+    "knowledgeBoundary": "Search/navigation metadata does not itself access full JSON content or extend JANUS source authority.",
+    "nativeBrowserIntegration": "assets/janus-native-atlas.js"
   },
   "interfaces": {
-    "structural": "https://hawkar-usls.github.io/Hrain/janus-map.html",
-    "semantic": "https://hawkar-usls.github.io/iNaiHR/janus-map.html",
+    "structural": "https://hawkar-usls.github.io/Hrain/?atlas=1",
+    "semantic": "https://hawkar-usls.github.io/iNaiHR/?atlas=1",
     "sourceCatalog": "https://hawkar-usls.github.io/Hrain/memory.html",
     "updatedFromGithubAction": ".github/workflows/janus-json-constellation.yml",
-    "refreshSchedule": "daily 04:23 UTC and on manual dispatch and main source change; actual publication subject to verified CI/run success."
+    "refreshSchedule": "daily 04:23 UTC and on manual dispatch and main source change; actual publication subject to verified CI/run success.",
+    "hrainNativeLivingRegistry": "https://hawkar-usls.github.io/Hrain/janus.html?atlas=1",
+    "inaihrNativeSemanticRegistry": "https://hawkar-usls.github.io/iNaiHR/janus.html?atlas=1",
+    "legacyReplicaStatus": "Retired; /janus-map.html redirects to the genuine native application"
   },
   "authority": {
     "sourceRepositoryWriterOnly": true,
