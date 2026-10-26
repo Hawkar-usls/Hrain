@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070b13">
+<meta name="description" content="JANUS read-only source-pinned GitHub JSON knowledge constellation for HRAiN and iNaiHR">
+<title>JANUS · HRAiN JSON Mindmap</title>
+<link rel="stylesheet" href="./assets/janus-json-map.css">
+<script src="./assets/janus-json-map.js" defer></script>
+</head>
+<body data-lens="structural">
+<header class="header">
+<div><h1 id="lens-title">HRAiN · STRUCTURAL CONTEXT</h1><p>JANUS PUBLIC GITHUB JSON CONSTELLATION · READ ONLY</p></div>
+<nav class="nav" aria-label="JANUS navigation">
+<a href="./memory.html">HRAiN MEMORY</a>
+<a href="./janus.html">LIVING REGISTRY</a>
+<a href="https://hawkar-usls.github.io/iNaiHR/janus-map.html">iNaiHR ASSOCIATIONS</a>
+<a href="https://github.com/Hawkar-usls/janus-meta-registry">SOURCE REGISTRY</a>
+</nav>
+</header>
+<div class="shell">
+<aside class="panel">
+<h2>Source catalog</h2><div id="count">Loading…</div><p id="stamp" class="hint">Pinned public GitHub snapshots</p>
+<label for="repositories">Repository</label>
+<select id="repositories"><option value="">ALL SOURCE REPOSITORIES</option></select>
+<label for="query">Find JSON by name, path or namespace</label>
+<input id="query" type="search" placeholder="Rowan · Tranception · FN1…" autocomplete="off">
+<div class="controls"><button id="load" type="button">LOAD REPO</button><button id="all" type="button">VERIFY ALL</button></div>
+<p id="status" role="status">Loading verified index…</p>
+<div id="visible" class="hint">—</div>
+<div id="results" aria-label="Verified GitHub JSON search matches"></div>
+</aside>
+<main class="panel map">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+<h2>JANUS knowledge map</h2><button id="reset" type="button">ROOT</button>
+</div>
+<p class="hint">DIVE: repository → path → JSON. Solid links = verified source hierarchy. Related nodes = path-token suggestions, not facts.</p>
+<svg id="graph" class="graph" role="img" aria-label="Interactive JANUS repository and JSON navigation graph" viewBox="0 0 960 560" preserveAspectRatio="xMidYMid meet"></svg>
+</main>
+<aside class="panel detail-panel">
+<h2>Provenance and association</h2>
+<div id="detail"><p class="hint">Choose a repository, load its verified shards, then select a JSON node.</p></div>
+</aside>
+</div>
+<footer class="footer">JANUS owns no source permissions through this interface. GITHUB_SOURCE ≠ PROOF · INAIHR_ASSOCIATION ≠ EVIDENCE · HRAIN_WIPE ≠ REGISTRY_DELETE. Public repositories only; private data not indexed.</footer>
+</body>
+</html>
