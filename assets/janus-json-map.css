@@ -33,3 +33,14 @@ button:hover{border-color:var(--accent)}button:disabled{opacity:.4;cursor:wait}
 @media(max-width:1180px){.shell{grid-template-columns:270px minmax(350px,1fr)}.detail-panel{grid-column:1/-1;min-height:120px}}
 @media(max-width:710px){.header{padding:12px}.shell{grid-template-columns:1fr;padding:8px}.panel{min-height:unset}.graph{min-height:330px}.map{min-height:360px}#results{max-height:28vh}.nav{gap:4px}.nav a{padding:7px;font-size:.7rem}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* JANUS source-byte gated JSON Pointer explorer, never HTML interpretation */
+.source-dive{display:block;width:100%;margin:10px 0;border-color:var(--accent);color:var(--accent);font-weight:700}
+.verified-pane{min-width:0}
+.verified-pane .verified{font-size:.71rem;overflow-wrap:anywhere;color:var(--accent);border-left:3px solid var(--accent);padding:8px;background:rgba(72,210,180,.07)}
+.verified-records{overflow:auto;max-height:40vh;border:1px solid var(--stroke);border-radius:8px}
+.verified-field{border-bottom:1px solid var(--stroke);padding:8px 10px;overflow-wrap:anywhere}
+.verified-field:last-child{border-bottom:0}
+.verified-pointer{display:block;color:var(--accent);font-size:.70rem;overflow-wrap:anywhere;white-space:normal}
+.verified-value{color:var(--text);font-size:.75rem;white-space:pre-wrap;overflow-wrap:anywhere;padding-top:5px}
+.field-filter{margin:8px 0;font-size:.8rem}
