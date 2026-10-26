@@ -57,3 +57,25 @@ def test_no_argument_abuse_or_mutation():
     with pytest.raises(nav.Hold,match="UNBOUNDED_NAVIGATION_REQUEST"):
         nav.navigate({"generatedAt":"now","repositoryCount":1,"jsonCount":1},[],limit=10**9)
     assert all("sourceMutation" not in name for name in dir(nav))
+
+def test_remote_catalog_pins_every_shard_to_one_immutable_manifest_commit(catalog):
+    import json
+    calls=[]
+    def get(url):
+        calls.append(url)
+        if url==nav.ATLAS_REVISION_API:
+            return json.dumps([{"sha":COMMIT}]).encode("utf8")
+        prefix=f"https://raw.githubusercontent.com/Hawkar-usls/Hrain/{COMMIT}/assets/janus-json-atlas/"
+        assert url.startswith(prefix), "mutable main ref forbidden"
+        return (catalog/url[len(prefix):]).read_bytes()
+    manifest,records=nav.load_catalog(fetch=get)
+    assert manifest["catalogRevision"]==COMMIT
+    assert len(records)==manifest["jsonCount"]
+    assert all("/main/assets/janus-json-atlas/" not in call for call in calls)
+
+def test_remote_catalog_api_missing_commit_fails_closed(catalog):
+    def get(url):
+        assert url==nav.ATLAS_REVISION_API
+        return b"[]"
+    with pytest.raises(nav.Hold,match="ATLAS_COMMIT_PIN_UNAVAILABLE"):
+        nav.load_catalog(fetch=get)
