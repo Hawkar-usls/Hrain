@@ -1,0 +1,111 @@
+name: JANUS Public GitHub JSON Constellation
+on:
+  pull_request:
+    paths:
+      - 'tools/janus_json_constellation.py'
+      - 'assets/janus-json-map.js'
+      - 'assets/janus-json-map.css'
+      - 'janus-map.html'
+      - 'tests/test_janus_json_constellation.py'
+      - '.github/workflows/janus-json-constellation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/janus_json_constellation.py'
+      - 'assets/janus-json-map.js'
+      - 'assets/janus-json-map.css'
+      - 'janus-map.html'
+      - 'tests/test_janus_json_constellation.py'
+      - '.github/workflows/janus-json-constellation.yml'
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: janus-public-json-constellation
+  cancel-in-progress: false
+
+jobs:
+  safe-code-and-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install offline unit test runner
+        run: python -m pip install --quiet pytest
+      - name: Unit tests private/public source boundary, SHA checks and graph
+        run: python -m pytest -q tests/test_janus_json_constellation.py
+      - name: Browser script syntax
+        run: node --check assets/janus-json-map.js
+      - name: Assert read-only boundaries and navigation source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('assets/janus-json-map.js').read_text()
+          t=Path('tools/janus_json_constellation.py').read_text()
+          html=Path('janus-map.html').read_text()
+          for x in ('SHARD_HASH_MISMATCH','SHARD_COMMIT_MISMATCH','sourceUrl','ASSOCIATIVE_CANDIDATES'):
+              assert x in s, x
+          assert 'metadataOnly' in t
+          assert 'privateRepositoriesIncluded' in t
+          assert 'data-lens="structural"' in html
+          for forbidden in ("method:'POST'","method:'DELETE'","method:'PUT'","method:'PATCH'",
+                            'localStorage.setItem('):
+              assert forbidden not in s, forbidden
+          print('JANUS_JSON_MAP=STRUCTURAL_ASSOCIATIVE_READ_ONLY_PASS')
+          PY
+
+  refresh-public-snapshot:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: safe-code-and-source-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build public allowlist snapshots and verify complete existing Meta shards
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/janus_json_constellation.py
+      - name: Commit and publish only navigation metadata (not source documents)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            if [[ -z "$(git status --porcelain -- assets/janus-json-atlas)" ]]; then
+              echo 'JANUS_JSON_CONSTELLATION=INDEX_CURRENT'
+              exit 0
+            fi
+            git add assets/janus-json-atlas
+            git commit -m "chore(hrain): refresh read-only JANUS public JSON constellation"
+            if git push origin HEAD:main; then
+              echo 'JANUS_JSON_CONSTELLATION=PUBLISHED'
+              exit 0
+            fi
+            echo "JANUS_JSON_INDEX_PUSH_RACE=${attempt}"
+            git fetch origin main
+            git reset --hard origin/main
+            GH_TOKEN="${GH_TOKEN:-}" python tools/janus_json_constellation.py
+          done
+          echo 'JANUS_JSON_INDEX=PUBLISH_HOLD_AFTER_RETRIES' >&2
+          exit 1
