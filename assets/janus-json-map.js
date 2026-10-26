@@ -4,7 +4,19 @@
    All generated shards are SHA-256 verified before appearing as navigable.
 */
 (()=>{'use strict';
-const BASE='https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas/';
+const ATLAS_ROOT='https://raw.githubusercontent.com/Hawkar-usls/Hrain/';
+const REVISION_API='https://api.github.com/repos/Hawkar-usls/Hrain/commits?path=assets/janus-json-atlas/manifest.json&per_page=1';
+let BASE='';let pinnedCatalogRevision=null;
+async function pinAtomicCatalog(){
+ const resp=await fetch(REVISION_API,{cache:'no-store',headers:{Accept:'application/vnd.github+json'}});
+ if(!resp.ok)throw Error('CATALOG_COMMIT_LOOKUP_HTTP_'+resp.status);
+ const commits=await resp.json();
+ const rev=commits?.[0]?.sha;
+ if(typeof rev!=='string'||!/^[0-9a-f]{40}$/.test(rev))
+   throw Error('CATALOG_REVISION_NOT_RESOLVED');
+ pinnedCatalogRevision=rev;
+ BASE=ATLAS_ROOT+rev+'/assets/janus-json-atlas/';
+}
 const SCHEMA='janus.hrain.github_json_constellation_manifest.v1';
 const SEMANTIC=document.body.dataset.lens==='semantic';
 const state={manifest:null,records:new Map(),loaded:new Set(),current:null,repo:'',query:'',busy:false};
@@ -22,10 +34,10 @@ function verifyRoot(m){if(m.schema!==SCHEMA||m.authority?.readOnly!==true||m.aut
  m.authority?.writeAuthority!==false||m.privateRepositoriesIncluded!==false||m.metadataOnly!==true||
  !Array.isArray(m.repositories)||!Array.isArray(m.shards)||m.shardCount!==m.shards.length)throw Error('CONSTELLATION_AUTHORITY_OR_SCHEMA_FAIL_CLOSED')}
 async function boot(){
- try{status('Loading immutable public catalog index…');const m=JSON.parse(await getText(BASE+'manifest.json'));verifyRoot(m);state.manifest=m;
+ try{status('Pinning one immutable GitHub catalog revision…');await pinAtomicCatalog();const m=JSON.parse(await getText(BASE+'manifest.json'));verifyRoot(m);state.manifest=m;
  const select=$('repositories');m.repositories.forEach(r=>{const o=element('option',r.repository+' · '+fmt(r.jsonCount));o.value=r.repository;select.appendChild(o)});
  $('count').textContent=fmt(m.jsonCount)+' JSON · '+fmt(m.repositoryCount)+' public repos';
- $('stamp').textContent='Snapshot: '+(m.generatedAt||'unknown');
+ $('stamp').textContent='Snapshot: '+(m.generatedAt||'unknown')+' · Git '+pinnedCatalogRevision.slice(0,12);
  $('lens-title').textContent=SEMANTIC?'iNaiHR · ASSOCIATIVE CONTEXT':'HRAiN · STRUCTURAL CONTEXT';
  status('Read-only snapshot · select a repository or search all');
  const p=new URLSearchParams(location.search), repo=p.get('repo'),id=p.get('focus');
