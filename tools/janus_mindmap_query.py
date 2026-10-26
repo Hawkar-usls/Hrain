@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""JANUS's read-only GitHub JSON mindmap query adapter.
+
+Source navigation through the *existing* HRAiN/iNaiHR public constellation.
+Mandatory SHA-256 verification of EVERY loaded shard and pinned GitHub source.
+No provider key, no user profile, no repository changes or command authority.
+Run:
+  python tools/janus_mindmap_query.py --query "Rowan FN1" --related 5
+  python tools/janus_mindmap_query.py --repo Hawkar-usls/tranception
+  python tools/janus_mindmap_query.py --focus 'Hawkar-usls/Janus:portfolio-visibility.json'
+"""
+import argparse
+import hashlib
+import json
+import re
+from pathlib import Path
+from urllib.request import urlopen,Request
+from urllib.parse import quote
+
+ROOT=Path(__file__).resolve().parents[1]
+DEFAULT_INDEX="https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas"
+SCHEMA="janus.hrain.github_json_constellation_manifest.v1"
+STOP={"janus","json","data","assets","2026","2025","repo","source","registry","meta","main","true","false"}
+class Hold(RuntimeError):pass
+
+def _get(url):
+    if not url.startswith("https://raw.githubusercontent.com/Hawkar-usls/Hrain/main/assets/janus-json-atlas/"):
+        raise Hold("SOURCE_HOST_OR_PATH_NOT_ALLOWED")
+    with urlopen(Request(url,headers={"User-Agent":"JANUS-HRAiN-readonly-navigator/1"}),timeout=30) as r:
+        return r.read(8_000_001)
+def tokens(path):
+    return {x for x in re.split(r"[^a-zа-яіїєґ0-9]+",path.casefold()) if len(x)>=3 and x not in STOP}
+def load_catalog(index_root=DEFAULT_INDEX,fetch=None):
+    local = isinstance(index_root,Path)
+    def read(path):
+        if local:
+            f=(index_root/path)
+            if not f.is_file():raise Hold("SHARD_OR_MANIFEST_NOT_FOUND:"+path)
+            data=f.read_bytes()
+        else:
+            if fetch is not None:data=fetch(index_root+"/"+path)
+            else:data=_get(index_root+"/"+path)
+        if len(data)>8_000_000:raise Hold("SHARD_LIMIT_EXCEEDED")
+        return data
+    m=json.loads(read("manifest.json"))
+    policy=m.get("authority") or {}
+    if (m.get("schema")!=SCHEMA or m.get("privateRepositoriesIncluded") is not False
+        or m.get("metadataOnly") is not True or policy.get("writeAuthority") is not False
+        or policy.get("sourceMutationAllowed") is not False or policy.get("readOnly") is not True):
+        raise Hold("PUBLIC_SOURCE_OR_AUTHORITY_VIOLATION")
+    if m.get("shardCount")!=len(m.get("shards",[])):raise Hold("INCOMPLETE_SHARD_MANIFEST")
+    records=[]
+    for shard in m["shards"]:
+        path=shard.get("path","")
+        if not path.startswith("assets/janus-json-atlas/shards/") or ".." in path:
+            raise Hold("PATH_TRAVERSAL_OR_INVALID_SHARD")
+        data=read(path.replace("assets/janus-json-atlas/",""))
+        if hashlib.sha256(data).hexdigest()!=shard["sha256"]:
+            raise Hold("SHARD_SHA256_MISMATCH:"+path)
+        doc=json.loads(data)
+        if (doc.get("schema")!="janus.hrain.github_json_constellation_shard.v1"
+            or doc.get("readOnly") is not True or doc.get("repository")!=shard["repository"]
+            or doc.get("sourceCommit") not in {s["commit"] for s in m["repositories"] if s["repository"]==shard["repository"]}
+            or len(doc.get("records",[]))!=shard["count"]):
+            raise Hold("SOURCE_SHARD_INTEGRITY_MISMATCH")
+        for rec in doc["records"]:
+            expected=f"https://github.com/{rec['repository']}/blob/{rec['sourceCommit']}/{quote(rec['path'],safe='/')}"
+            if (rec.get("sourceUrl")!=expected or not rec["repository"].startswith("Hawkar-usls/")
+                or rec.get("readOnly") is not True or rec.get("deleteAllowed") is not False
+                or not rec["path"].endswith(".json")):
+                raise Hold("UNTRUSTED_GITHUB_SOURCE_POINTER")
+            records.append(rec)
+    if len(records)!=m["jsonCount"] or len({x["id"] for x in records})!=len(records):
+        raise Hold("INCOMPLETE_OR_DUPLICATED_PUBLIC_SOURCE_CATALOG")
+    return m,records
+
+def navigate(m,records,query="",repository="",focus="",limit=12,related=6):
+    if limit<1 or limit>50 or related<0 or related>20:raise Hold("UNBOUNDED_NAVIGATION_REQUEST")
+    candidates=[r for r in records if not repository or r["repository"]==repository]
+    q=tokens(query)
+    if query:
+        raw=query.casefold().strip()
+        def score(r):
+            txt=(r["repository"]+"/"+r["path"]).casefold()
+            overlap=tokens(txt)&q
+            return 5*len(overlap)+int(raw in txt)
+        matches=[r for r in candidates if score(r)>0]
+        matches.sort(key=lambda x:(-score(x),x["repository"],x["path"]))
+    else:matches=sorted(candidates,key=lambda x:(x["repository"],x["path"]))
+    if focus:
+        key=next((x for x in records if x["id"]==focus or
+                  x["repository"]+":"+x["path"]==focus),None)
+        if key is None:raise Hold("FOCUS_SOURCE_NOT_INDEXED")
+    else:key=matches[0] if matches else None
+    edges=[]
+    neighbour=[]
+    if key:
+        base=tokens(key["path"])
+        out=[]
+        for rec in records:
+            if rec["id"]==key["id"]:continue
+            shared=sorted(base&tokens(rec["path"]))
+            if len(shared)<2:continue
+            out.append((len(shared),rec,shared))
+        out.sort(key=lambda v:(-v[0],v[1]["repository"],v[1]["path"]))
+        for weight,rec,shared in out[:related]:
+            neighbour.append({
+                "id":rec["id"],"source":rec["sourceUrl"],
+                "repository":rec["repository"],"path":rec["path"],
+                "sharedPathTokens":shared,
+                "edgeType":"UNVERIFIED_SEMANTIC_PATH_ASSOCIATION",
+                "verifiedScientificRelation":False,
+            })
+            edges.append({"source":key["id"],"target":rec["id"],
+                          "kind":"ASSOCIATIVE_CANDIDATE","truthAuthority":False})
+    return {
+      "schema":"janus.hrain.inaihr.json_navigation_receipt.v1",
+      "status":"SOURCE_INDEX_VERIFIED_READ_ONLY",
+      "snapshotAt":m["generatedAt"],
+      "snapshotRepositoryCount":m["repositoryCount"],
+      "snapshotJSONCount":m["jsonCount"],
+      "query":query,"repositoryFilter":repository,
+      "hits":len(matches),
+      "results":[{"id":r["id"],"repository":r["repository"],"path":r["path"],
+                  "source":r["sourceUrl"],"sourceCommit":r["sourceCommit"],
+                  "metadataOnly":True} for r in matches[:limit]],
+      "focus":({"id":key["id"],"source":key["sourceUrl"],
+                "githubRef":key["repository"]+"@"+key["sourceCommit"]+":"+key["path"]}
+                if key else None),
+      "mindmap":{
+        "HRAiN":"STRUCTURAL_REPO_PATH_TREE",
+        "iNaiHR":"ASSOCIATIVE_CANDIDATES_NOT_EVIDENCE",
+        "related":neighbour,"edges":edges,
+      },
+      "claimCeiling":["SOURCE_INDEX != SOURCE_JSON_CONTENT",
+                       "ASSOCIATION != FACT","READ_ONLY != COMMAND_PERMISSION",
+                       "PINNED_GITHUB_COMMIT_MUST_BE_READ_FOR_CLAIMS"],
+      "newActionsTriggered":0,
+      "registryWrites":0,
+    }
+
+def main():
+    p=argparse.ArgumentParser()
+    p.add_argument("--query",default="")
+    p.add_argument("--repo",default="")
+    p.add_argument("--focus",default="")
+    p.add_argument("--limit",type=int,default=12)
+    p.add_argument("--related",type=int,default=6)
+    p.add_argument("--local-index",type=Path)
+    args=p.parse_args()
+    m,rows=load_catalog(args.local_index or DEFAULT_INDEX)
+    print(json.dumps(navigate(m,rows,args.query,args.repo,args.focus,args.limit,args.related),
+                     ensure_ascii=False,indent=2))
+if __name__=="__main__":main()

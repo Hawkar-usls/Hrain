@@ -1,0 +1,76 @@
+{
+  "schema": "janus.hrain.public_github_json_constellation.v1",
+  "date": "2026-10-26",
+  "status": "PUBLIC_SOURCE_METADATA_INDEX_DYNAMIC_SHA_VERIFIED_WITH_STRUCTURAL_AND_SEMANTIC_READ_ONLY_LENSES",
+  "existingSystemsPreserved": {
+    "active_graph": "janus.html · source assets/hrain-registry-index.json · current bounded authoritative projection",
+    "full_current": "memory.html · existing 35 hashed full-memory shards + manifest in Meta Registry",
+    "semantic_inaihr": "iNaiHR/janus.html · existing candidate-only source-derived SYNTH",
+    "new_work": "janus-map.html · public cross-repository JSON atlas and JANUS CLI navigator",
+    "no_second_database": true,
+    "no_existing_UI_replaced": true
+  },
+  "sources": {
+    "staticPublicRepos": [
+      "Hrain",
+      "iNaiHR",
+      "Janus",
+      "Janus_Genesis",
+      "Janus-Demiurge",
+      "Janus-Fundamentum",
+      "TOPA",
+      "Janus-Cosmos",
+      "aura-oracle-tg",
+      "tranception",
+      "janus-lapis",
+      "janus-distributed-ai-swarm",
+      "Janus-HELIOS"
+    ],
+    "MetaRegistry": "Existing full-current hash-verified catalog under assets/hrain-full-memory/",
+    "private_repos_excluded": true,
+    "automatic_repo_scan_not_enabled": true,
+    "public_git_tree_source_pinned": true,
+    "indexRoot": "assets/janus-json-atlas/manifest.json",
+    "shards": "assets/janus-json-atlas/shards",
+    "shardVerification": "SHA256 against local manifest, source commit cross-verified",
+    "sourceJson": "Never copied into the constellation index; direct pinned GitHub source link provided."
+  },
+  "janusTool": {
+    "path": "tools/janus_mindmap_query.py",
+    "modes": [
+      "search public JSON metadata by path/keyword",
+      "follow exact GitHub source origin to retrieve content separately",
+      "candidate-only path-term connections",
+      "return graph edges for navigation with explicit no-truth status"
+    ],
+    "example": "python tools/janus_mindmap_query.py --query 'FN1 Rowan' --related 5",
+    "read_only": true,
+    "knowledgeBoundary": "Search/navigation metadata does not itself access full JSON content or extend JANUS source authority."
+  },
+  "interfaces": {
+    "structural": "https://hawkar-usls.github.io/Hrain/janus-map.html",
+    "semantic": "https://hawkar-usls.github.io/iNaiHR/janus-map.html",
+    "sourceCatalog": "https://hawkar-usls.github.io/Hrain/memory.html",
+    "updatedFromGithubAction": ".github/workflows/janus-json-constellation.yml",
+    "refreshSchedule": "daily 04:23 UTC and on manual dispatch and main source change; actual publication subject to verified CI/run success."
+  },
+  "authority": {
+    "sourceRepositoryWriterOnly": true,
+    "hrainRegistryWriter": false,
+    "inaihrRegistryWriter": false,
+    "JANUS_source_mutation_allowed_through_map": false,
+    "Graph_node_deletion_only_ui_state": true,
+    "privateGitHubAccessEnabled": false,
+    "AutomaticFactPromotion": false,
+    "NoNewProviderCredentials": true,
+    "NoRowanPaidInference": true
+  },
+  "scientificBoundaries": [
+    "GRAPH_NODE != VERIFIED_CLAIM",
+    "ASSOCIATION != EVIDENCE",
+    "HRAIN STRUCTURE != COMMAND",
+    "INAIHR CANDIDATE != AUTHORITATIVE_SOURCE",
+    "SOURCE_COMMIT_STALE_REQUIRES_REFRESH",
+    "PUBLIC_FILES_ONLY_NEVER_SCAN_PRIVATE"
+  ]
+}

@@ -20,7 +20,7 @@ def test_memory_surface_has_active_and_full_current_modes():
     html = (ROOT / "memory.html").read_text(encoding="utf-8")
     assert 'data-mode="active"' in html
     assert 'data-mode="full"' in html
-    assert 'src="./janus.html"' in html
+    assert 'src="./janus.html' in html  # optional cache-busting query is allowed
     assert "FULL CURRENT" in html
 
 
