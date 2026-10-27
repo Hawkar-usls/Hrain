@@ -85,6 +85,26 @@ def load_snapshot(path:Path):
         "notice":"LOCAL SNAPSHOT ONLY · NO SERVER MUTATIONS · NOT SCIENTIFIC PROOF",
     }}
 
+def load_local_systems(snapshot:Path):
+    """Local-only typed projection, NEVER call v89 or BFain HTTP."""
+    if snapshot is None:
+        raise SnapshotError("NO_PRIVATE_SNAPSHOT_CONFIGURED")
+    p=snapshot.resolve(strict=True)
+    if p.name!="hrain_graph_state.json" or p.parent.name!="raw_logs":
+        raise SnapshotError("PRIVATE_SOURCE_NOT_APPROVED")
+    import importlib.util
+    path=Path(__file__).with_name("janus_allstar_local_projection.py")
+    spec=importlib.util.spec_from_file_location("janus_private_typed_projection",path)
+    if spec is None or spec.loader is None:
+        raise SnapshotError("PROJECTION_MODULE_MISSING")
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    obj=module.build(p.parent.parent)
+    if obj.get("schema")!="janus.allstar.private_local_crosssystem_projection.v1" or (
+            obj.get("authority",{}).get("readOnly") is not True):
+        raise SnapshotError("LOCAL_SOURCE_AUTHORITY_HOLD")
+    return obj
+
 def make_handler(root:Path,snapshot:Path|None):
     root=root.resolve()
     class Handler(BaseHTTPRequestHandler):
@@ -109,6 +129,18 @@ def make_handler(root:Path,snapshot:Path|None):
                 self._body(403,b'{"error":"LOCAL_HOST_ONLY"}')
                 return
             p=urlsplit(self.path).path
+            if p=="/api/janus/local-systems":
+                if snapshot is None:
+                    self._body(404,b'{"error":"NO_PRIVATE_SNAPSHOT_CONFIGURED"}')
+                    return
+                try:
+                    obj=load_local_systems(snapshot)
+                    payload=json.dumps(obj,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+                    if len(payload)>64_000:raise SnapshotError("LOCAL_PROJECTION_SIZE_HOLD")
+                    self._body(200,payload)
+                except (OSError,ValueError,TypeError,ImportError,AttributeError):
+                    self._body(422,b'{"error":"LOCAL_PROJECTION_INTEGRITY_HOLD"}')
+                return
             if p=="/api/hrain/state":
                 if snapshot is None:
                     self._body(404,b'{"error":"NO_PRIVATE_SNAPSHOT_CONFIGURED"}')
