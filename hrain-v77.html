@@ -410,7 +410,10 @@
             App.updateButtons();
             App.render();
             Nerve.push(true);
-            setTimeout(() => App.openRename(), 50);
+            const pendingId=newNode.id;
+            setTimeout(() => {
+                if(!window.JANUSAtlasViewActive && App.selectedNode?.id===pendingId)App.openRename();
+            }, 50);
         },
 
         deleteNode: () => {
@@ -690,6 +693,7 @@
                 y:App.height/2+(Math.random()-.5)*280});
         }
         if(!nodes.length)return;
+        document.getElementById('rename-modal').style.display='none';
         janusAtlasRestoreState={nodes:App.globalNodes,links:App.globalLinks,context:App.contextStack.slice(),selected:App.selectedNode};
         window.JANUSAtlasViewActive=true;
         App.globalNodes=nodes;App.globalLinks=[];
