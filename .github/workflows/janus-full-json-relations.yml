@@ -37,7 +37,7 @@ jobs:
       - name: Python syntax
         run: python -m py_compile tools/janus_full_json_relations.py
   incremental-public-source-pass:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'pull_request'
     needs: contract-and-parser
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -52,8 +52,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify existing 14-repo catalog and scan up to 5000 new source JSON blobs
-        run: python -u tools/janus_full_json_relations.py --workers 24 --max-new 5000
+      - name: Verify frozen 14-repo catalog and advance read-only full-corpus scan
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            python -u tools/janus_full_json_relations.py --workers 24 --max-new 5000
+          else
+            python -u tools/janus_full_json_relations.py --workers 24 --max-new 0
+          fi
       - name: Publish only derived read-only relationship shards and cache
         run: |
           set -euo pipefail
