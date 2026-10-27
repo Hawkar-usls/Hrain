@@ -31,6 +31,21 @@ FIELD_CAP = SIZE_CAP
 NODE_CAP = 100_000
 DEPTH_CAP = 24
 REF_CAP = 1000
+# Exceptional-size access is pinned to ONE frozen, hash-identified public blob.
+# No global raise: all other JSON remain at the original 4 MB safety ceiling.
+OVERSIZE_EYE = {
+    "repository": "Hawkar-usls/janus-meta-registry",
+    "path": "EYE/generated/EYE-REGISTRY-INDEX.json",
+    "sourceCommit": "046e77c695056eba60fc702cb135f51ce9c17e45",
+    "gitBlobSha": "8a27f24d102372f555de16a42386a364de3c2059",
+    "sourceSha256": "22d4799b4a34f5f9dff020aa2da1651620cf42f4cc48a2ff17503ac948eb4080",
+    "sizeBytes": 13_675_178,
+}
+OVERSIZE_CAP = 16_000_000
+def source_cap(row):
+    if all(row.get(k)==v for k,v in OVERSIZE_EYE.items()):
+        return OVERSIZE_CAP
+    return SIZE_CAP
 def encoded(x): return (json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(",",":"))+"\n").encode("utf-8")
 def sha(b): return hashlib.sha256(b).hexdigest()
 def ensure(c,msg):
@@ -82,11 +97,11 @@ def decode_reference(raw):
     if not path.endswith(".json"):return None
     return repo,rev,path
 
-def extract_references(document):
+def extract_references(document,max_nodes=NODE_CAP):
     out=[];seen=set();nodes=0;truncated=False
     def walk(v,pointer,depth):
         nonlocal nodes,truncated
-        if nodes>=NODE_CAP or depth>DEPTH_CAP or len(out)>=REF_CAP:
+        if nodes>=max_nodes or depth>DEPTH_CAP or len(out)>=REF_CAP:
             truncated=True;return
         nodes+=1
         if isinstance(v,str):
@@ -112,9 +127,10 @@ def get_bytes(row):
     seg="/".join(quote(x,safe="") for x in row["path"].split("/"))
     url="https://raw.githubusercontent.com/"+row["repository"]+"/"+row["sourceCommit"]+"/"+seg
     req=Request(url,headers={"User-Agent":"JANUS-JSON-relations-readonly/1"})
+    cap=source_cap(row)
     with urlopen(req,timeout=35) as f:
-        body=f.read(SIZE_CAP+1)
-    ensure(len(body)<=SIZE_CAP,"BODY_OVER_LIMIT")
+        body=f.read(cap+1)
+    ensure(len(body)<=cap,"BODY_OVER_LIMIT")
     ensure(len(body)==row["sizeBytes"],"BYTE_SIZE_DRIFT")
     blob=b"blob "+str(len(body)).encode()+b"\x00"+body
     ensure(hashlib.sha1(blob).hexdigest()==row["gitBlobSha"],"GIT_BLOB_MISMATCH")
@@ -122,7 +138,7 @@ def get_bytes(row):
     return body
 
 def scan(row):
-    if row["sizeBytes"]>SIZE_CAP:return {"status":"SKIPPED_SIZE_CAP","blob":row["gitBlobSha"]}
+    if row["sizeBytes"]>source_cap(row):return {"status":"SKIPPED_SIZE_CAP","blob":row["gitBlobSha"]}
     try:
         body=get_bytes(row)
         if body.startswith((b"\xff\xfe",b"\xfe\xff")):
@@ -132,7 +148,7 @@ def scan(row):
         else:
             decoded=body.decode("utf-8")
         doc=json.loads(decoded)
-        refs,trunc=extract_references(doc)
+        refs,trunc=extract_references(doc,max_nodes=2_000_000 if source_cap(row)>SIZE_CAP else NODE_CAP)
         return {"status":"VERIFIED_TRUNCATED" if trunc else "VERIFIED","blob":row["gitBlobSha"],
                 "sha256":sha(body),"refs":refs}
     except Exception as e:
@@ -161,7 +177,7 @@ def build(root,out,workers,max_new=0):
     for rid,r in sorted(rows.items()):
         v=cache.get(rid)
         if v and v.get("blob")==r["gitBlobSha"] and (v.get("status")=="VERIFIED" or
-             (v.get("status")=="SKIPPED_SIZE_CAP" and r["sizeBytes"]>SIZE_CAP)):
+             (v.get("status")=="SKIPPED_SIZE_CAP" and r["sizeBytes"]>source_cap(r))):
             kept[rid]=v
         elif max_new==0 or len(todo)<max_new:
             todo.append((rid,r))
