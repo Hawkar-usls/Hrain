@@ -53,7 +53,7 @@ def source_cap(row):
 # Hash-verified GENERATED relations are not source-authored evidence. Treat
 # these as provenance-bearing derived artifacts rather than recursively mining
 # today's relation edges from yesterday's relation edges (feedback inflation).
-GENERATED_RELATIONS = re.compile(r"^assets/janus-json-relations/(?:shards/[0-9]{2}|cache/[A-Za-z0-9_.-]+)\\.json$")
+GENERATED_RELATIONS = re.compile(r"^assets/janus-json-relations/(?:shards/[0-9]{2}|cache/[A-Za-z0-9_.-]+)\.json$")
 def is_derived_relation(row):
     return row.get("repository")=="Hawkar-usls/Hrain" and bool(
         GENERATED_RELATIONS.fullmatch(str(row.get("path",""))))
