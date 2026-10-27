@@ -4,6 +4,7 @@ on:
     paths:
       - 'tools/janus_full_json_relations.py'
       - 'tests/test_janus_full_json_relations.py'
+      - 'tests/audit_janus_three_exceptions_live.py'
       - '.github/workflows/janus-full-json-relations.yml'
       - 'assets/janus-native-atlas.js'
       - 'assets/janus-json-relations/**'
@@ -36,6 +37,9 @@ jobs:
         run: python -m unittest discover -v -s tests -p 'test_janus_full_json_relations.py'
       - name: Python syntax
         run: python -m py_compile tools/janus_full_json_relations.py
+      - name: Independent live source audit of 3 exceptions (no source changes)
+        if: github.event_name == 'pull_request'
+        run: python -u tests/audit_janus_three_exceptions_live.py
   incremental-public-source-pass:
     if: github.event_name != 'pull_request'
     needs: contract-and-parser
