@@ -1,0 +1,32 @@
+name: JANUS All Star Private Read-Only Adapter
+on:
+  pull_request:
+    paths:
+      - 'tools/janus_allstar_local_projection.py'
+      - 'tests/test_janus_allstar_local_projection.py'
+      - 'docs/ALLSTAR_LOCAL_CROSSSYSTEM_READONLY_ADAPTER.md'
+      - '.github/workflows/janus-allstar-readonly-adapter.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/janus_allstar_local_projection.py'
+      - 'tests/test_janus_allstar_local_projection.py'
+      - '.github/workflows/janus-allstar-readonly-adapter.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-private-source-adapter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile local source adapter without importing legacy JANUS services
+        run: python -m py_compile tools/janus_allstar_local_projection.py
+      - name: Verify no-network, no-graph-write read-only adapter contracts
+        run: python -m unittest discover -v -s tests -p 'test_janus_allstar_local_projection.py'
