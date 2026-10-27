@@ -75,7 +75,7 @@ def diagnostic():
     # 3. The larger file must pass the exact same content checks as smaller
     # sources. The 16 MB exception is pinned to exact hash and revision.
     large_scan=rel.scan(large)
-    assert large_scan["status"] in ("VERIFIED","VERIFIED_TRUNCATED"),large_scan
+    assert large_scan["status"]=="VERIFIED",large_scan  # Full traversal, no silent partial coverage
     assert large_scan["sha256"]==large["sourceSha256"]
     assert large_scan["blob"]==large["gitBlobSha"]
     assert rel.source_cap({**large,"gitBlobSha":"0"*40})==rel.SIZE_CAP
