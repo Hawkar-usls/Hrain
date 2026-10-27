@@ -86,6 +86,9 @@ def run():
             assert not request_writes,request_writes
             # Prove the v77 D3 renderer accepts a TRUE SHA-indexed Cosmos edge,
             # not only a hand-written graph fixture.
+            # The original v77 create-node gesture opens a modal; close it
+            # before invoking the separate Atlas navigation control.
+            page.evaluate("document.getElementById('rename-modal').style.display='none'")
             page.locator(".janus-native-atlas-launch").click()
             page.wait_for_function("!document.querySelector('#janus-atlas-drawer').hidden",timeout=10000)
             page.wait_for_function("document.querySelector('#janus-atlas-repo').options.length>=15",timeout=30000)

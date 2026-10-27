@@ -118,6 +118,8 @@
         </div>
         <div class="top-controls ui-interactive">
             <button id="btn-synth" class="btn" onclick="Nerve.synthNode()" title="Requires an authorized JANUS backend; never auto-post">✨ SYNTH · GATED</button>
+            <button id="btn-v77-local-systems" class="btn" onclick="window.JANUSV77ViewLocalSystems()" title="Local 127.0.0.1 only · derived Genesis and BFain snapshot · no science authority">⧉ LOCAL GENESIS · READ ONLY</button>
+            <button id="btn-v77-return" class="btn" onclick="window.JANUSAtlasNativeRestore()" title="Restore full original graph after a temporary projection">↩ RESTORE GRAPH</button>
             <button id="btn-v77-export" class="btn" onclick="window.JANUSV77ExportDraft()">↓ EXPORT DRAFT</button>
             <button id="btn-v77-import" class="btn" onclick="window.JANUSV77ImportDraft()">↑ IMPORT DRAFT</button>
             <a class="btn" href="./janus.html" style="text-decoration:none">◈ LIVING REGISTRY</a>
@@ -724,6 +726,57 @@
         App.selectedNode=janusAtlasRestoreState.selected;
         janusAtlasRestoreState=null;window.JANUSAtlasViewActive=false;
         App.updateView();App.log('Original living graph restored; source JSON unchanged','sys');
+    };
+    window.JANUSV77ViewLocalSystems=async()=>{
+        const origin=location.hostname;
+        if(!['127.0.0.1','localhost'].includes(origin)){
+            App.showToast('PRIVATE LOCAL GENESIS: start loopback All Star reader first',true);
+            return;
+        }
+        let obj;
+        try{
+            const response=await fetch('/api/janus/local-systems',{method:'GET',cache:'no-store'});
+            if(!response.ok)throw Error('LOCAL_INTEGRITY_HOLD_'+response.status);
+            obj=await response.json();
+        }catch(e){App.showToast('Local systems unavailable / integrity HOLD',true);return;}
+        if(obj?.schema!=='janus.allstar.private_local_crosssystem_projection.v1' ||
+           obj?.authority?.readOnly!==true || obj?.authority?.writeAuthority!==false ||
+           obj?.authority?.topaAutoAdjudication!==false ||
+           !Array.isArray(obj?.nodes)||obj.nodes.length>12 ||
+           !Array.isArray(obj?.edges)||obj.edges.length>11){
+            App.showToast('Local source authority mismatch',true);return;
+        }
+        const ids=new Set(),view=[];
+        for(const n of obj.nodes){
+            if(typeof n.id!=='string'||!n.id.startsWith('local:')||ids.has(n.id) ||
+               n.readOnly!==true || n.synthAuthority===true ||
+               n.scientificVerdict && n.scientificVerdict!=='NOT_TOPA_ADJUDICATED'){
+                App.showToast('Local node source policy HOLD',true);return;
+            }
+            ids.add(n.id);
+            view.push({id:n.id,label:String(n.label||n.id).slice(0,70),type:'info',emoji:'🧬',
+              parentId:null,description:'PRIVATE LOCAL SIMULATION STRUCTURE · NOT TOPA EVIDENCE',
+              x:App.width/2+(Math.random()-.5)*380,y:App.height/2+(Math.random()-.5)*300});
+        }
+        const links=[];
+        for(const e of obj.edges){
+            if(e?.relationClass!=='LOCAL_DERIVED_STRUCTURE'||!ids.has(e.sourceId)||
+               !ids.has(e.targetId)||e.scientificVerdict!=='NOT_TOPA_ADJUDICATED'){
+                App.showToast('Local relation source policy HOLD',true);return;
+            }
+            links.push({source:e.sourceId,target:e.targetId,kind:'local-derived'});
+        }
+        if(!ids.has('local:allstar'))return;
+        if(janusAtlasRestoreState)window.JANUSAtlasNativeRestore();
+        document.getElementById('rename-modal').style.display='none';
+        janusAtlasRestoreState={nodes:App.globalNodes,links:App.globalLinks,
+            context:App.contextStack.slice(),selected:App.selectedNode};
+        window.JANUSAtlasViewActive=true;
+        App.globalNodes=view;App.globalLinks=links;App.contextStack=[];App.selectedNode=null;
+        App.updateView();
+        const missing=(obj.sources||[]).filter(x=>x.status==='MISSING_LOCAL_SOURCE').length;
+        App.log('Private Genesis/HRAiN structural snapshot · '+links.length+
+            ' local-only edges · '+missing+' missing sources · NOT TOPA','info');
     };
     window.JANUSV77ExportDraft=()=>{
         if(window.JANUSAtlasViewActive){App.showToast('RESTORE ORIGINAL GRAPH before exporting',true);return;}
