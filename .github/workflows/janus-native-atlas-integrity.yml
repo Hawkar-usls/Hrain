@@ -9,6 +9,8 @@ on:
       - 'tests/hrain_v77_browser.py'
       - 'tools/hrain_v77_readonly_bridge.py'
       - 'tests/test_hrain_v77_readonly_bridge.py'
+      - 'tests/hrain_v77_local_systems_browser.py'
+      - 'tools/janus_allstar_local_projection.py'
       - 'janus-map.html'
       - 'memory.html'
       - 'assets/janus-native-atlas.js'
@@ -31,6 +33,8 @@ on:
       - 'tests/hrain_v77_browser.py'
       - 'tools/hrain_v77_readonly_bridge.py'
       - 'tests/test_hrain_v77_readonly_bridge.py'
+      - 'tests/hrain_v77_local_systems_browser.py'
+      - 'tools/janus_allstar_local_projection.py'
       - 'janus-map.html'
       - 'memory.html'
       - 'assets/janus-native-atlas.js'
@@ -84,6 +88,8 @@ jobs:
         run: python tests/janus_relation_browser_live.py
       - name: Verify loopback-only bridge blocks server mutations and preserves 9,737 edges
         run: python -m unittest discover -v -s tests -p 'test_hrain_v77_readonly_bridge.py'
+      - name: Original v77 D3 private local Genesis+BFAIN read-only overlay/restore
+        run: python tests/hrain_v77_local_systems_browser.py
       - name: Original All Star v77 D3 / DIVE / local-draft / Atlas Chrome regression
         run: python tests/hrain_v77_browser.py
       - name: Real source SHA version/path directory filters in native D3
