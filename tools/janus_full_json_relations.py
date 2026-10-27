@@ -97,11 +97,11 @@ def decode_reference(raw):
     if not path.endswith(".json"):return None
     return repo,rev,path
 
-def extract_references(document):
+def extract_references(document,max_nodes=NODE_CAP):
     out=[];seen=set();nodes=0;truncated=False
     def walk(v,pointer,depth):
         nonlocal nodes,truncated
-        if nodes>=NODE_CAP or depth>DEPTH_CAP or len(out)>=REF_CAP:
+        if nodes>=max_nodes or depth>DEPTH_CAP or len(out)>=REF_CAP:
             truncated=True;return
         nodes+=1
         if isinstance(v,str):
@@ -148,7 +148,7 @@ def scan(row):
         else:
             decoded=body.decode("utf-8")
         doc=json.loads(decoded)
-        refs,trunc=extract_references(doc)
+        refs,trunc=extract_references(doc,max_nodes=2_000_000 if source_cap(row)>SIZE_CAP else NODE_CAP)
         return {"status":"VERIFIED_TRUNCATED" if trunc else "VERIFIED","blob":row["gitBlobSha"],
                 "sha256":sha(body),"refs":refs}
     except Exception as e:
