@@ -26,11 +26,11 @@ EXPECTED_REPOS = {"Hawkar-usls/"+name for name in (
     "Janus-Fundamentum","TOPA","Janus-Cosmos","aura-oracle-tg",
     "tranception","janus-lapis","janus-distributed-ai-swarm",
     "Janus-HELIOS","janus-meta-registry")}
-SIZE_CAP = 2_000_000
-FIELD_CAP = 20_000
+SIZE_CAP = 4_000_000
+FIELD_CAP = SIZE_CAP
 NODE_CAP = 100_000
 DEPTH_CAP = 24
-REF_CAP = 200
+REF_CAP = 1000
 def encoded(x): return (json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(",",":"))+"\n").encode("utf-8")
 def sha(b): return hashlib.sha256(b).hexdigest()
 def ensure(c,msg):
@@ -125,7 +125,13 @@ def scan(row):
     if row["sizeBytes"]>SIZE_CAP:return {"status":"SKIPPED_SIZE_CAP","blob":row["gitBlobSha"]}
     try:
         body=get_bytes(row)
-        doc=json.loads(body.decode("utf-8"))
+        if body.startswith((b"\xff\xfe",b"\xfe\xff")):
+            decoded=body.decode("utf-16")
+        elif body.startswith(b"\xef\xbb\xbf"):
+            decoded=body.decode("utf-8-sig")
+        else:
+            decoded=body.decode("utf-8")
+        doc=json.loads(decoded)
         refs,trunc=extract_references(doc)
         return {"status":"VERIFIED_TRUNCATED" if trunc else "VERIFIED","blob":row["gitBlobSha"],
                 "sha256":sha(body),"refs":refs}
@@ -154,7 +160,8 @@ def build(root,out,workers,max_new=0):
     todo=[]
     for rid,r in sorted(rows.items()):
         v=cache.get(rid)
-        if v and v.get("blob")==r["gitBlobSha"] and v.get("status") in ("VERIFIED","VERIFIED_TRUNCATED","SKIPPED_SIZE_CAP"):
+        if v and v.get("blob")==r["gitBlobSha"] and (v.get("status")=="VERIFIED" or
+             (v.get("status")=="SKIPPED_SIZE_CAP" and r["sizeBytes"]>SIZE_CAP)):
             kept[rid]=v
         elif max_new==0 or len(todo)<max_new:
             todo.append((rid,r))
