@@ -31,21 +31,32 @@ FIELD_CAP = SIZE_CAP
 NODE_CAP = 100_000
 DEPTH_CAP = 24
 REF_CAP = 1000
-# Exceptional-size access is pinned to ONE frozen, hash-identified public blob.
-# No global raise: all other JSON remain at the original 4 MB safety ceiling.
-OVERSIZE_EYE = {
-    "repository": "Hawkar-usls/janus-meta-registry",
-    "path": "EYE/generated/EYE-REGISTRY-INDEX.json",
-    "sourceCommit": "046e77c695056eba60fc702cb135f51ce9c17e45",
-    "gitBlobSha": "8a27f24d102372f555de16a42386a364de3c2059",
-    "sourceSha256": "22d4799b4a34f5f9dff020aa2da1651620cf42f4cc48a2ff17503ac948eb4080",
-    "sizeBytes": 13_675_178,
-}
+# Each daily EYE index gets a NEW immutable commit+blob. Enforce one exact
+# repository/path, SHA-pinned URL, 16 MB byte limit and the original SHA1/SHA256
+# checks rather than permanently whitelisting yesterday's Git blob.
+OVERSIZE_EYE_REPO = "Hawkar-usls/janus-meta-registry"
+OVERSIZE_EYE_PATH = "EYE/generated/EYE-REGISTRY-INDEX.json"
 OVERSIZE_CAP = 16_000_000
 def source_cap(row):
-    if all(row.get(k)==v for k,v in OVERSIZE_EYE.items()):
-        return OVERSIZE_CAP
-    return SIZE_CAP
+    commit=row.get("sourceCommit","")
+    blob=row.get("gitBlobSha","")
+    valid=(row.get("repository")==OVERSIZE_EYE_REPO and
+           row.get("path")==OVERSIZE_EYE_PATH and
+           isinstance(commit,str) and SHA40.fullmatch(commit) and
+           isinstance(blob,str) and SHA40.fullmatch(blob) and
+           isinstance(row.get("sizeBytes"),int) and
+           0<row["sizeBytes"]<=OVERSIZE_CAP and
+           row.get("sourceUrl")=="https://github.com/"+OVERSIZE_EYE_REPO+
+                "/blob/"+commit+"/"+OVERSIZE_EYE_PATH)
+    return OVERSIZE_CAP if valid else SIZE_CAP
+
+# Hash-verified GENERATED relations are not source-authored evidence. Treat
+# these as provenance-bearing derived artifacts rather than recursively mining
+# today's relation edges from yesterday's relation edges (feedback inflation).
+GENERATED_RELATIONS = re.compile(r"^assets/janus-json-relations/(?:shards/[0-9]{2}|cache/[A-Za-z0-9_.-]+)\.json$")
+def is_derived_relation(row):
+    return row.get("repository")=="Hawkar-usls/Hrain" and bool(
+        GENERATED_RELATIONS.fullmatch(str(row.get("path",""))))
 def encoded(x): return (json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(",",":"))+"\n").encode("utf-8")
 def sha(b): return hashlib.sha256(b).hexdigest()
 def ensure(c,msg):
@@ -148,6 +159,12 @@ def scan(row):
         else:
             decoded=body.decode("utf-8")
         doc=json.loads(decoded)
+        if is_derived_relation(row):
+            # Parsing and Git blob verification succeed, but derived source's
+            # authored URLs are not re-imported as independent primary evidence.
+            ensure(isinstance(doc,dict),"DERIVED_JSON_ROOT_HOLD")
+            return {"status":"VERIFIED_DERIVED_EXCLUDED","blob":row["gitBlobSha"],
+                    "sha256":sha(body),"refs":[],"exclusion":"SELF_GENERATED_NOT_PRIMARY_SOURCE"}
         refs,trunc=extract_references(doc,max_nodes=2_000_000 if source_cap(row)>SIZE_CAP else NODE_CAP)
         return {"status":"VERIFIED_TRUNCATED" if trunc else "VERIFIED","blob":row["gitBlobSha"],
                 "sha256":sha(body),"refs":refs}
@@ -176,7 +193,7 @@ def build(root,out,workers,max_new=0):
     todo=[]
     for rid,r in sorted(rows.items()):
         v=cache.get(rid)
-        if v and v.get("blob")==r["gitBlobSha"] and (v.get("status")=="VERIFIED" or
+        if v and v.get("blob")==r["gitBlobSha"] and (v.get("status") in ("VERIFIED","VERIFIED_DERIVED_EXCLUDED") or
              (v.get("status")=="SKIPPED_SIZE_CAP" and r["sizeBytes"]>source_cap(r))):
             kept[rid]=v
         elif max_new==0 or len(todo)<max_new:
@@ -214,10 +231,12 @@ def build(root,out,workers,max_new=0):
                 "sourceMutationAllowed":False,"semanticHypothesesAreEvidence":False,"topaVerdictsAreAutoInferred":False},
             "sourceCatalogSha256":manifest_hash,"sourceCatalogGeneratedAt":manifest.get("generatedAt"),
             "sourceCatalogJsonCount":len(rows),"publicRepositoryCount":len(repos),
-            "scannedVerifiedFiles":kinds["VERIFIED"]+kinds["VERIFIED_TRUNCATED"],
+            "scannedVerifiedFiles":kinds["VERIFIED"]+kinds["VERIFIED_TRUNCATED"]+kinds["VERIFIED_DERIVED_EXCLUDED"],
+            "derivedExcludedFiles":kinds["VERIFIED_DERIVED_EXCLUDED"],
             "truncatedFiles":kinds["VERIFIED_TRUNCATED"],"skippedSizeFiles":kinds["SKIPPED_SIZE_CAP"],
             "heldFiles":kinds["HOLD"],"pendingFiles":len(rows)-len(kept),
-            "complete":len(kept)==len(rows) and not kinds["HOLD"] and not kinds["VERIFIED_TRUNCATED"],
+            "complete":len(kept)==len(rows) and not kinds["HOLD"] and not kinds["VERIFIED_TRUNCATED"]
+                       and not kinds["SKIPPED_SIZE_CAP"] and not kinds["VERIFIED_DERIVED_EXCLUDED"],
             "directEdges":sum(len(edges[repo]) for repo in repos),"semanticHypothesisEdges":0,
             "topaAdjudicatedClaims":0,
             "shards":[{"repository":repo,"path":"assets/janus-json-relations/"+name,"sha256":sha(b),

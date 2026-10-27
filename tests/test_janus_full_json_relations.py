@@ -82,6 +82,36 @@ class Relations(unittest.TestCase):
             self.assertEqual(edge["targetId"],f"json:{7:024x}")
             self.assertTrue(result2["complete"])
 
+    def test_rotating_oversize_eyefile_stays_snapshot_pinned(self):
+        commit="c"*40
+        row={"repository":"Hawkar-usls/janus-meta-registry",
+             "path":"EYE/generated/EYE-REGISTRY-INDEX.json",
+             "sourceCommit":commit,"gitBlobSha":"d"*40,
+             "sourceUrl":"https://github.com/Hawkar-usls/janus-meta-registry/blob/"+commit+"/EYE/generated/EYE-REGISTRY-INDEX.json",
+             "sizeBytes":13_704_750}
+        self.assertEqual(m.source_cap(row),m.OVERSIZE_CAP)
+        self.assertEqual(m.source_cap({**row,"sourceCommit":"f"*40}),m.SIZE_CAP)
+        self.assertEqual(m.source_cap({**row,"gitBlobSha":"bad"}),m.SIZE_CAP)
+        self.assertEqual(m.source_cap({**row,"sizeBytes":m.OVERSIZE_CAP+1}),m.SIZE_CAP)
+        self.assertEqual(m.source_cap({**row,"path":"EYE/generated/other.json"}),m.SIZE_CAP)
+        self.assertEqual(m.source_cap({**row,"repository":"Hawkar-usls/Hrain"}),m.SIZE_CAP)
+
+    def test_generated_relation_cache_does_not_recurse_derived_evidence(self):
+        row={"repository":"Hawkar-usls/Hrain",
+             "path":"assets/janus-json-relations/cache/Janus-Demiurge.json",
+             "sourceCommit":"a"*40,"gitBlobSha":"b"*40,"sizeBytes":44}
+        self.assertTrue(m.is_derived_relation(row))
+        self.assertTrue(m.is_derived_relation({**row,"path":"assets/janus-json-relations/shards/03.json"}))
+        self.assertFalse(m.is_derived_relation({**row,"path":"assets/janus-json-relations/wrong.json"}))
+        self.assertFalse(m.is_derived_relation({**row,"repository":"Hawkar-usls/TOPA"}))
+        body=m.encoded({"links":["https://github.com/Hawkar-usls/TOPA/blob/main/data/test.json"]})
+        with patch.object(m,"get_bytes",return_value=body):
+            output=m.scan({**row,"sizeBytes":len(body)})
+        self.assertEqual(output["status"],"VERIFIED_DERIVED_EXCLUDED")
+        self.assertEqual(output["refs"],[])
+        self.assertEqual(output["sha256"],m.sha(body))
+        self.assertEqual(output["exclusion"],"SELF_GENERATED_NOT_PRIMARY_SOURCE")
+
     def test_corrupt_shard_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root=pathlib.Path(td);self.fixture(root)
