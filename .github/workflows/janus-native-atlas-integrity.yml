@@ -12,6 +12,7 @@ on:
       - 'tests/test_janus_native_atlas.py'
       - 'tests/test_janus_relation_ui.py'
       - 'tests/janus_relation_browser_smoke.py'
+      - 'tests/janus_relation_browser_live.py'
       - '.github/workflows/janus-native-atlas-integrity.yml'
   push:
     branches: [main]
@@ -26,6 +27,7 @@ on:
       - 'tests/test_janus_native_atlas.py'
       - 'tests/test_janus_relation_ui.py'
       - 'tests/janus_relation_browser_smoke.py'
+      - 'tests/janus_relation_browser_live.py'
       - '.github/workflows/janus-native-atlas-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -62,6 +64,8 @@ jobs:
         env:
           JANUS_ORGANISM: Hrain
         run: python tests/janus_relation_browser_smoke.py
+      - name: Verify PUBLISHED complete-index graph on both native sites
+        run: python tests/janus_relation_browser_live.py
       - name: Verify original source family has not been replaced
         run: |
           python - <<'PY'
