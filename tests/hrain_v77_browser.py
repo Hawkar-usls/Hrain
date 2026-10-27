@@ -84,8 +84,31 @@ def run():
             assert page.evaluate("App.globalNodes.length")==old_count
             assert not page.evaluate("window.JANUSAtlasViewActive")
             assert not request_writes,request_writes
+            # Prove the v77 D3 renderer accepts a TRUE SHA-indexed Cosmos edge,
+            # not only a hand-written graph fixture.
+            page.locator(".janus-native-atlas-launch").click()
+            page.wait_for_function("!document.querySelector('#janus-atlas-drawer').hidden",timeout=10000)
+            page.wait_for_function("document.querySelector('#janus-atlas-repo').options.length>=15",timeout=30000)
+            page.select_option("#janus-atlas-repo","Hawkar-usls/Janus-Cosmos")
+            page.wait_for_function("document.querySelectorAll('#janus-atlas-results .janus-atlas-hit').length>=2",timeout=30000)
+            page.locator("#janus-atlas-query").fill("COSMOS-ALI-V2-LATTICE-TOF-PROTOCOL-2026-10-18")
+            page.wait_for_function("document.querySelector('#janus-atlas-shown').textContent.startsWith('1 matching')",timeout=12000)
+            page.locator("#janus-atlas-results .janus-atlas-hit").first.click()
+            page.get_by_role("button",name="INDEXED LINKS · FULL PUBLIC CATALOG").click()
+            page.wait_for_function("document.querySelector('#janus-atlas-focus')?.textContent.includes('DIRECT edges')||document.querySelector('#janus-atlas-focus')?.textContent.includes('RELATION INDEX HOLD')",timeout=32000)
+            panel=page.locator("#janus-atlas-focus").inner_text()
+            assert "RELATION INDEX HOLD" not in panel,panel[:1800]
+            assert "/sources/prior_v1/url" in panel,panel[:1800]
+            assert "TOPA scientific claims remain NOT ADJUDICATED" in panel
+            page.get_by_role("button",name="VERIFY ALL TARGET SHARDS & PROJECT SOURCE EDGES").click()
+            page.wait_for_function("document.querySelector('#janus-atlas-drawer').hidden",timeout=45000)
+            page.wait_for_function("document.querySelectorAll('.link[data-source-pointer=\"/sources/prior_v1/url\"]').length>0",timeout=18000)
+            assert page.evaluate("window.JANUSAtlasViewActive")
+            page.evaluate("window.JANUSAtlasNativeRestore()")
+            assert page.evaluate("App.globalNodes.length")==old_count
+            assert not request_writes,request_writes
             assert not errors,errors
-            print("HRAIN_V77_AUTHENTIC_D3_DIVE_LOCAL_DRAFT_ATLAS_READONLY_PASS",flush=True)
+            print("HRAIN_V77_AUTHENTIC_D3_DIVE_LOCAL_DRAFT_ATLAS_READONLY_AND_REAL_CORPUS_PASS",flush=True)
             page.close()
             browser.close()
     finally:
