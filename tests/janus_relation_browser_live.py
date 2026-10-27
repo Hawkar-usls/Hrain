@@ -33,7 +33,7 @@ def run():
    assert "RELATION INDEX HOLD" not in text,(url,text[:1500])
    # Verify real live counts and source class, without pinning the browser
    # test to yesterday's valid manifest (new sources may legitimately publish).
-   match=re.search(r"(\\d[\\d,]*) / (\\d[\\d,]*) source JSON byte-verified.*?(\\d[\\d,]*) DIRECT edges.*?(\\d+) PENDING.*?(\\d+) HOLD.*?(\\d+) TRUNCATED",text,re.S)
+   match=re.search(r"(\d[\d,]*) / (\d[\d,]*) source JSON byte-verified.*?(\d[\d,]*) DIRECT edges.*?(\d+) PENDING.*?(\d+) HOLD.*?(\d+) TRUNCATED",text,re.S)
    assert match,(url,text[:1500])
    checked,total,edges,pending,held,truncated=(
        int(v.replace(",","")) for v in match.groups())
