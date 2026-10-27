@@ -21,6 +21,11 @@ CATALOG_SCHEMA = "janus.hrain.github_json_constellation_manifest.v1"
 SCHEMA = "janus.hrain.json_explicit_relations.v1"
 SHA40 = re.compile(r"^[a-f0-9]{40}$")
 REF = re.compile(r"https://(?:github\.com/Hawkar-usls/[A-Za-z0-9_.-]+/blob/|raw\.githubusercontent\.com/Hawkar-usls/[A-Za-z0-9_.-]+/)(?:main|[a-f0-9]{40})/[A-Za-z0-9_.%/+~-]+\.json\b")
+EXPECTED_REPOS = {"Hawkar-usls/"+name for name in (
+    "Hrain","iNaiHR","Janus","Janus_Genesis","Janus-Demiurge",
+    "Janus-Fundamentum","TOPA","Janus-Cosmos","aura-oracle-tg",
+    "tranception","janus-lapis","janus-distributed-ai-swarm",
+    "Janus-HELIOS","janus-meta-registry")}
 SIZE_CAP = 2_000_000
 FIELD_CAP = 20_000
 NODE_CAP = 100_000
@@ -39,7 +44,7 @@ def read_catalog(root):
            m.get("authority",{}).get("readOnly") is True,"CATALOG_AUTHORITY")
     ensure(m["shardCount"]==len(m["shards"]) and m["repositoryCount"]==len(m["repositories"]),"CATALOG_MANIFEST_COUNTS")
     repos={r["repository"]:r["commit"] for r in m["repositories"]}
-    ensure(len(repos)==14,"PUBLIC_REPO_ALLOWLIST_DRIFT")
+    ensure(set(repos)==EXPECTED_REPOS,"PUBLIC_REPO_ALLOWLIST_DRIFT")
     records={}
     for s in m["shards"]:
         path=s["path"]
