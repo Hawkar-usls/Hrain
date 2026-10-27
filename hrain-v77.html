@@ -57,6 +57,9 @@
         #main-btn.holding-delete { box-shadow: 0 0 0 2px var(--c-threat), 0 0 60px var(--c-threat); transform: translateX(-50%) scale(1.1); color: var(--c-threat); }
         #btn-dive { position: absolute; bottom: 40px; left: 30px; border-color: var(--c-janus); color: var(--c-janus); font-family: 'Orbitron'; font-size: 1rem; padding: 12px 20px; box-shadow: 0 0 20px rgba(0,255,242,0.1); opacity: 0; transform: translateY(20px); transition: 0.4s; pointer-events: none; background: rgba(0, 20, 10, 0.9); }
         #btn-dive.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        #hrain-render-status { position: fixed; right: 40px; bottom: 251px; width:300px;
+            font: 600 10px Orbitron,monospace; color: var(--c-ally); opacity: .85; z-index: 25;
+            pointer-events: none; text-align:right; text-shadow:0 0 8px #000; }
         #neural-log { position: absolute; bottom: 40px; right: 40px; width: 300px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: 'Share Tech Mono', monospace; font-size: 10px; pointer-events: none; z-index: 25; display: flex; flex-direction: column-reverse; gap: 4px; scrollbar-width: thin; }
         .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
         .log-t { color: #aaa; }
@@ -129,6 +132,7 @@
         <div id="toast-container"></div>
     </div>
     <div id="neural-log"></div>
+    <div id="hrain-render-status" aria-live="polite">v77 · source / local draft</div>
     <div id="rename-modal" class="modal ui-interactive">
         <div class="modal-box">
             <input type="text" id="rename-input" placeholder="AGENT NAME..." autocomplete="off">
@@ -144,6 +148,8 @@
     const CONFIG = {
         isMobile: window.innerWidth < 768,
         lodThreshold: 0.45,
+        maxRenderedLinks: 750, // 9737 edges in global memory, render bounded LOD
+        maxVisualConnections: 12,
         validTypes: ['janus', 'ally', 'threat', 'intel', 'sleeper', 'plug', 'info'],
         emojiMap: {
             janus: '🧠', ally: '🤖', threat: '🐉', intel: '✨', sleeper: '💤', plug: '🔌', info: '💎'
@@ -205,7 +211,7 @@
             App.sim = d3.forceSimulation()
                 .force("link", d3.forceLink().id(d => d.id).distance(CONFIG.isMobile ? 160 : 220))
                 .force("charge", d3.forceManyBody().strength(-2500))
-                .force("collide", d3.forceCollide().radius(d => (d.connectionCount || 1) * 5 + 80).strength(0.8))
+                .force("collide", d3.forceCollide().radius(d => Math.min(CONFIG.maxVisualConnections,(d.connectionCount||1))*5+80).strength(0.8))
                 .force("x", d3.forceX(App.width/2).strength(0.012))
                 .force("y", d3.forceY(App.height/2).strength(0.012))
                 .velocityDecay(0.6);
@@ -228,20 +234,21 @@
                 App.updateNav();
             }
             const nodeMap = new Set(App.viewNodes.map(n => n.id));
-            App.viewLinks = App.globalLinks.filter(l => {
-                const s = l.source.id || l.source;
-                const t = l.target.id || l.target;
-                return nodeMap.has(s) && nodeMap.has(t);
-            }).map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target, kind:l.kind||'', pointer:l.pointer||'' }));
-
-            const counts = {};
-            App.viewNodes.forEach(n => counts[n.id] = 0);
-            App.viewLinks.forEach(l => {
-                const s = l.source.id || l.source;
-                const t = l.target.id || l.target;
-                counts[s] = (counts[s] || 0) + 1;
-                counts[t] = (counts[t] || 0) + 1;
-            });
+            const allVisibleLinks=App.globalLinks.filter(l=>{
+                const s=l.source?.id||l.source, t=l.target?.id||l.target;
+                return nodeMap.has(s)&&nodeMap.has(t);
+            }).map(l=>({source:l.source?.id||l.source,target:l.target?.id||l.target,
+                kind:l.kind||'',pointer:l.pointer||'',weight:Number.isFinite(+l.weight)?+l.weight:1}));
+            // Degrees describe the WHOLE graph; bounded render LOD never deletes edges.
+            const counts={};
+            App.viewNodes.forEach(n=>counts[n.id]=0);
+            allVisibleLinks.forEach(l=>{counts[l.source]=(counts[l.source]||0)+1;counts[l.target]=(counts[l.target]||0)+1});
+            App.viewLinks=allVisibleLinks.length>CONFIG.maxRenderedLinks
+                ?allVisibleLinks.slice().sort((a,b)=>b.weight-a.weight).slice(0,CONFIG.maxRenderedLinks)
+                :allVisibleLinks;
+            const status=document.getElementById('hrain-render-status');
+            if(status)status.textContent='D3 RENDER '+App.viewLinks.length.toLocaleString()+' / '+allVisibleLinks.length.toLocaleString()
+                +' visible edges · '+App.globalLinks.length.toLocaleString()+' total in memory · '+(window.JANUSAtlasViewActive?'VERIFIED SOURCES / READ ONLY':'LOCAL GRAPH');
             App.viewNodes.forEach(n => n.connectionCount = counts[n.id] || 0);
             App.render();
             App.updateButtons();
@@ -288,12 +295,12 @@
                 return `node-group type-${t} ${d === App.selectedNode ? 'selected' : ''} ${d.id === rootId ? 'is-root' : ''}`;
             });
             allN.select(".node-foreign-object")
-                .attr("width", d => 80 + (d.connectionCount||0)*6)
-                .attr("height", d => 80 + (d.connectionCount||0)*6)
-                .attr("x", d => -(80 + (d.connectionCount||0)*6)/2)
-                .attr("y", d => -(80 + (d.connectionCount||0)*6)/2);
+                .attr("width", d => 80 + Math.min(CONFIG.maxVisualConnections,d.connectionCount||0)*6)
+                .attr("height", d => 80 + Math.min(CONFIG.maxVisualConnections,d.connectionCount||0)*6)
+                .attr("x", d => -(80 + Math.min(CONFIG.maxVisualConnections,d.connectionCount||0)*6)/2)
+                .attr("y", d => -(80 + Math.min(CONFIG.maxVisualConnections,d.connectionCount||0)*6)/2);
             allN.select(".emoji").text(d => d.emoji || CONFIG.emojiMap[d.type] || '🧬');
-            allN.select(".label").text(d => d.label).attr("dy", d => 45 + (d.connectionCount||0)*2);
+            allN.select(".label").text(d => d.label).attr("dy", d => 45 + Math.min(CONFIG.maxVisualConnections,d.connectionCount||0)*2);
 
             App.sim.on("tick", () => {
                 allL.attr("d", d => {
@@ -618,6 +625,10 @@
                             if(window.JANUSDraftDirty||window.JANUSAtlasViewActive){
                                 App.log('Remote update held: local draft / verified atlas in use','info');return;
                             }
+                            // v89 may broadcast every 1.35s; never restart D3 every tick.
+                            const current=Date.now();
+                            if(Nerve.lastUpdateAt&&current-Nerve.lastUpdateAt<8000)return;
+                            Nerve.lastUpdateAt=current;
                             if(Array.isArray(data.data.nodes)&&Array.isArray(data.data.links)&&data.data.nodes.length<=5000&&data.data.links.length<=20000){
                                 App.globalNodes=data.data.nodes;App.globalLinks=data.data.links;App.updateView();
                             }
