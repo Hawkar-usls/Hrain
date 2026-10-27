@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>JANUS • HRAiN v77 — ORIGINAL LIVING GRAPH · SAFE DRAFT</title>
+    <script src="./assets/janus-explicit-links.js" defer></script>
+    <script src="./assets/janus-native-atlas.js" defer></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #030508;
+            --bg-pulse: #0b101a;
+            --c-janus: #00fff2;
+            --c-ally: #00ffa3;
+            --c-threat: #ff2a6d;
+            --c-intel: #ffcc00;
+            --c-sleeper: #666;
+            --c-plug: #ffae00;
+            --c-info: #d300ff;
+            --border: rgba(255, 255, 255, 0.15);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-dark); font-family: 'Rajdhani', sans-serif; color: #e0e0e0; touch-action: none; position: fixed; }
+        #neural-bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, var(--bg-pulse), var(--bg-dark)); z-index: 0; animation: breathe 12s infinite alternate; pointer-events: none; }
+        @keyframes breathe { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 1; transform: scale(1.1); } }
+        #particles { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle { position: absolute; background: var(--c-ally); border-radius: 50%; opacity: 0.3; animation: float 30s infinite linear; box-shadow: 0 0 10px var(--c-ally); }
+        @keyframes float { 0% { transform: translateY(0); opacity: 0; } 50% { opacity: 0.5; } 100% { transform: translateY(-100vh); opacity: 0; } }
+        .ui-layer { position: fixed; z-index: 20; pointer-events: none; width: 100%; height: 100%; top: 0; left: 0; }
+        .ui-interactive { pointer-events: auto !important; }
+        #logo { position: absolute; top: 30px; left: 30px; font-family: 'Orbitron'; font-size: 1.4rem; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-shadow: 0 0 15px rgba(0,255,242,0.2); cursor: pointer; z-index: 30; }
+        #logo span { color: var(--c-janus); }
+        #status-light { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #444; margin-left: 10px; box-shadow: 0 0 5px #000; transition: 0.3s; }
+        #status-light.online { background: var(--c-ally); box-shadow: 0 0 10px var(--c-ally); }
+        .top-controls { position: absolute; top: 30px; right: 30px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 70%; }
+        .btn { background: rgba(10, 15, 20, 0.8); border: 1px solid var(--border); color: rgba(255,255,255,0.8); backdrop-filter: blur(8px); padding: 10px 16px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn:hover { border-color: var(--c-janus); color: #fff; box-shadow: 0 0 15px rgba(0,255,242,0.3); }
+        .btn:active { transform: scale(0.95); }
+        .btn.active { border-color: var(--c-ally); color: var(--c-ally); background: rgba(0, 255, 163, 0.15); }
+        .btn.loading { border-color: var(--c-info); color: var(--c-info); animation: pulse-btn 1s infinite alternate; }
+        @keyframes pulse-btn { 0% { opacity: 0.7; } 100% { opacity: 1; box-shadow: 0 0 15px var(--c-info); } }
+        #info-panel { position: absolute; bottom: 40px; left: 40px; max-width: 400px; opacity: 0; transform: translateY(20px); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; z-index: 25; }
+        #info-panel.visible { opacity: 1; transform: translateY(0); }
+        #info-title { font-family: 'Orbitron'; font-size: 1.4rem; color: var(--c-janus); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,255,242,0.4); }
+        #info-desc { font-family: 'Rajdhani'; font-size: 1rem; line-height: 1.5; color: #ddd; background: rgba(5, 8, 12, 0.9); padding: 15px; border-left: 3px solid var(--c-janus); border: 1px solid var(--border); border-left-width: 3px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        #nav-context { position: absolute; top: 80px; left: 30px; display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s; }
+        #nav-context.visible { opacity: 1; }
+        .crumb { font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .crumb:hover { color: #fff; text-decoration: underline; }
+        .crumb.active { color: var(--c-janus); font-weight: bold; }
+        #btn-ascend { padding: 6px 12px; font-size: 0.75rem; border: 1px solid var(--c-janus); background: rgba(0,0,0,0.6); color: var(--c-janus); width: fit-content; margin-top: 5px; cursor: pointer; }
+        #main-btn { position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 50%; border: none; background: radial-gradient(circle at 40% 40%, rgba(40,40,40,0.5), rgba(0,0,0,0.95)); box-shadow: 0 0 0 1px var(--border), 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; color: var(--c-janus); text-shadow: 0 0 10px var(--c-janus); }
+        #main-btn:active { transform: translateX(-50%) scale(0.9); }
+        #main-btn.mode-edit { box-shadow: 0 0 0 2px var(--color-target, var(--c-janus)), 0 0 50px var(--color-target, var(--c-janus)); color: #fff; text-shadow: none; }
+        #main-btn.holding-delete { box-shadow: 0 0 0 2px var(--c-threat), 0 0 60px var(--c-threat); transform: translateX(-50%) scale(1.1); color: var(--c-threat); }
+        #btn-dive { position: absolute; bottom: 40px; left: 30px; border-color: var(--c-janus); color: var(--c-janus); font-family: 'Orbitron'; font-size: 1rem; padding: 12px 20px; box-shadow: 0 0 20px rgba(0,255,242,0.1); opacity: 0; transform: translateY(20px); transition: 0.4s; pointer-events: none; background: rgba(0, 20, 10, 0.9); }
+        #btn-dive.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        #neural-log { position: absolute; bottom: 40px; right: 40px; width: 300px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: 'Share Tech Mono', monospace; font-size: 10px; pointer-events: none; z-index: 25; display: flex; flex-direction: column-reverse; gap: 4px; scrollbar-width: thin; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
+        .log-t { color: #aaa; }
+        .log-d { color: var(--c-threat); font-weight: bold; }
+        .log-i { color: var(--c-intel); font-weight: bold; }
+        .log-p { color: var(--c-info); }
+        .log-sys { color: var(--c-ally); }
+        #chart { width: 100%; height: 100%; position: relative; z-index: 1; }
+        .link { fill: none; stroke-width: 1.5px; opacity: 0.4; transition: opacity 0.3s; vector-effect: non-scaling-stroke; }
+        .impulse { filter: drop-shadow(0 0 8px currentColor); pointer-events: none; mix-blend-mode: screen; opacity: 0.8; }
+        @keyframes bio-morph { 0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; } 50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; } 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; } }
+        @keyframes root-aura-pulse { 0% { box-shadow: 0 0 10px var(--node-color); opacity: 0.5; border-width: 2px; } 100% { box-shadow: 0 0 50px var(--node-color); opacity: 0.9; border-width: 6px; } }
+        .node-foreign-object { overflow: visible; }
+        .node-body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+        .neuron-aura { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: var(--node-bg, rgba(0,255,242,0.1)); border: 1px solid var(--node-color, #00fff2); opacity: 0.3; animation: bio-morph 8s ease-in-out infinite; transition: all 0.3s; }
+        .neuron-core { width: 40%; height: 40%; background: var(--node-color, #00fff2); border-radius: 50%; box-shadow: 0 0 15px var(--node-color); transition: 0.3s; z-index: 2; }
+        .node-group.is-root .neuron-core { width: 60%; height: 60%; box-shadow: 0 0 40px var(--node-color), 0 0 80px var(--node-color); z-index: 10; border: 2px solid #fff; }
+        .node-group.is-root .neuron-aura { animation: bio-morph 10s ease-in-out infinite, root-aura-pulse 4s infinite alternate; border-style: solid; background: rgba(0,255,242,0.2); }
+        .node-group:hover .neuron-aura { opacity: 0.6; animation-duration: 2s; box-shadow: 0 0 20px var(--node-color); }
+        .node-group.selected .neuron-aura { opacity: 0.8; border-width: 2px; border-style: dashed; box-shadow: 0 0 30px var(--node-color); }
+        .node-group.selected .neuron-core { background: #fff; box-shadow: 0 0 30px #fff; }
+        .type-janus { --node-color: var(--c-janus); --node-bg: rgba(0, 255, 242, 0.2); }
+        .type-ally { --node-color: var(--c-ally); --node-bg: rgba(0, 255, 163, 0.15); }
+        .type-threat { --node-color: var(--c-threat); --node-bg: rgba(255, 42, 109, 0.15); }
+        .type-intel { --node-color: var(--c-intel); --node-bg: rgba(255, 204, 0, 0.15); }
+        .type-sleeper { --node-color: var(--c-sleeper); --node-bg: rgba(102, 102, 102, 0.15); }
+        .type-plug { --node-color: var(--c-plug); --node-bg: rgba(255, 174, 0, 0.15); }
+        .type-info { --node-color: var(--c-info); --node-bg: rgba(211, 0, 255, 0.15); }
+        text.emoji { font-size: 20px; text-anchor: middle; dominant-baseline: central; pointer-events: none; fill: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); transition: opacity 0.2s; }
+        text.label { font-family: 'Rajdhani'; font-size: 12px; font-weight: 700; fill: rgba(255,255,255,0.8); text-anchor: middle; pointer-events: none; text-shadow: 0 2px 5px #000; transition: opacity 0.2s; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 3000; display: none; align-items: center; justify-content: center; }
+        .modal-box { width: 80%; max-width: 280px; padding: 25px; background: #080c10; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,255,242,0.1); text-align: center; border-radius: 16px; }
+        #rename-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--c-janus); color: #fff; font-size: 1.5rem; text-align: center; padding: 10px; margin-bottom: 20px; outline: none; font-family: 'Orbitron'; }
+        #btn-confirm { width: 100%; padding: 12px; font-size: 1rem; letter-spacing: 2px; border-color: var(--c-janus); color: var(--c-janus); }
+        #delete-hint { position: fixed; bottom: calc(130px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: var(--c-threat); font-size: 0.85rem; letter-spacing: 2px; font-weight: 700; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 50; }
+        #delete-hint.visible { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+        #toast-container { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 4000; width: 90%; max-width: 350px; }
+        .toast { background: rgba(10, 15, 20, 0.95); border: 1px solid var(--border); color: #ddd; padding: 12px 16px; border-radius: 8px; font-family: 'Rajdhani'; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px); opacity: 0; transform: translateY(20px); transition: 0.3s; text-align: center; }
+        .toast.visible { opacity: 1; transform: translateY(0); }
+        .toast.error { border-color: var(--c-threat); color: var(--c-threat); }
+        @media (max-width: 768px) {
+            #neural-log { width: 250px; bottom: 100px; right: 20px; max-height: 150px; }
+            #info-panel { max-width: 280px; bottom: 20px; left: 20px; }
+            .btn { padding: 8px 12px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="neural-bg"></div>
+    <div id="particles"></div>
+    <div class="ui-layer">
+        <div id="logo">HR<span>ai</span>N <div id="status-light"></div></div>
+        <div id="nav-context" class="ui-interactive">
+            <div id="breadcrumbs"></div>
+            <button id="btn-ascend" class="btn" onclick="App.ascend()">⬆ ASCEND</button>
+        </div>
+        <div class="top-controls ui-interactive">
+            <button id="btn-synth" class="btn" onclick="Nerve.synthNode()" title="Requires an authorized JANUS backend; never auto-post">✨ SYNTH · GATED</button>
+            <button id="btn-v77-export" class="btn" onclick="window.JANUSV77ExportDraft()">↓ EXPORT DRAFT</button>
+            <button id="btn-v77-import" class="btn" onclick="window.JANUSV77ImportDraft()">↑ IMPORT DRAFT</button>
+            <a class="btn" href="./janus.html" style="text-decoration:none">◈ LIVING REGISTRY</a>
+        </div>
+        <div id="info-panel">
+            <div id="info-title"></div>
+            <div id="info-desc"></div>
+        </div>
+        <button id="btn-dive" class="btn ui-interactive" onclick="App.dive()">🔽 DIVE</button>
+        <button id="main-btn" class="ui-interactive"></button>
+        <div id="delete-hint">DISCONNECTING...</div>
+        <div id="toast-container"></div>
+    </div>
+    <div id="neural-log"></div>
+    <div id="rename-modal" class="modal ui-interactive">
+        <div class="modal-box">
+            <input type="text" id="rename-input" placeholder="AGENT NAME..." autocomplete="off">
+            <button id="btn-confirm" class="btn" onclick="App.confirmRename()">CONFIRM</button>
+        </div>
+    </div>
+    <div id="chart"></div>
+
+<script>
+    // ----------------------------------------------
+    //  JANUS HRAIN v77 — LIVING GRAPH ENGINE
+    // ----------------------------------------------
+    const CONFIG = {
+        isMobile: window.innerWidth < 768,
+        lodThreshold: 0.45,
+        validTypes: ['janus', 'ally', 'threat', 'intel', 'sleeper', 'plug', 'info'],
+        emojiMap: {
+            janus: '🧠', ally: '🤖', threat: '🐉', intel: '✨', sleeper: '💤', plug: '🔌', info: '💎'
+        }
+    };
+
+    // Глобальный объект приложения
+    const App = {
+        globalNodes: [],
+        globalLinks: [],
+        viewNodes: [],
+        viewLinks: [],
+        contextStack: [],
+        selectedNode: null,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        container: null,
+        svg: null,
+        g: null,
+        linkG: null,
+        impulseG: null,
+        nodeG: null,
+        zoom: null,
+        sim: null,
+
+        init: async () => {
+            initParticles();
+            App.setupVis();
+            await Nerve.loadInitial();
+            Nerve.connect();
+            App.bindEvents();
+            App.updateButtons();
+            setInterval(() => {
+                // имитация живых событий (в будущем заменится на WebSocket)
+                if (Math.random() < 0.05) App.log("🌐 SYNAPSE: neural drift detected", "sys");
+            }, 15000);
+        },
+
+        setupVis: () => {
+            App.container = d3.select("#chart");
+            App.svg = App.container.append("svg").attr("width", "100%").attr("height", "100%");
+            App.g = App.svg.append("g");
+            App.linkG = App.g.append("g").attr("class", "links");
+            App.impulseG = App.g.append("g").attr("class", "impulses");
+            App.nodeG = App.g.append("g").attr("class", "nodes");
+
+            App.zoom = d3.zoom()
+                .scaleExtent([0.01, 500])
+                .on("zoom", e => {
+                    App.g.attr("transform", e.transform);
+                    if (e.transform.k < CONFIG.lodThreshold) App.container.classed("lod-active", true);
+                    else App.container.classed("lod-active", false);
+                });
+            App.svg.call(App.zoom)
+                .call(App.zoom.transform, d3.zoomIdentity.translate(App.width/2, App.height/2).scale(0.3).translate(-App.width/2, -App.height/2))
+                .on("dblclick.zoom", null);
+            App.svg.on("click", e => { if (e.target.tagName === 'svg') App.deselect(); });
+
+            App.sim = d3.forceSimulation()
+                .force("link", d3.forceLink().id(d => d.id).distance(CONFIG.isMobile ? 160 : 220))
+                .force("charge", d3.forceManyBody().strength(-2500))
+                .force("collide", d3.forceCollide().radius(d => (d.connectionCount || 1) * 5 + 80).strength(0.8))
+                .force("x", d3.forceX(App.width/2).strength(0.012))
+                .force("y", d3.forceY(App.height/2).strength(0.012))
+                .velocityDecay(0.6);
+
+            requestAnimationFrame(() => animateVisuals());
+        },
+
+        getCurrentRoot: () => App.contextStack.length > 0 ? App.contextStack[App.contextStack.length-1] : null,
+
+        updateView: () => {
+            const rootId = App.getCurrentRoot();
+            if (!rootId) {
+                App.viewNodes = App.globalNodes.filter(n => !n.parentId);
+                document.getElementById('nav-context').classList.remove('visible');
+            } else {
+                const root = App.globalNodes.find(n => n.id === rootId);
+                if (!root) { App.contextStack.pop(); App.updateView(); return; }
+                root.fx = App.width/2; root.fy = App.height/2;
+                App.viewNodes = App.globalNodes.filter(n => n.id === rootId || n.parentId === rootId);
+                App.updateNav();
+            }
+            const nodeMap = new Set(App.viewNodes.map(n => n.id));
+            App.viewLinks = App.globalLinks.filter(l => {
+                const s = l.source.id || l.source;
+                const t = l.target.id || l.target;
+                return nodeMap.has(s) && nodeMap.has(t);
+            }).map(l => ({ source: l.source.id || l.source, target: l.target.id || l.target, kind:l.kind||'', pointer:l.pointer||'' }));
+
+            const counts = {};
+            App.viewNodes.forEach(n => counts[n.id] = 0);
+            App.viewLinks.forEach(l => {
+                const s = l.source.id || l.source;
+                const t = l.target.id || l.target;
+                counts[s] = (counts[s] || 0) + 1;
+                counts[t] = (counts[t] || 0) + 1;
+            });
+            App.viewNodes.forEach(n => n.connectionCount = counts[n.id] || 0);
+            App.render();
+            App.updateButtons();
+            App.sim.nodes(App.viewNodes);
+            App.sim.force("link").links(App.viewLinks);
+            App.sim.alpha(1).restart();
+        },
+
+        render: () => {
+            const l = App.linkG.selectAll(".link").data(App.viewLinks, d => (d.source.id||d.source)+"-"+(d.target.id||d.target));
+            l.exit().remove();
+            const lEnter = l.enter().append("path").attr("class", "link");
+            const allL = lEnter.merge(l);
+            allL.style("stroke", d => {
+                if(d.kind==='explicit-json-url') return 'var(--c-ally)';
+                const target = App.viewNodes.find(n => n.id === (d.target.id||d.target));
+                return target ? `var(--c-${target.type||'ally'})` : 'var(--c-ally)';
+            }).style("stroke-dasharray",d=>d.kind==='explicit-json-url'?'7 5':null)
+              .attr("data-source-pointer",d=>d.kind==='explicit-json-url'?d.pointer:null);
+
+            const n = App.nodeG.selectAll(".node-group").data(App.viewNodes, d => d.id);
+            n.exit().transition().duration(200).style("opacity", 0).remove();
+            const nEnter = n.enter().append("g").attr("class", "node-group")
+                .attr("opacity", 0)
+                .call(d3.drag()
+                    .on("start", (e,d) => { if (!e.active) App.sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+                    .on("drag", (e,d) => { d.fx = e.x; d.fy = e.y; })
+                    .on("end", (e,d) => { if (!e.active) App.sim.alphaTarget(0); if (d.id !== App.getCurrentRoot()) { d.fx = null; d.fy = null; } Nerve.push(); }))
+                .on("click", App.clickNode);
+            nEnter.transition().duration(800).ease(d3.easeElasticOut).attr("opacity", 1);
+
+            const fo = nEnter.append("foreignObject").attr("class", "node-foreign-object");
+            const div = fo.append("xhtml:div").attr("class", "node-body");
+            div.append("div").attr("class", "neuron-aura");
+            div.append("div").attr("class", "neuron-core");
+            nEnter.append("text").attr("class", "emoji").attr("dy", 1);
+            nEnter.append("text").attr("class", "label");
+
+            const allN = nEnter.merge(n);
+            const rootId = App.getCurrentRoot();
+            allN.attr("class", d => {
+                let t = d.type || 'ally';
+                if (!CONFIG.validTypes.includes(t)) t = 'ally';
+                return `node-group type-${t} ${d === App.selectedNode ? 'selected' : ''} ${d.id === rootId ? 'is-root' : ''}`;
+            });
+            allN.select(".node-foreign-object")
+                .attr("width", d => 80 + (d.connectionCount||0)*6)
+                .attr("height", d => 80 + (d.connectionCount||0)*6)
+                .attr("x", d => -(80 + (d.connectionCount||0)*6)/2)
+                .attr("y", d => -(80 + (d.connectionCount||0)*6)/2);
+            allN.select(".emoji").text(d => d.emoji || CONFIG.emojiMap[d.type] || '🧬');
+            allN.select(".label").text(d => d.label).attr("dy", d => 45 + (d.connectionCount||0)*2);
+
+            App.sim.on("tick", () => {
+                allL.attr("d", d => {
+                    const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx*dx + dy*dy) * 1.5;
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
+                allN.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+        },
+
+        clickNode: (e, d) => {
+            if (window.JANUSAtlasViewActive) return;
+            if (e.defaultPrevented) return;
+            if (App.selectedNode === d) { App.deselect(); }
+            else if (!App.selectedNode) { App.selectedNode = d; }
+            else {
+                const s = App.selectedNode.id, t = d.id;
+                const idx = App.globalLinks.findIndex(l => {
+                    const ls = l.source.id || l.source;
+                    const lt = l.target.id || l.target;
+                    return (ls === s && lt === t) || (ls === t && lt === s);
+                });
+                if (idx > -1) {
+                    App.globalLinks.splice(idx, 1);
+                    App.log(`⚡ Link severed: ${App.selectedNode.label} — ${d.label}`, "intent");
+                } else {
+                    App.globalLinks.push({ source: s, target: t });
+                    App.log(`🔗 New link: ${App.selectedNode.label} — ${d.label}`, "intent");
+                }
+                App.animateImpulse(App.selectedNode, d);
+                App.selectedNode = d;
+                App.updateView();
+                Nerve.push(true);
+            }
+            App.updateButtons();
+            App.render();
+        },
+
+        updateButtons: () => {
+            const mb = document.getElementById('main-btn');
+            mb.disabled=!!window.JANUSAtlasViewActive;
+            const panel = document.getElementById('info-panel');
+            mb.className = "ui-interactive " + (App.selectedNode ? "mode-edit" : "");
+            if (App.selectedNode) {
+                mb.style.setProperty('--color-target', `var(--c-${App.selectedNode.type||'ally'})`);
+                mb.textContent = "EDIT";
+                const isRoot = App.selectedNode.id === App.getCurrentRoot();
+                document.getElementById('btn-dive').classList.toggle('visible', !isRoot && App.selectedNode);
+                document.getElementById('info-title').innerText = App.selectedNode.label;
+                let desc = App.selectedNode.description || "No data.";
+                if (App.selectedNode.level) desc += `\n⚡ Level: ${App.selectedNode.level}`;
+                if (App.selectedNode.score) desc += `\n📊 Score: ${App.selectedNode.score.toFixed(2)}`;
+                desc += `\n🔗 Connections: ${App.selectedNode.connectionCount || 0}`;
+                document.getElementById('info-desc').innerText = desc;
+                panel.classList.add('visible');
+            } else {
+                mb.style.removeProperty('--color-target');
+                mb.textContent = "ADD";
+                panel.classList.remove('visible');
+                document.getElementById('btn-dive').classList.remove('visible');
+            }
+        },
+
+        updateNav: () => {
+            const bc = document.getElementById('breadcrumbs');
+            bc.innerHTML = "";
+            App.contextStack.forEach((id, idx) => {
+                const n = App.globalNodes.find(x => x.id === id);
+                if (n) {
+                    const el = document.createElement('span');
+                    el.className = "crumb";
+                    el.innerText = n.label + (idx < App.contextStack.length-1 ? " > " : "");
+                    el.onclick = () => {
+                        while (App.contextStack.length > idx+1) App.contextStack.pop();
+                        App.updateView();
+                    };
+                    bc.appendChild(el);
+                }
+            });
+            document.getElementById('nav-context').classList.add('visible');
+        },
+
+        createNode: () => {
+            if (window.JANUSAtlasViewActive) return;
+            const t = d3.zoomTransform(App.svg.node());
+            let x, y;
+            const parentId = App.getCurrentRoot();
+            if (App.selectedNode) {
+                const a = Math.random()*6.28;
+                x = App.selectedNode.x + Math.cos(a)*120;
+                y = App.selectedNode.y + Math.sin(a)*120;
+            } else {
+                x = (App.width/2 - t.x)/t.k;
+                y = (App.height/2 - t.y)/t.k;
+            }
+            const newNode = {
+                id: "n_" + Date.now(),
+                label: "New Agent",
+                emoji: "🦾",
+                type: "ally",
+                x, y,
+                parentId: parentId,
+                isNew: true,
+                level: 1,
+                score: 0,
+                description: "Freshly spawned agent."
+            };
+            App.globalNodes.push(newNode);
+            if (App.selectedNode) App.globalLinks.push({ source: App.selectedNode.id, target: newNode.id });
+            else if (parentId) App.globalLinks.push({ source: parentId, target: newNode.id });
+            App.updateView();
+            App.selectedNode = App.viewNodes.find(n => n.id === newNode.id);
+            App.updateButtons();
+            App.render();
+            Nerve.push(true);
+            setTimeout(() => App.openRename(), 50);
+        },
+
+        deleteNode: () => {
+            if (window.JANUSAtlasViewActive) return;
+            if (!App.selectedNode || App.selectedNode.id === App.getCurrentRoot()) return;
+            App.log(`💀 Agent terminated: ${App.selectedNode.label}`, "threat");
+            App.globalNodes = App.globalNodes.filter(n => n.id !== App.selectedNode.id);
+            App.globalLinks = App.globalLinks.filter(l => {
+                const s = l.source.id || l.source;
+                const t = l.target.id || l.target;
+                return s !== App.selectedNode.id && t !== App.selectedNode.id;
+            });
+            App.deselect();
+            App.updateView();
+            Nerve.push(true);
+        },
+
+        dive: () => {
+            if (!App.selectedNode || App.selectedNode.id === App.getCurrentRoot()) return;
+            const children = App.globalNodes.filter(n => n.parentId === App.selectedNode.id);
+            children.forEach(c => { c.fx = null; c.fy = null; });
+            App.contextStack.push(App.selectedNode.id);
+            App.deselect();
+            App.updateView();
+            App.svg.transition().duration(1200).call(App.zoom.transform, d3.zoomIdentity.translate(App.width/2, App.height/2).scale(1.2).translate(-App.width/2, -App.height/2));
+            App.log(`🔽 Diving into ${App.selectedNode?.label || 'node'}`, "sys");
+        },
+
+        ascend: () => {
+            if (App.contextStack.length === 0) return;
+            const oldRootId = App.contextStack.pop();
+            const oldRoot = App.globalNodes.find(n => n.id === oldRootId);
+            if (oldRoot) { oldRoot.fx = null; oldRoot.fy = null; }
+            App.updateView();
+            App.svg.transition().duration(1000).call(App.zoom.scaleBy, 0.8);
+            App.log(`⬆ Ascending`, "sys");
+        },
+
+        openRename: () => {
+            document.getElementById('rename-modal').style.display = 'flex';
+            const inp = document.getElementById('rename-input');
+            inp.value = App.selectedNode.isNew ? "" : App.selectedNode.label;
+            if (App.selectedNode.isNew) delete App.selectedNode.isNew;
+            setTimeout(() => inp.focus(), 50);
+        },
+
+        confirmRename: () => {
+            if (window.JANUSAtlasViewActive) return;
+            const inp = document.getElementById('rename-input');
+            if (App.selectedNode && inp.value.trim() !== "") {
+                const old = App.selectedNode.label;
+                App.selectedNode.label = inp.value.trim();
+                App.log(`✏️ Agent renamed: ${old} → ${App.selectedNode.label}`, "intent");
+                App.render();
+                Nerve.push(true);
+            }
+            document.getElementById('rename-modal').style.display = 'none';
+        },
+
+        deselect: () => {
+            App.selectedNode = null;
+            App.updateButtons();
+            App.render();
+        },
+
+        animateImpulse: (source, target) => {
+            if (!source || !target || isNaN(source.x) || isNaN(target.x)) return;
+            const color = `var(--c-${source.type || 'ally'})`;
+            const spark = App.impulseG.append("circle")
+                .attr("class", "impulse")
+                .attr("r", 4)
+                .attr("cx", source.x)
+                .attr("cy", source.y)
+                .style("fill", "#fff")
+                .style("color", color);
+            spark.transition()
+                .duration(800)
+                .ease(d3.easeQuadIn)
+                .attr("cx", target.x)
+                .attr("cy", target.y)
+                .style("fill", color)
+                .on("end", function() { d3.select(this).remove(); });
+        },
+
+        bindEvents: () => {
+            const mb = document.getElementById('main-btn');
+            const dh = document.getElementById('delete-hint');
+            let timer, long = false;
+            const start = (e) => {
+                if (e.type === 'touchstart') e.stopPropagation();
+                long = false;
+                if (App.selectedNode) {
+                    mb.classList.add('holding-delete');
+                    dh.classList.add('visible');
+                    timer = setTimeout(() => { long = true; App.deleteNode(); }, 800);
+                } else {
+                    mb.style.transform = "translateX(-50%) scale(0.9)";
+                }
+            };
+            const end = (e) => {
+                e.preventDefault();
+                clearTimeout(timer);
+                mb.classList.remove('holding-delete');
+                dh.classList.remove('visible');
+                mb.style.transform = "";
+                if (long) return;
+                if (App.selectedNode) App.openRename();
+                else App.createNode();
+            };
+            mb.addEventListener('mousedown', start);
+            mb.addEventListener('touchstart', start, { passive: false });
+            mb.addEventListener('mouseup', end);
+            mb.addEventListener('touchend', end);
+            document.getElementById('rename-input').addEventListener("keypress", e => { if (e.key === "Enter") App.confirmRename(); });
+            window.addEventListener('resize', () => {
+                App.width = window.innerWidth;
+                App.height = window.innerHeight;
+                App.sim.force("center", d3.forceCenter(App.width/2, App.height/2));
+                App.sim.alpha(0.3).restart();
+            });
+        },
+
+        log: (msg, type="sys") => {
+            const feed = document.getElementById('neural-log');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            const t = document.createElement('span');
+            t.className = 'log-t';
+            t.textContent = '[' + new Date().toLocaleTimeString('en-US',{hour12:false,minute:'2-digit',second:'2-digit'}) + '] ';
+            const m = document.createElement('span');
+            m.className = ({threat:'log-d',intent:'log-i',info:'log-p',sys:'log-sys'})[type]||'log-sys';
+            m.textContent = String(msg).slice(0,700);
+            div.append(t,m);feed.prepend(div);
+            if(feed.children.length>50)feed.removeChild(feed.lastChild);
+        },
+
+        showToast: (txt, err=false) => {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast ' + (err ? 'error' : '');
+            t.innerText = txt;
+            c.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('visible'));
+            setTimeout(() => {
+                t.classList.remove('visible');
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        }
+    };
+
+    // --- NERVE: связь с бэкендом ---
+    const Nerve = {
+        socket: null,
+        loadInitial: async () => {
+            try {
+                const draft=sessionStorage.getItem('janus_hrain_v77_local_draft_v1');
+                if(draft){
+                    const obj=JSON.parse(draft);
+                    if(Array.isArray(obj.nodes)&&Array.isArray(obj.links)&&obj.nodes.length<=5000&&obj.links.length<=20000){
+                        App.globalNodes=obj.nodes;App.globalLinks=obj.links;
+                        window.JANUSDraftDirty=true;App.updateView();
+                        App.log('Local draft restored; server state NOT overwritten','sys');
+                        return;
+                    }
+                }
+            }catch(e){App.log('Local draft unavailable; no data deleted','threat')}
+            try {
+                // Public GitHub Pages never contacts its own /api endpoints.
+                if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))throw Error('PUBLIC_DEMO_MODE');
+                const res=await fetch('/api/hrain/state',{cache:'no-store'});
+                if(!res.ok)throw Error('LOCAL_SERVER_OFFLINE');
+                const data=await res.json();
+                if(!Array.isArray(data.nodes)||!Array.isArray(data.links)||data.nodes.length>5000||data.links.length>20000)throw Error('INVALID_SERVER_GRAPH');
+                App.globalNodes=data.nodes;App.globalLinks=data.links;
+                App.globalNodes.forEach(n=>{if(!n.chatHistory)n.chatHistory=[];if(!n.type)n.type='ally'});
+                App.updateView();App.log('Local JANUS Core: read-only graph snapshot','sys');
+                return;
+            }catch(e) {
+                App.log('Original v77 OFFLINE demo / local-only draft. Backend mutations disabled.','info');
+                App.globalNodes = [
+                    {id:'janus',label:'JANUS',type:'janus',emoji:'🧠',level:42,score:0.98,x:App.width/2,y:App.height/2,parentId:null,description:'The Demiurge of Thresholds. Core AI.'},
+                    {id:'a1',label:'Sentinel',type:'ally',emoji:'🤖',x:App.width/2-150,y:App.height/2+100,parentId:'janus',description:'Guardian unit.'},
+                    {id:'a2',label:'Oracle',type:'intel',emoji:'✨',x:App.width/2+200,y:App.height/2-80,parentId:'janus',description:'Data analyst.'},
+                    {id:'t1',label:'Chaos Weaver',type:'threat',emoji:'🐉',x:App.width/2-200,y:App.height/2-150,parentId:null,description:'Hostile anomaly.'}
+                ];
+                App.globalLinks=[{source:'janus',target:'a1'},{source:'janus',target:'a2'},{source:'a1',target:'t1'}];
+                App.updateView();
+            }
+        },
+        connect: () => {
+            if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))return;
+            const protocol=location.protocol==='https:'?'wss:':'ws:';
+            try {
+                Nerve.socket=new WebSocket(protocol+'//'+location.host+'/ws');
+                Nerve.socket.onopen=()=>document.getElementById('status-light').classList.add('online');
+                Nerve.socket.onclose=()=>document.getElementById('status-light').classList.remove('online');
+                Nerve.socket.onmessage=(message)=>{
+                    try{
+                        const data=JSON.parse(message.data);
+                        if(data.type==='EVENT'){App.log(String(data.text||''),'info');return;}
+                        if(data.type==='UPDATE'&&data.data){
+                            if(window.JANUSDraftDirty||window.JANUSAtlasViewActive){
+                                App.log('Remote update held: local draft / verified atlas in use','info');return;
+                            }
+                            if(Array.isArray(data.data.nodes)&&Array.isArray(data.data.links)&&data.data.nodes.length<=5000&&data.data.links.length<=20000){
+                                App.globalNodes=data.data.nodes;App.globalLinks=data.data.links;App.updateView();
+                            }
+                        }
+                    }catch(e){App.log('Invalid WebSocket event discarded','threat')}
+                };
+            }catch(e){App.log('Local WebSocket unavailable','info')}
+        },
+        push: async (notify=false) => {
+            // V89 /api/hrain/save replaces the ENTIRE server graph: never auto-POST.
+            if(window.JANUSAtlasViewActive)return;
+            const cn=App.globalNodes.map(n=>({id:n.id,label:n.label,emoji:n.emoji,type:n.type,x:n.x,y:n.y,
+                 parentId:n.parentId,level:n.level,score:n.score,description:n.description}));
+            const cl=App.globalLinks.map(l=>({source:l.source?.id||l.source,target:l.target?.id||l.target}));
+            try{
+                sessionStorage.setItem('janus_hrain_v77_local_draft_v1',JSON.stringify({schema:'janus.hrain.v77.local_draft.v1',nodes:cn,links:cl}));
+                window.JANUSDraftDirty=true;
+                if(notify)App.showToast('LOCAL DRAFT saved · server unchanged');
+            }catch(e){if(notify)App.showToast('Draft storage full — use EXPORT',true)}
+        },
+        synthNode: async () => {
+            // Original POST /api/janus/action mutates a live autonomous graph.
+            // A source link and a semantic hypothesis are NOT authority to execute.
+            App.showToast('SYNTH requires authorized backend · no request sent',true);
+            App.log('SYNTH gated: cannot convert source relations into agent commands','info');
+        }
+    };
+
+    function initParticles() {
+        const c = document.getElementById('particles');
+        for (let i = 0; i < 40; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random()*100 + '%';
+            p.style.top = Math.random()*100 + '%';
+            p.style.width = (Math.random()*3+2) + 'px';
+            p.style.height = p.style.width;
+            p.style.animationDuration = (Math.random()*20+20) + 's';
+            p.style.animationDelay = -(Math.random()*20) + 's';
+            c.appendChild(p);
+        }
+    }
+
+    function animateVisuals() {
+        if (App.viewLinks.length > 0 && Math.random() > 0.95) {
+            const l = App.viewLinks[Math.floor(Math.random()*App.viewLinks.length)];
+            const src = App.viewNodes.find(n => n.id === (l.source.id||l.source));
+            const tgt = App.viewNodes.find(n => n.id === (l.target.id||l.target));
+            if (src && tgt && src.x && tgt.x) App.animateImpulse(src, tgt);
+        }
+        requestAnimationFrame(animateVisuals);
+    }
+
+
+    // Original v77 graph remains authoritative for this VIEW only; JSON corpus
+    // projection is transient, epistemically labelled, and cannot be saved.
+    window.JANUSAtlasViewActive=false;
+    window.JANUSDraftDirty=false;
+    let janusAtlasRestoreState=null;
+    window.JANUSAtlasNativeFocus=(records,links=[])=>{
+        if(!Array.isArray(records)||records.length>50||!Array.isArray(links)||links.length>100)return;
+        if(janusAtlasRestoreState)window.JANUSAtlasNativeRestore();
+        const allowed=new Set();
+        const nodes=[];
+        for(const r of records){
+            if(!r||typeof r.id!=='string'||!r.id.startsWith('json:')||r.readOnly!==true||r.deleteAllowed!==false)continue;
+            if(allowed.has(r.id))continue;
+            allowed.add(r.id);
+            nodes.push({id:r.id,label:String(r.path||r.id).split('/').pop().slice(0,75),
+                type:'info',emoji:'📄',parentId:null,
+                description:'PUBLIC SOURCE SNAPSHOT ONLY · '+r.repository+'@'+r.sourceCommit+
+                  ' · relation is not TOPA evidence',x:App.width/2+(Math.random()-.5)*280,
+                y:App.height/2+(Math.random()-.5)*280});
+        }
+        if(!nodes.length)return;
+        janusAtlasRestoreState={nodes:App.globalNodes,links:App.globalLinks,context:App.contextStack.slice(),selected:App.selectedNode};
+        window.JANUSAtlasViewActive=true;
+        App.globalNodes=nodes;App.globalLinks=[];
+        for(const e of links){
+            if(e?.evidence!=='explicit-json-url'||!allowed.has(e.sourceId)||!allowed.has(e.targetId))continue;
+            if(typeof e.pointer!=='string'||(e.pointer!==''&&!e.pointer.startsWith('/')))continue;
+            App.globalLinks.push({source:e.sourceId,target:e.targetId,kind:'explicit-json-url',pointer:e.pointer});
+        }
+        App.contextStack=[];App.selectedNode=null;App.updateView();
+        App.log('Verified-source temporary view; '+App.globalLinks.length+' exact document edges · read-only','info');
+    };
+    window.JANUSAtlasNativeRestore=()=>{
+        if(!janusAtlasRestoreState)return;
+        App.globalNodes=janusAtlasRestoreState.nodes;
+        App.globalLinks=janusAtlasRestoreState.links;
+        App.contextStack=janusAtlasRestoreState.context;
+        App.selectedNode=janusAtlasRestoreState.selected;
+        janusAtlasRestoreState=null;window.JANUSAtlasViewActive=false;
+        App.updateView();App.log('Original living graph restored; source JSON unchanged','sys');
+    };
+    window.JANUSV77ExportDraft=()=>{
+        if(window.JANUSAtlasViewActive){App.showToast('RESTORE ORIGINAL GRAPH before exporting',true);return;}
+        const body={schema:'janus.hrain.v77.local_draft.v1',origin:'browser draft — not JANUS server state',
+            nodes:App.globalNodes.map(n=>({id:n.id,label:n.label,emoji:n.emoji,type:n.type,
+                parentId:n.parentId,description:n.description,level:n.level,score:n.score,x:n.x,y:n.y})),
+            links:App.globalLinks.map(l=>({source:l.source?.id||l.source,target:l.target?.id||l.target}))};
+        const blob=new Blob([JSON.stringify(body,null,2)],{type:'application/json'});
+        const a=document.createElement('a');const url=URL.createObjectURL(blob);
+        a.href=url;a.download='JANUS-HRAIN-v77-DRAFT-'+new Date().toISOString().slice(0,10)+'.json';
+        document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
+        App.showToast('Downloaded local draft · no server writes');
+    };
+    window.JANUSV77ImportDraft=()=>{
+        if(window.JANUSAtlasViewActive){App.showToast('Restore original graph first',true);return;}
+        const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+        input.onchange=async()=>{
+            const file=input.files?.[0];
+            if(!file||file.size>4_000_000){App.showToast('Import requires a JSON draft under 4MB',true);return}
+            try{
+                const v=JSON.parse(await file.text());
+                if(v.schema!=='janus.hrain.v77.local_draft.v1'||!Array.isArray(v.nodes)||
+                  !Array.isArray(v.links)||v.nodes.length>5000||v.links.length>20000)throw Error('DRAFT_SCHEMA_HOLD');
+                const ids=new Set();
+                for(const n of v.nodes){if(typeof n.id!=='string'||!n.id||ids.has(n.id)||
+                  n.id.startsWith('json:'))throw Error('DRAFT_NODE_ID_HOLD');ids.add(n.id)}
+                for(const l of v.links){if(!ids.has(l.source)||!ids.has(l.target))throw Error('DRAFT_EDGE_HOLD')}
+                if(!confirm('Replace the current BROWSER draft only? JANUS server state stays unchanged.'))return;
+                App.globalNodes=v.nodes;App.globalLinks=v.links;App.contextStack=[];App.selectedNode=null;
+                App.updateView();await Nerve.push(true);
+            }catch(e){App.showToast('Import rejected: invalid draft',true)}
+        };input.click();
+    };
+
+    window.onload = App.init;
+</script>
+</body>
+</html>
