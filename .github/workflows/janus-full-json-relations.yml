@@ -1,0 +1,81 @@
+name: JANUS Verified JSON Relations · Full-Corpus Incremental
+on:
+  pull_request:
+    paths:
+      - 'tools/janus_full_json_relations.py'
+      - 'tests/test_janus_full_json_relations.py'
+      - '.github/workflows/janus-full-json-relations.yml'
+      - 'assets/janus-native-atlas.js'
+      - 'assets/janus-json-relations/**'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/janus_full_json_relations.py'
+      - 'tests/test_janus_full_json_relations.py'
+      - '.github/workflows/janus-full-json-relations.yml'
+  schedule:
+    - cron: '03 5 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: janus-verified-json-relations
+  cancel-in-progress: false
+jobs:
+  contract-and-parser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline referential, cache and integrity checks
+        run: python -m unittest discover -v -s tests -p 'test_janus_full_json_relations.py'
+      - name: Python syntax
+        run: python -m py_compile tools/janus_full_json_relations.py
+  incremental-public-source-pass:
+    if: github.event_name != 'pull_request'
+    needs: contract-and-parser
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify frozen 14-repo catalog and advance read-only full-corpus scan
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            python -u tools/janus_full_json_relations.py --workers 24 --max-new 5000
+          else
+            python -u tools/janus_full_json_relations.py --workers 24 --max-new 0
+          fi
+      - name: Publish only derived read-only relationship shards and cache
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -z "$(git status --porcelain -- assets/janus-json-relations)" ]]; then
+            echo 'JANUS_RELATIONS_INDEX_ALREADY_CURRENT'
+            exit 0
+          fi
+          # Never push graph metadata built against an outdated catalog.
+          git fetch origin main
+          if ! git diff --quiet HEAD origin/main -- assets/janus-json-atlas; then
+            echo 'JANUS_CATALOG_CHANGED_DURING_SCAN=HOLD' >&2
+            exit 1
+          fi
+          git add assets/janus-json-relations
+          git commit -m "chore(janus): resume SHA-backed public JSON relations"
+          git pull --rebase origin main
+          git push origin HEAD:main
