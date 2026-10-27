@@ -1,6 +1,7 @@
 """Live published GitHub Pages native JANUS source-graph smoke test.
 Requires playwright + Chromium. No fixtures, no writes, no synthetic relations.
 """
+import re
 from playwright.sync_api import sync_playwright
 
 URLS=[
@@ -30,8 +31,17 @@ def run():
    page.wait_for_function("document.querySelector('#janus-atlas-focus')?.textContent.includes('DIRECT edges') || document.querySelector('#janus-atlas-focus')?.textContent.includes('RELATION INDEX HOLD')",timeout=30000)
    text=page.locator("#janus-atlas-focus").inner_text()
    assert "RELATION INDEX HOLD" not in text,(url,text[:1500])
-   assert "19,621 / 19,624" in text,(url,text[:1500])
-   assert "5,838 DIRECT edges" in text,(url,text[:1500])
+   # Verify real live counts and source class, without pinning the browser
+   # test to yesterday's valid manifest (new sources may legitimately publish).
+   match=re.search(r"(\\d[\\d,]*) / (\\d[\\d,]*) source JSON byte-verified.*?(\\d[\\d,]*) DIRECT edges.*?(\\d+) PENDING.*?(\\d+) HOLD.*?(\\d+) TRUNCATED",text,re.S)
+   assert match,(url,text[:1500])
+   checked,total,edges,pending,held,truncated=(
+       int(v.replace(",","")) for v in match.groups())
+   assert total>=19624,(url,total)
+   assert checked>=19622,(url,checked)
+   assert edges>=5878,(url,edges)
+   assert pending==0 and truncated==0,(url,pending,truncated)
+   assert held<=2,(url,held)
    assert "/sources/prior_v1/url" in text,(url,text[:1500])
    assert "TOPA scientific claims remain NOT ADJUDICATED" in text,(url,text[:1500])
    page.get_by_role("button",name="VERIFY ALL TARGET SHARDS & PROJECT SOURCE EDGES").click()
