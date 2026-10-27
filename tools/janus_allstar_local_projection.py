@@ -31,7 +31,12 @@ def _sha(body: bytes) -> str:
 def _checked_read(root: Path, filename: str):
     if filename not in MAX_BYTES:
         raise ValueError("UNLISTED_LOCAL_SOURCE_HOLD")
-    base = (root / "raw_logs").resolve(strict=True)
+    raw_dir = root / "raw_logs"
+    if raw_dir.is_symlink():
+        raise ValueError("RAW_LOGS_SYMLINK_HOLD")
+    base = raw_dir.resolve(strict=True)
+    if not base.is_relative_to(root):
+        raise ValueError("SOURCE_OUTSIDE_APPROVED_ROOT")
     item = base / filename
     if item.is_symlink():
         raise ValueError("SOURCE_SYMLINK_HOLD")
