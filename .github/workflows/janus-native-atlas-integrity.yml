@@ -4,6 +4,9 @@ on:
     paths:
       - 'index.html'
       - 'janus.html'
+      - 'hrain-v77.html'
+      - 'legacy/hrain-v77-allstar-original.html'
+      - 'tests/hrain_v77_browser.py'
       - 'janus-map.html'
       - 'memory.html'
       - 'assets/janus-native-atlas.js'
@@ -19,6 +22,9 @@ on:
     paths:
       - 'index.html'
       - 'janus.html'
+      - 'hrain-v77.html'
+      - 'legacy/hrain-v77-allstar-original.html'
+      - 'tests/hrain_v77_browser.py'
       - 'janus-map.html'
       - 'memory.html'
       - 'assets/janus-native-atlas.js'
@@ -35,7 +41,7 @@ permissions:
 jobs:
   preserve-real-neural-interface:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +72,8 @@ jobs:
         run: python tests/janus_relation_browser_smoke.py
       - name: Verify PUBLISHED complete-index graph on both native sites
         run: python tests/janus_relation_browser_live.py
+      - name: Original All Star v77 D3 / DIVE / local-draft / Atlas Chrome regression
+        run: python tests/hrain_v77_browser.py
       - name: Verify original source family has not been replaced
         run: |
           python - <<'PY'
