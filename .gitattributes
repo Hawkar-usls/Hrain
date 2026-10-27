@@ -1,0 +1,5 @@
+assets/janus-json-atlas/*.json text eol=lf
+assets/janus-json-atlas/shards/*.json text eol=lf
+assets/janus-json-relations/*.json text eol=lf
+assets/janus-json-relations/shards/*.json text eol=lf
+assets/janus-json-relations/cache/*.json text eol=lf
