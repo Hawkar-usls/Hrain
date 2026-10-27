@@ -56,6 +56,41 @@ class SourceBridge(unittest.TestCase):
             finally:
                 srv.shutdown();srv.server_close();thread.join(timeout=3)
 
+    def test_private_genesis_context_get_only_and_no_secrets(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=pathlib.Path(td);logs=root/"raw_logs";logs.mkdir()
+            p=logs/"hrain_graph_state.json";self.sample(p)
+            (logs/"janus_world_state.json").write_text(json.dumps({
+                "level":4,"inventory":[],"limbs":[],"base_upgrades":{},
+                "faction_reputation":{},"self_model":{"private":"DO_NOT_EXPOSE_ME"}}))
+            (logs/"janus_world_agents.json").write_text(json.dumps({
+                "population":[{},{}],"memory":[{"private":"DO_NOT_EXPOSE_ME"}],"tick":2}))
+            obj=v.load_local_systems(p)
+            self.assertEqual(obj["schema"],"janus.allstar.private_local_crosssystem_projection.v1")
+            self.assertEqual(len(obj["sources"]),4)
+            self.assertEqual(len(obj["nodes"]),4)
+            self.assertEqual(len(obj["edges"]),3)
+            self.assertEqual(obj["sources"][-1]["status"],"MISSING_LOCAL_SOURCE")
+            self.assertNotIn("DO_NOT_EXPOSE_ME",json.dumps(obj))
+            before=hashlib.sha256(p.read_bytes()).hexdigest()
+            from http.server import ThreadingHTTPServer
+            srv=ThreadingHTTPServer(("127.0.0.1",0),v.make_handler(ROOT,p))
+            t=threading.Thread(target=srv.serve_forever,daemon=True);t.start()
+            try:
+                def req(method,uri,host=None):
+                    c=http.client.HTTPConnection("127.0.0.1",srv.server_port,timeout=8)
+                    c.request(method,uri,headers={"Host":host or f"127.0.0.1:{srv.server_port}"})
+                    r=c.getresponse();code=r.status;body=r.read();c.close()
+                    return code,body
+                code,body=req("GET","/api/janus/local-systems")
+                self.assertEqual(code,200)
+                self.assertEqual(json.loads(body)["authority"]["writeAuthority"],False)
+                self.assertEqual(req("POST","/api/janus/local-systems")[0],405)
+                self.assertEqual(req("GET","/api/janus/local-systems",host="attacker.invalid")[0],403)
+                self.assertEqual(hashlib.sha256(p.read_bytes()).hexdigest(),before)
+            finally:
+                srv.shutdown();srv.server_close();t.join(timeout=3)
+
     def test_no_unvalidated_transforms(self):
         with tempfile.TemporaryDirectory() as td:
             path=pathlib.Path(td)/"test.json"
