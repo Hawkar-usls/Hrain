@@ -1,12 +1,12 @@
 {
   "claimPromotionPerformed": false,
-  "documentCount": 254,
-  "documentMapHash": "e2940bc62b056b49e360ed45866dc83c199370957e6a16a2ed8df4004d88c048",
-  "objectCount": 254,
-  "projectionSha256": "0c3c598e361e0a3d048e47a4fb125bd51ab7efc08b4ba4093299b48efe83706e",
-  "receiptHash": "bd58a1602974fc90464abd2e43f76b18fd6b32fe3176de0ea174f156971e39bf",
+  "documentCount": 190,
+  "documentMapHash": "1bcddf30eeb9a7c8d5ce56c4a08efe722638237d90dc31a8ee7248680022d04c",
+  "objectCount": 190,
+  "projectionSha256": "1920f7ba2d757f51ac57dbbf59ebf17511eed65634bc10182f8a51b8949dae2d",
+  "receiptHash": "1c3ea0a9c9111d6c29c2c47f0ece06a727838710d316b7f97ad8639208f2aaff",
   "registryMutationPerformed": false,
   "schema": "janus.hrain.topa_semantic_prepare_receipt.v1",
-  "sourceCommit": "20c9c24cbd52a39d5bd5a3505a86188c5175f348",
+  "sourceCommit": "fc154bf5432b4d10141c60c11f5465c536c0d22e",
   "status": "PASS"
 }
