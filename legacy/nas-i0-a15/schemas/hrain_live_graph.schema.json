@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A15.5 HRain Live Graph",
+  "type": "object",
+  "required": [
+    "meta",
+    "nodes",
+    "links"
+  ]
+}
