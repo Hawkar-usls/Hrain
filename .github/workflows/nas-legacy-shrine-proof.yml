@@ -1,0 +1,32 @@
+name: JANUS Legacy Shrine NAS Recovery Proof
+
+on:
+  pull_request:
+    paths:
+      - 'legacy/nas-i0-a15/**'
+      - 'tests/test_nas_legacy_shrine_archive.py'
+      - '.github/workflows/nas-legacy-shrine-proof.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'legacy/nas-i0-a15/**'
+      - 'tests/test_nas_legacy_shrine_archive.py'
+      - '.github/workflows/nas-legacy-shrine-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  static-archive-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify original source parses and topology is label-stripped
+        run: |
+          python -m unittest discover -s tests -p test_nas_legacy_shrine_archive.py -v
