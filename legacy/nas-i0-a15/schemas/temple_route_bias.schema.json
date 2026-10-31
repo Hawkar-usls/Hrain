@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A15.3 Temple Route Bias Output",
+  "type": "object",
+  "required": [
+    "version",
+    "observer_only",
+    "janus_route_bias",
+    "mirror_control"
+  ],
+  "properties": {
+    "janus_route_bias": {
+      "type": "object"
+    },
+    "mirror_control": {
+      "type": "object"
+    }
+  }
+}
