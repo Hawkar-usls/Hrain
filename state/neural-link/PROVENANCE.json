@@ -18,7 +18,7 @@
   "mirror_grants_authority": false,
   "read_only_mirror": true,
   "schema": "janus.hrain.neural_link_memory_provenance.v1",
-  "source_commit": "8ae6c816fecde46d1af07a2c7eeb620b74a6e3ac",
+  "source_commit": "3a3b87ff83dddeaebf78c49a5559cd4d7d3ff7a2",
   "source_path": "data/JANUS-NEURAL-LINK/",
   "source_repository": "Hawkar-usls/janus-meta-registry",
   "status": "VERIFIED_READ_ONLY_MIRROR",
