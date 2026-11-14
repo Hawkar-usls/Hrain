@@ -100,6 +100,9 @@ Local operation can reduce unnecessary data exposure, but privacy/compliance dep
 
 ## Review / run
 
+**New opt-in galaxy lens:** [Galaxy view](galaxy.html) · read-only, deterministic projection inspired by the [Milky Way interactive](https://now.intellectronica.net/hydrogen-milky-way/). Original graphs and source data are unchanged; [design, provenance and boundaries](docs/JANUS_GALAXY_LENS.md).
+
+
 - Live demo: https://hawkar-usls.github.io/Hrain/
 - JANUS Registry Mode: https://hawkar-usls.github.io/Hrain/janus.html
 - DemiHead left-hemisphere sidecar: https://hawkar-usls.github.io/Hrain/demihead.html
