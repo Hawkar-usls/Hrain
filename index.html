@@ -355,6 +355,21 @@
             globalNodes.push({id:1, label:"Void", emoji:"🌀", type:"default", x:window.innerWidth/2, y:window.innerHeight/2, parentId: null, chatHistory:[]});
         }
 
+        // Read-only deep-link from the 3D editor to the selected original mindmap node.
+        // No mutation or background SYNTH invocation occurs on navigation.
+        const focus = new URLSearchParams(location.search).get('focus');
+        if(focus) {
+            const candidate=globalNodes.find(n=>String(n.id)===focus);
+            if(candidate){
+                const chain=[];let p=candidate,guard=0;
+                while(p && p.parentId!=null && guard++<24){
+                    const parent=globalNodes.find(n=>String(n.id)===String(p.parentId));
+                    if(!parent || chain.includes(parent.id))break;
+                    chain.unshift(parent.id);p=parent;
+                }
+                contextStack=chain;selectedNode=candidate;
+            }
+        }
         updateView();
         animateVisuals();
     }
