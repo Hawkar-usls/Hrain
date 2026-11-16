@@ -1,10 +1,10 @@
 {
   "cross_repository_write": false,
-  "event_count": 36,
+  "event_count": 37,
   "hashes": {
-    "HEAD.json": "63cab114515d8d9883897d02230de42573e808a65ae516442c1f2649586e47b4",
+    "HEAD.json": "0a3ae73d3d285b07a911227dc2c4e36476299a8ae8943dcbf566d51fc9484383",
     "MANIFEST.json": "a9b46b9d735e8d89f4bb4de33b934686669fc401aa44676be626dcd9493995fd",
-    "RECENT.json": "308f76dcd6c9448152847444d77edcf8352bdd2415324d8d5a295d261f87d2f8"
+    "RECENT.json": "cdec2390652f6eecf373445c60373207e6691ce48729996cd504a2f9361d6767"
   },
   "laws": [
     "META_REGISTRY_DB -> HRAIN -> TERMINAL",
@@ -18,7 +18,7 @@
   "mirror_grants_authority": false,
   "read_only_mirror": true,
   "schema": "janus.hrain.neural_link_memory_provenance.v1",
-  "source_commit": "b9f7a5b78c45254c248cc2312261bdaf3854e932",
+  "source_commit": "7cbc50a2c9a72a6fdd8439c35c6d6a1fe3047152",
   "source_path": "data/JANUS-NEURAL-LINK/",
   "source_repository": "Hawkar-usls/janus-meta-registry",
   "status": "VERIFIED_READ_ONLY_MIRROR",
